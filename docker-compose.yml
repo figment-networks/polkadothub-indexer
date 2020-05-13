@@ -1,0 +1,72 @@
+version: '3.2'
+
+services:
+
+  redis:
+    image: redis:3.2.11
+
+  timedb:
+    image: timescale/timescaledb:latest-pg10
+    ports:
+      - "5432:5432"
+    volumes:
+      - timedb-data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_DB=polkadothub
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+
+  migrate:
+    image: migrate/migrate
+    volumes:
+      - ./db/timescale/migrations:/migrations
+    command: version
+    entrypoint:
+      - migrate
+      - -path
+      - /migrations/
+      - -database
+      - postgres://postgres:password@timedb:5432/polkadothub?sslmode=disable
+    depends_on:
+      - timedb
+
+  server:
+    container_name: polkadot-indexer-server
+    build: .
+    ports:
+      - "8081:8081"
+    environment:
+      - NODE_URL=ws://host.docker.internal:9944
+      - DB_HOST=timedb
+      - DB_NAME=polkadothub
+      - DB_USER=postgres
+      - DB_PASSWORD=password
+    depends_on:
+      - timedb
+
+  job:
+    container_name: polkadothub-indexer-job
+    build: .
+    entrypoint: /go/bin/job
+    environment:
+      - NODE_URL=ws://host.docker.internal:9944
+      - DB_HOST=timedb
+      - DB_NAME=polkadothub
+      - DB_USER=postgres
+      - DB_PASSWORD=password
+    depends_on:
+      - timedb
+
+  node:
+    image: chevdor/polkadot:latest
+    ports:
+      - '30333:30333'
+      - '9933:9933'
+      - '9944:9944'
+    volumes:
+      - node-data:/data
+    command: polkadot --dev --rpc-port 9933 --rpc-external --rpc-cors all --name "FigmentLocal" --chain edgeware
+
+volumes:
+  timedb-data:
+  node-data:
