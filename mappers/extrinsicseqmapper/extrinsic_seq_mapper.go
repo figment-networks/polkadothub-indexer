@@ -2,9 +2,9 @@ package extrinsicseqmapper
 
 import (
 	"github.com/figment-networks/polkadothub-indexer/mappers/syncablemapper"
+	"github.com/figment-networks/polkadothub-indexer/models/extrinsicseq"
 	"github.com/figment-networks/polkadothub-indexer/models/shared"
 	"github.com/figment-networks/polkadothub-indexer/models/syncable"
-	"github.com/figment-networks/polkadothub-indexer/models/extrinsicseq"
 	"github.com/figment-networks/polkadothub-indexer/types"
 	"github.com/figment-networks/polkadothub-indexer/utils/errors"
 )
@@ -19,20 +19,22 @@ func ToSequence(blockSyncable syncable.Model) ([]extrinsicseq.Model, errors.Appl
 	for _, rawExtrinsic := range blockData.Block.Extrinsics {
 		e := extrinsicseq.Model{
 			HeightSequence: &shared.HeightSequence{
-				SpecVersionUid: blockData.SpecVersion,
-				ChainUid: blockData.Chain,
-				Height:  types.Height(blockSyncable.SequenceId),
-				Time:    types.NewTimeFromTimestamp(*blockData.Block.Header.Time),
+				ChainUid:       blockData.GetChain(),
+				SpecVersionUid: blockData.GetSpecVersion(),
+				Height:         types.Height(blockSyncable.SequenceId),
+				Session:        blockData.GetSession(),
+				Era:            blockData.GetEra(),
+				Time:           types.NewTimeFromTimestamp(*blockData.GetBlock().GetHeader().GetTime()),
 			},
 
-			Index: rawExtrinsic.ExtrinsicIndex,
+			Index:     rawExtrinsic.ExtrinsicIndex,
 			Signature: rawExtrinsic.Signature,
-			Signer: rawExtrinsic.Signer,
-			Nonce: rawExtrinsic.Nonce,
+			Signer:    rawExtrinsic.Signer,
+			Nonce:     rawExtrinsic.Nonce,
 			Method:    rawExtrinsic.Method,
-			Section: rawExtrinsic.Section,
-			Args: rawExtrinsic.Args,
-			IsSigned: rawExtrinsic.IsSignedTransaction,
+			Section:   rawExtrinsic.Section,
+			Args:      rawExtrinsic.Args,
+			IsSigned:  rawExtrinsic.IsSignedTransaction,
 		}
 
 		if !e.Valid() {

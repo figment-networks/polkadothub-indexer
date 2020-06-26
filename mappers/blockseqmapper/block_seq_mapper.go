@@ -28,17 +28,19 @@ func ToSequence(blockSyncable syncable.Model) (*blockseq.Model, errors.Applicati
 
 	e := &blockseq.Model{
 		HeightSequence: &shared.HeightSequence{
-			SpecVersionUid: blockData.SpecVersion,
-			ChainUid: blockData.Chain,
-			Height:  types.Height(blockSyncable.SequenceId),
-			Time:    types.NewTimeFromTimestamp(*blockData.Block.Header.Time),
+			ChainUid:       blockData.GetChain(),
+			SpecVersionUid: blockData.GetSpecVersion(),
+			Height:         types.Height(blockData.GetBlock().GetHeader().GetHeight()),
+			Session:        blockData.GetSession(),
+			Era:            blockData.GetEra(),
+			Time:           types.NewTimeFromTimestamp(*blockData.GetBlock().GetHeader().GetTime()),
 		},
 
-		ParentHash: blockData.Block.Header.ParentHash,
-		StateRoot: blockData.Block.Header.ParentHash,
-		ExtrinsicsRoot: blockData.Block.Header.ParentHash,
-		ExtrinsicsCount: int64(len(blockData.Block.Extrinsics)),
-		SignedExtrinsicsCount: signedExtrinsicsCount,
+		ParentHash:              blockData.Block.Header.ParentHash,
+		StateRoot:               blockData.Block.Header.ParentHash,
+		ExtrinsicsRoot:          blockData.Block.Header.ParentHash,
+		ExtrinsicsCount:         int64(len(blockData.Block.Extrinsics)),
+		SignedExtrinsicsCount:   signedExtrinsicsCount,
 		UnsignedExtrinsicsCount: unsignedExtrinsicsCount,
 	}
 
@@ -53,10 +55,10 @@ type DetailsView struct {
 	*shared.Model
 	*shared.HeightSequence
 
-	ParentHash              string     `json:"parent_hash"`
-	StateRoot               string     `json:"state_root"`
-	ExtrinsicsRoot          string     `json:"extrinsics_root"`
-	ExtrinsicsCount         int64      `json:"extrinsics_count"`
+	ParentHash      string `json:"parent_hash"`
+	StateRoot       string `json:"state_root"`
+	ExtrinsicsRoot  string `json:"extrinsics_root"`
+	ExtrinsicsCount int64  `json:"extrinsics_count"`
 
 	Transactions []extrinsicseq.Model `json:"transactions"`
 }
@@ -68,12 +70,12 @@ func ToDetailsView(m *blockseq.Model, s syncable.Model, ts []extrinsicseq.Model)
 	}
 
 	return &DetailsView{
-		Model: m.Model,
+		Model:          m.Model,
 		HeightSequence: m.HeightSequence,
 
-		ParentHash: blockData.Block.Header.ParentHash,
-		StateRoot: blockData.Block.Header.ParentHash,
-		ExtrinsicsRoot: blockData.Block.Header.ParentHash,
+		ParentHash:      blockData.Block.Header.ParentHash,
+		StateRoot:       blockData.Block.Header.ParentHash,
+		ExtrinsicsRoot:  blockData.Block.Header.ParentHash,
 		ExtrinsicsCount: int64(len(blockData.Block.Extrinsics)),
 
 		Transactions: ts,

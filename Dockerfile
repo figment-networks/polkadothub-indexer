@@ -1,8 +1,9 @@
-FROM golang:1.13 AS builder
+# ------------------------------------------------------------------------------
+# Builder Image
+# ------------------------------------------------------------------------------
+FROM golang:1.14 AS build
 
-ENV GO111MODULE=on
-
-WORKDIR /app
+WORKDIR /go/src/github.com/figment-networks/polkadothub-indexer
 
 COPY ./go.mod .
 COPY ./go.sum .
@@ -11,33 +12,25 @@ RUN go mod download
 
 COPY . .
 
+ENV CGO_ENABLED=0
+ENV GOARCH=amd64
+ENV GOOS=linux
 
-RUN GIT_SHA=$(git rev-parse --short HEAD) && \
-    CGO_ENABLED=0 GOARCH=amd64 GOOS=linux \
-    go build -a \
-    -ldflags "-extldflags '-static' -w -s -X main.appSha=$GIT_SHA" \
-    -o /go/bin/server \
-    ./apps/server
+RUN \
+  GO_VERSION=$(go version | awk {'print $3'}) \
+  GIT_COMMIT=$(git rev-parse HEAD) \
+  make build
+    
+# ------------------------------------------------------------------------------
+# Target Image
+# ------------------------------------------------------------------------------
+FROM alpine:3.10 AS release
 
-RUN GIT_SHA=$(git rev-parse --short HEAD) && \
-    CGO_ENABLED=0 GOARCH=amd64 GOOS=linux \
-    go build -a \
-    -ldflags "-extldflags '-static' -w -s -X main.appSha=$GIT_SHA" \
-    -o /go/bin/job \
-    ./apps/job
+WORKDIR /app
 
-RUN GIT_SHA=$(git rev-parse --short HEAD) && \
-    CGO_ENABLED=0 GOARCH=amd64 GOOS=linux \
-    go build -a \
-    -ldflags "-extldflags '-static' -w -s -X main.appSha=$GIT_SHA" \
-    -o /go/bin/cli \
-    ./apps/cli
-
-FROM alpine:3.10
-
-COPY --from=builder /go/bin/server /go/bin/server
-COPY --from=builder /go/bin/job /go/bin/job
-COPY --from=builder /go/bin/cli /go/bin/cli
+COPY --from=build /go/src/github.com/figment-networks/polkadothub-indexer/polkadothub-indexer /app/polkadothub-indexer
+COPY --from=build /go/src/github.com/figment-networks/polkadothub-indexer/migrations /app/migrations
 
 EXPOSE 8081
-ENTRYPOINT ["/go/bin/server"]
+
+ENTRYPOINT ["/app/polkadothub-indexer"]

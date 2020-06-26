@@ -1,72 +1,76 @@
-version: '3.2'
+version: "3.7"
+
+networks:
+  internal:
+    name: internal
+    driver: bridge
+
+volumes:
+  database:
 
 services:
-
-  redis:
-    image: redis:3.2.11
-
-  timedb:
+  database:
     image: timescale/timescaledb:latest-pg10
+    networks: 
+      - internal
     ports:
       - "5432:5432"
-    volumes:
-      - timedb-data:/var/lib/postgresql/data/
     environment:
-      - POSTGRES_DB=polkadothub
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=password
+      POSTGRES_USER: polkadothub
+      POSTGRES_PASSWORD: polkadothub
+      POSTGRES_DB: polkadothub
+    volumes:
+      - database:/var/lib/postgresql/data/
+  
+  server:
+    build: .
+    command: -cmd=server
+    networks:
+      - internal
+    ports:
+      - "8081:8081"
+    environment:
+      PROXY_URL: localhost:50051
+      DATABASE_DSN: postgres://polkadothub:polkadothub@database/polkadothub?sslmode=disable
+    depends_on:
+      - database
+  
+  worker:
+    build: .
+    command: -cmd=worker
+    networks:    
+      - internal
+    environment:
+      PROXY_URL: localhost:50051
+      DATABASE_DSN: postgres://polkadothub:polkadothub@database/polkadothub?sslmode=disable
+    depends_on:
+      - database
 
   migrate:
+    build: .
+    command: -cmd=migrate
+    networks:
+      - internal
+    environment:
+      PROXY_URL: localhost:50051
+      DATABASE_DSN: postgres://polkadothub:polkadothub@database/polkadothub?sslmode=disable
+    depends_on:
+      - database
+
+  migrate-cmd:
     image: migrate/migrate
     volumes:
-      - ./db/timescale/migrations:/migrations
+      - ./migrations:/migrations
     command: version
+    networks:
+      - internal
     entrypoint:
       - migrate
       - -path
       - /migrations/
       - -database
-      - postgres://postgres:password@timedb:5432/polkadothub?sslmode=disable
-    depends_on:
-      - timedb
-
-  server:
-    container_name: polkadot-indexer-server
-    build: .
-    ports:
-      - "8081:8081"
+      - postgres://polkadothub:polkadothub@database:5432/polkadothub?sslmode=disable
     environment:
-      - NODE_URL=ws://host.docker.internal:9944
-      - DB_HOST=timedb
-      - DB_NAME=polkadothub
-      - DB_USER=postgres
-      - DB_PASSWORD=password
+      DATABASE_DSN: postgres://polkadothub:polkadothub@database/polkadothub?sslmode=disable
     depends_on:
-      - timedb
-
-  job:
-    container_name: polkadothub-indexer-job
-    build: .
-    entrypoint: /go/bin/job
-    environment:
-      - NODE_URL=ws://host.docker.internal:9944
-      - DB_HOST=timedb
-      - DB_NAME=polkadothub
-      - DB_USER=postgres
-      - DB_PASSWORD=password
-    depends_on:
-      - timedb
-
-  node:
-    image: chevdor/polkadot:latest
-    ports:
-      - '30333:30333'
-      - '9933:9933'
-      - '9944:9944'
-    volumes:
-      - node-data:/data
-    command: polkadot --dev --rpc-port 9933 --rpc-external --rpc-cors all --name "FigmentLocal" --chain edgeware
-
-volumes:
-  timedb-data:
-  node-data:
+      - database

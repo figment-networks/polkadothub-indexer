@@ -10,8 +10,12 @@ import (
 type Model struct {
 	*shared.Model
 
-	SequenceType types.SequenceType
-	SequenceId   types.SequenceId
+	SequenceType  types.SequenceType
+	SequenceId    types.SequenceId
+	Session       int64
+	Era           int64
+	LastInSession bool `json:"last_in_session"`
+	LastInEra     bool `json:"last_in_era"`
 
 	Type        types.SyncableType
 	Report      report.Model `gorm:"foreignkey"`

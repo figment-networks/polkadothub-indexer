@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "targets": [
+    {
+      "id": 1,
+      "name": "index_block_sequences",
+      "desc": "Creates and persists block sequences",
+      "tasks": [
+        "HeightMetaRetriever",
+        "MainSyncer",
+        "BlockFetcher",
+        "BlockParser",
+        "BlockSeqCreator",
+        "SyncerPersistor",
+        "BlockSeqPersistor"
+      ]
+    }
+  ]
+}

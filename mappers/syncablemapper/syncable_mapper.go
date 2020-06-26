@@ -7,7 +7,9 @@ import (
 	"github.com/figment-networks/polkadothub-indexer/types"
 	"github.com/figment-networks/polkadothub-indexer/utils/errors"
 	"github.com/figment-networks/polkadothub-proxy/grpc/block/blockpb"
+	"github.com/figment-networks/polkadothub-proxy/grpc/staking/stakingpb"
 	"github.com/figment-networks/polkadothub-proxy/grpc/transaction/transactionpb"
+	"github.com/figment-networks/polkadothub-proxy/grpc/validatorperformance/validatorperformancepb"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
 )
@@ -20,6 +22,12 @@ func FromProxy(syncableType types.SyncableType, sequence shared.HeightSequence, 
 	switch syncableType {
 	case types.SyncableTypeBlock:
 		res := data.(*blockpb.GetByHeightResponse)
+		bytes, err = marshaler.MarshalToString(res)
+	case types.SyncableTypeStaking:
+		res := data.(*stakingpb.GetByHeightResponse)
+		bytes, err = marshaler.MarshalToString(res)
+	case types.SyncableTypeValidatorPerformance:
+		res := data.(*validatorperformancepb.GetByHeightResponse)
 		bytes, err = marshaler.MarshalToString(res)
 	default:
 		return nil, errors.NewErrorFromMessage(fmt.Sprintf("syncable type %s not found", syncableType), errors.ProxyRequestError)
@@ -34,6 +42,10 @@ func FromProxy(syncableType types.SyncableType, sequence shared.HeightSequence, 
 	e := &syncable.Model{
 		SequenceId: types.SequenceId(sequence.Height),
 		SequenceType: types.SequenceTypeHeight,
+		Session: sequence.Session,
+		Era: sequence.Era,
+		LastInSession: sequence.LastInSession,
+		LastInEra: sequence.LastInEra,
 		Data: d,
 		Type: syncableType,
 	}
@@ -50,7 +62,6 @@ func UnmarshalBlockData(data types.Jsonb) (*blockpb.GetByHeightResponse, errors.
 	if err != nil {
 		return nil, errors.NewError("could not unmarshal grpc block response", errors.ProxyUnmarshalError, err)
 	}
-
 	return res, nil
 }
 
@@ -60,6 +71,23 @@ func UnmarshalTransactionsData(data types.Jsonb) (*transactionpb.GetByHeightResp
 	if err != nil {
 		return nil, errors.NewError("could not unmarshal grpc transaction response", errors.ProxyUnmarshalError, err)
 	}
+	return res, nil
+}
 
+func UnmarshalStakingData(data types.Jsonb) (*stakingpb.GetByHeightResponse, errors.ApplicationError) {
+	res := &stakingpb.GetByHeightResponse{}
+	err := jsonpb.UnmarshalString(string(data.RawMessage), res)
+	if err != nil {
+		return nil, errors.NewError("could not unmarshal grpc staking response", errors.ProxyUnmarshalError, err)
+	}
+	return res, nil
+}
+
+func UnmarshalValidatorPerformanceData(data types.Jsonb) (*validatorperformancepb.GetByHeightResponse, errors.ApplicationError) {
+	res := &validatorperformancepb.GetByHeightResponse{}
+	err := jsonpb.UnmarshalString(string(data.RawMessage), res)
+	if err != nil {
+		return nil, errors.NewError("could not unmarshal grpc validator performance response", errors.ProxyUnmarshalError, err)
+	}
 	return res, nil
 }

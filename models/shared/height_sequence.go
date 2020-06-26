@@ -8,7 +8,11 @@ type HeightSequence struct {
 	ChainUid       string       `json:"chain_uid"`
 	SpecVersionUid string       `json:"spec_version_uid"`
 	Height         types.Height `json:"height"`
-	Time           *types.Time   `json:"time"`
+	Session        int64        `json:"session"`
+	Era            int64        `json:"era"`
+	LastInSession  bool         `json:"last_in_session"`
+	LastInEra      bool         `json:"last_in_era"`
+	Time           *types.Time  `json:"time"`
 }
 
 func (s *HeightSequence) Valid() bool {
