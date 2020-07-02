@@ -51,6 +51,8 @@ This package connects via gRPC to a polkadothub-proxy which in turn connects to 
 | GET    | `/block_times/:limit`                | get last x block times                                      | limit (required) - limit of blocks                                                                                                                    |
 | GET    | `/blocks_summary`                    | get block summary                                           | interval (required) - time interval [hourly or daily] period (required) - summary period [ie. 24 hours]                                               |
 | GET    | `/transactions`                      | get list of transactions                                    | height (optional) - height [Default: 0 = last]                                                                                                        |
+| GET    | `/account/:address`                  | get account information for height                          | address (required) - account address  height (optional) - height [Default: 0 = last]                                                                  |
+| GET    | `/account_identity/:address`         | get account identity                                        | address (required) - account address                                                                                                                  |
 
 ### Running app
 
