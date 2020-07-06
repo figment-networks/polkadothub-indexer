@@ -31,7 +31,8 @@ func New(connStr string) (*Store, error) {
 
 		ValidatorAgg: NewValidatorAggStore(conn),
 
-		BlockSummary: NewBlockSummaryStore(conn),
+		BlockSummary:     NewBlockSummaryStore(conn),
+		ValidatorSummary: NewValidatorSummaryStore(conn),
 	}, nil
 }
 
@@ -49,7 +50,8 @@ type Store struct {
 
 	ValidatorAgg *ValidatorAggStore
 
-	BlockSummary *BlockSummaryStore
+	BlockSummary     *BlockSummaryStore
+	ValidatorSummary *ValidatorSummaryStore
 }
 
 // Test checks the connection status

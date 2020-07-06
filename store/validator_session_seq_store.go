@@ -1,6 +1,7 @@
 package store
 
 import (
+	"fmt"
 	"github.com/figment-networks/polkadothub-indexer/types"
 	"github.com/jinzhu/gorm"
 	"time"
@@ -113,63 +114,56 @@ func (s *ValidatorSessionSeqStore) DeleteOlderThan(purgeThreshold time.Time) (*i
 }
 
 type ValidatorSessionSeqSummary struct {
-	Address         string         `json:"address"`
-	TimeBucket      types.Time     `json:"time_bucket"`
-	VotingPowerAvg  float64        `json:"voting_power_avg"`
-	VotingPowerMax  float64        `json:"voting_power_max"`
-	VotingPowerMin  float64        `json:"voting_power_min"`
-	TotalSharesAvg  types.Quantity `json:"total_shares_avg"`
-	TotalSharesMax  types.Quantity `json:"total_shares_max"`
-	TotalSharesMin  types.Quantity `json:"total_shares_min"`
-	ValidatedSum    int64          `json:"validated_sum"`
-	NotValidatedSum int64          `json:"not_validated_sum"`
-	ProposedSum     int64          `json:"proposed_sum"`
-	UptimeAvg       float64        `json:"uptime_avg"`
+	StashAccount string     `json:"stash_account"`
+	TimeBucket   types.Time `json:"time_bucket"`
+	UptimeAvg    float64    `json:"uptime_avg"`
+	UptimeMin    int64      `json:"uptime_min"`
+	UptimeMax    int64      `json:"uptime_max"`
 }
 
 // Summarize gets the summarized version of validator sequences
-//func (s *ValidatorSessionSeqStore) Summarize(interval types.SummaryInterval, activityPeriods []ActivityPeriodRow) ([]ValidatorSessionSeqSummary, error) {
-//	defer logQueryDuration(time.Now(), "ValidatorSessionSeqStore_Summarize")
-//
-//	tx := s.db.
-//		Table(model.ValidatorSessionSeq{}.TableName()).
-//		Select(summarizeValidatorsQuerySelect, interval).
-//		Order("time_bucket").
-//		Group("address, time_bucket")
-//
-//	if len(activityPeriods) == 1 {
-//		activityPeriod := activityPeriods[0]
-//		tx = tx.Or("time < ? OR time >= ?", activityPeriod.Min, activityPeriod.Max)
-//	} else {
-//		for i, activityPeriod := range activityPeriods {
-//			isLast := i == len(activityPeriods)-1
-//
-//			if isLast {
-//				tx = tx.Or("time >= ?", activityPeriod.Max)
-//			} else {
-//				duration, err := time.ParseDuration(fmt.Sprintf("1%s", interval))
-//				if err != nil {
-//					return nil, err
-//				}
-//				tx = tx.Or("time >= ? AND time < ?", activityPeriod.Max.Add(duration), activityPeriods[i+1].Min)
-//			}
-//		}
-//	}
-//
-//	rows, err := tx.Rows()
-//	if err != nil {
-//		return nil, err
-//	}
-//	defer rows.Close()
-//
-//	var models []ValidatorSessionSeqSummary
-//	for rows.Next() {
-//		var summary ValidatorSessionSeqSummary
-//		if err := s.db.ScanRows(rows, &summary); err != nil {
-//			return nil, err
-//		}
-//
-//		models = append(models, summary)
-//	}
-//	return models, nil
-//}
+func (s *ValidatorSessionSeqStore) Summarize(interval types.SummaryInterval, activityPeriods []ActivityPeriodRow) ([]ValidatorSessionSeqSummary, error) {
+	defer logQueryDuration(time.Now(), "ValidatorSessionSeqStore_Summarize")
+
+	tx := s.db.
+		Table(model.ValidatorSessionSeq{}.TableName()).
+		Select(summarizeValidatorsForSessionQuerySelect, interval).
+		Order("time_bucket").
+		Group("stash_account, time_bucket")
+
+	if len(activityPeriods) == 1 {
+		activityPeriod := activityPeriods[0]
+		tx = tx.Or("time < ? OR time >= ?", activityPeriod.Min, activityPeriod.Max)
+	} else {
+		for i, activityPeriod := range activityPeriods {
+			isLast := i == len(activityPeriods)-1
+
+			if isLast {
+				tx = tx.Or("time >= ?", activityPeriod.Max)
+			} else {
+				duration, err := time.ParseDuration(fmt.Sprintf("1%s", interval))
+				if err != nil {
+					return nil, err
+				}
+				tx = tx.Or("time >= ? AND time < ?", activityPeriod.Max.Add(duration), activityPeriods[i+1].Min)
+			}
+		}
+	}
+
+	rows, err := tx.Rows()
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var models []ValidatorSessionSeqSummary
+	for rows.Next() {
+		var summary ValidatorSessionSeqSummary
+		if err := s.db.ScanRows(rows, &summary); err != nil {
+			return nil, err
+		}
+
+		models = append(models, summary)
+	}
+	return models, nil
+}
