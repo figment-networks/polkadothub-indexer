@@ -2,9 +2,11 @@ module github.com/figment-networks/polkadothub-indexer
 
 go 1.14
 
+replace github.com/figment-networks/polkadothub-proxy/grpc => ../polkadothub-proxy/grpc
+
 require (
 	github.com/figment-networks/indexing-engine v0.1.5
-	github.com/figment-networks/polkadothub-proxy/grpc v0.3.7
+	github.com/figment-networks/polkadothub-proxy/grpc v0.1.0
 	github.com/gin-gonic/gin v1.5.0
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang-migrate/migrate/v4 v4.11.0

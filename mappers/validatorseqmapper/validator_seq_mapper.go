@@ -3,14 +3,14 @@ package validatorseqmapper
 
 import (
 	"github.com/figment-networks/polkadothub-indexer/mappers/syncablemapper"
+	"github.com/figment-networks/polkadothub-indexer/model"
 	"github.com/figment-networks/polkadothub-indexer/models/shared"
 	"github.com/figment-networks/polkadothub-indexer/models/syncable"
-	"github.com/figment-networks/polkadothub-indexer/models/validatorseq"
 	"github.com/figment-networks/polkadothub-indexer/types"
 	"github.com/figment-networks/polkadothub-indexer/utils/errors"
 )
 
-func ToSequence(blockSyncable syncable.Model, stakingSyncable syncable.Model, validatorPerformanceSyncable syncable.Model) ([]validatorseq.Model, errors.ApplicationError) {
+func ToSequence(blockSyncable syncable.Model, stakingSyncable syncable.Model, validatorPerformanceSyncable syncable.Model) ([]model.Model, errors.ApplicationError) {
 	blockData, err := syncablemapper.UnmarshalBlockData(blockSyncable.Data)
 	if err != nil {
 		return nil, err
@@ -20,9 +20,9 @@ func ToSequence(blockSyncable syncable.Model, stakingSyncable syncable.Model, va
 		return nil, err
 	}
 
-	var validators []validatorseq.Model
+	var validators []model.Model
 	for i, rawValidator := range stakingData.GetStaking().GetValidators() {
-		acc := validatorseq.Model{
+		acc := model.Model{
 			HeightSequence: &shared.HeightSequence{
 				ChainUid:       blockData.GetChain(),
 				SpecVersionUid: blockData.GetSpecVersion(),

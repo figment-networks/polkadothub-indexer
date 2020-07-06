@@ -11,12 +11,14 @@ import (
 )
 
 const (
-	SyncerPersistorTaskName       = "SyncerPersistor"
-	BlockSeqPersistorTaskName     = "BlockSeqPersistor"
-	ValidatorSeqPersistorTaskName = "ValidatorSeqPersistor"
-	ValidatorAggPersistorTaskName = "ValidatorAggPersistor"
+	SyncerPersistorTaskName              = "SyncerPersistor"
+	BlockSeqPersistorTaskName            = "BlockSeqPersistor"
+	ValidatorSessionSeqPersistorTaskName = "ValidatorSessionSeqPersistor"
+	ValidatorEraSeqPersistorTaskName     = "ValidatorEraSeqPersistor"
+	ValidatorAggPersistorTaskName        = "ValidatorAggPersistor"
 )
 
+// NewSyncerPersistorTask is responsible for storing syncable to persistence layer
 func NewSyncerPersistorTask(db *store.Store) pipeline.Task {
 	return &syncerPersistorTask{
 		db: db,
@@ -41,6 +43,7 @@ func (t *syncerPersistorTask) Run(ctx context.Context, p pipeline.Payload) error
 	return t.db.Syncables.CreateOrUpdate(payload.Syncable)
 }
 
+// NewBlockSeqPersistorTask is responsible for storing block to persistence layer
 func NewBlockSeqPersistorTask(db *store.Store) pipeline.Task {
 	return &blockSeqPersistorTask{
 		db: db,
@@ -73,74 +76,122 @@ func (t *blockSeqPersistorTask) Run(ctx context.Context, p pipeline.Payload) err
 	return nil
 }
 
-//func NewValidatorSeqPersistorTask(db *store.Store) pipeline.Task {
-//	return &validatorSeqPersistorTask{
-//		db: db,
-//	}
-//}
-//
-//type validatorSeqPersistorTask struct {
-//	db *store.Store
-//}
-//
-//func (t *validatorSeqPersistorTask) GetName() string {
-//	return ValidatorSeqPersistorTaskName
-//}
-//
-//func (t *validatorSeqPersistorTask) Run(ctx context.Context, p pipeline.Payload) error {
-//	defer metric.LogIndexerTaskDuration(time.Now(), t.GetName())
-//
-//	payload := p.(*payload)
-//
-//	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
-//
-//	for _, sequence := range payload.NewValidatorSequences {
-//		if err := t.db.ValidatorSeq.Create(&sequence); err != nil {
-//			return err
-//		}
-//	}
-//
-//	for _, sequence := range payload.UpdatedValidatorSequences {
-//		if err := t.db.ValidatorSeq.Save(&sequence); err != nil {
-//			return err
-//		}
-//	}
-//
-//	return nil
-//}
-//
-//func NewValidatorAggPersistorTask(db *store.Store) pipeline.Task {
-//	return &validatorAggPersistorTask{
-//		db: db,
-//	}
-//}
-//
-//type validatorAggPersistorTask struct {
-//	db *store.Store
-//}
-//
-//func (t *validatorAggPersistorTask) GetName() string {
-//	return ValidatorAggPersistorTaskName
-//}
-//
-//func (t *validatorAggPersistorTask) Run(ctx context.Context, p pipeline.Payload) error {
-//	defer metric.LogIndexerTaskDuration(time.Now(), t.GetName())
-//
-//	payload := p.(*payload)
-//
-//	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
-//
-//	for _, aggregate := range payload.NewAggregatedValidators {
-//		if err := t.db.ValidatorAgg.Create(&aggregate); err != nil {
-//			return err
-//		}
-//	}
-//
-//	for _, aggregate := range payload.UpdatedAggregatedValidators {
-//		if err := t.db.ValidatorAgg.Save(&aggregate); err != nil {
-//			return err
-//		}
-//	}
-//
-//	return nil
-//}
+// NewValidatorSessionSeqPersistorTask is responsible for storing validator session info to persistence layer
+func NewValidatorSessionSeqPersistorTask(db *store.Store) pipeline.Task {
+	return &validatorSessionSeqPersistorTask{
+		db: db,
+	}
+}
+
+type validatorSessionSeqPersistorTask struct {
+	db *store.Store
+}
+
+func (t *validatorSessionSeqPersistorTask) GetName() string {
+	return ValidatorSessionSeqPersistorTaskName
+}
+
+func (t *validatorSessionSeqPersistorTask) Run(ctx context.Context, p pipeline.Payload) error {
+	defer metric.LogIndexerTaskDuration(time.Now(), t.GetName())
+
+	payload := p.(*payload)
+
+	if !payload.Syncable.LastInSession {
+		logger.Info(fmt.Sprintf("indexer task skipped because height is not last in session [stage=%s] [task=%s] [height=%d]", pipeline.StageFetcher, t.GetName(), payload.CurrentHeight))
+		return nil
+	}
+
+	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
+
+	for _, sequence := range payload.NewValidatorSessionSequences {
+		if err := t.db.ValidatorSessionSeq.Create(&sequence); err != nil {
+			return err
+		}
+	}
+
+	for _, sequence := range payload.UpdatedValidatorSessionSequences {
+		if err := t.db.ValidatorSessionSeq.Save(&sequence); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// NewValidatorEraSeqPersistorTask is responsible for storing validator era info to persistence layer
+func NewValidatorEraSeqPersistorTask(db *store.Store) pipeline.Task {
+	return &validatorEraSeqPersistorTask{
+		db: db,
+	}
+}
+
+type validatorEraSeqPersistorTask struct {
+	db *store.Store
+}
+
+func (t *validatorEraSeqPersistorTask) GetName() string {
+	return ValidatorEraSeqPersistorTaskName
+}
+
+func (t *validatorEraSeqPersistorTask) Run(ctx context.Context, p pipeline.Payload) error {
+	defer metric.LogIndexerTaskDuration(time.Now(), t.GetName())
+
+	payload := p.(*payload)
+
+	if !payload.Syncable.LastInEra {
+		logger.Info(fmt.Sprintf("indexer task skipped because height is not last in era [stage=%s] [task=%s] [height=%d]", pipeline.StageFetcher, t.GetName(), payload.CurrentHeight))
+		return nil
+	}
+
+	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
+
+	for _, sequence := range payload.NewValidatorEraSequences {
+		if err := t.db.ValidatorEraSeq.Create(&sequence); err != nil {
+			return err
+		}
+	}
+
+	for _, sequence := range payload.UpdatedValidatorEraSequences {
+		if err := t.db.ValidatorEraSeq.Save(&sequence); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func NewValidatorAggPersistorTask(db *store.Store) pipeline.Task {
+	return &validatorAggPersistorTask{
+		db: db,
+	}
+}
+
+type validatorAggPersistorTask struct {
+	db *store.Store
+}
+
+func (t *validatorAggPersistorTask) GetName() string {
+	return ValidatorAggPersistorTaskName
+}
+
+func (t *validatorAggPersistorTask) Run(ctx context.Context, p pipeline.Payload) error {
+	defer metric.LogIndexerTaskDuration(time.Now(), t.GetName())
+
+	payload := p.(*payload)
+
+	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
+
+	for _, aggregate := range payload.NewValidatorAggregates {
+		if err := t.db.ValidatorAgg.Create(&aggregate); err != nil {
+			return err
+		}
+	}
+
+	for _, aggregate := range payload.UpdatedValidatorAggregates {
+		if err := t.db.ValidatorAgg.Save(&aggregate); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}

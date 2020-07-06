@@ -33,6 +33,40 @@ func (s *Sequence) Equal(m Sequence) bool {
 		s.Time.Equal(m.Time)
 }
 
+// SessionSequence is used for sequences recorded per session
+type SessionSequence struct {
+	Session     int64 `json:"session"`
+	StartHeight int64 `json:"start_height"`
+	EndHeight   int64 `json:"end_height"`
+}
+
+func (s *SessionSequence) Valid() bool {
+	return s.Session >= 0 &&
+		s.StartHeight >= 0 &&
+		s.EndHeight >= 0
+}
+
+func (s *SessionSequence) Equal(m SessionSequence) bool {
+	return s.Session == m.Session
+}
+
+// EraSequence is used for sequences recorded per era
+type EraSequence struct {
+	Era         int64 `json:"era"`
+	StartHeight int64 `json:"start_height"`
+	EndHeight   int64 `json:"end_height"`
+}
+
+func (s *EraSequence) Valid() bool {
+	return s.Era >= 0 &&
+		s.StartHeight >= 0 &&
+		s.EndHeight >= 0
+}
+
+func (s *EraSequence) Equal(m EraSequence) bool {
+	return s.Era == m.Era
+}
+
 // Aggregate is used for aggregate tables
 type Aggregate struct {
 	StartedAtHeight int64      `json:"started_at_height"`

@@ -14,6 +14,47 @@
         "SyncerPersistor",
         "BlockSeqPersistor"
       ]
+    },
+    {
+      "id": 2,
+      "name": "index_validator_session_sequences",
+      "desc": "Creates and persists validator session sequences",
+      "tasks": [
+        "HeightMetaRetriever",
+        "MainSyncer",
+        "ValidatorPerformanceFetcher",
+        "ValidatorSessionSeqCreator",
+        "SyncerPersistor",
+        "ValidatorSessionSeqPersistor"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "index_validator_era_sequences",
+      "desc": "Creates and persists validator era sequences",
+      "tasks": [
+        "HeightMetaRetriever",
+        "MainSyncer",
+        "StakingFetcher",
+        "ValidatorEraSeqCreator",
+        "SyncerPersistor",
+        "ValidatorEraSeqPersistor"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "index_validator_aggregates",
+      "desc": "Creates and persists validator aggregates",
+      "tasks": [
+        "HeightMetaRetriever",
+        "MainSyncer",
+        "ValidatorPerformanceFetcher",
+        "StakingFetcher",
+        "ValidatorsParser",
+        "ValidatorAggCreator",
+        "SyncerPersistor",
+        "ValidatorAggPersistor"
+      ]
     }
   ]
 }

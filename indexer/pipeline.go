@@ -53,10 +53,8 @@ func NewPipeline(cfg *config.Config, db *store.Store, client *client.Client) (*i
 		pipeline.StageFetcher,
 		pipeline.AsyncRunner(
 			pipeline.RetryingTask(NewBlockFetcherTask(client), isTransient, 3),
-			//pipeline.RetryingTask(NewStakingStateFetcherTask(client), isTransient, 3),
-			//pipeline.RetryingTask(NewStateFetcherTask(client), isTransient, 3),
-			//pipeline.RetryingTask(NewValidatorFetcherTask(client), isTransient, 3),
-			//pipeline.RetryingTask(NewTransactionFetcherTask(client), isTransient, 3),
+			pipeline.RetryingTask(NewValidatorPerformanceFetcherTask(client), isTransient, 3),
+			pipeline.RetryingTask(NewStakingFetcherTask(client), isTransient, 3),
 		),
 	)
 
@@ -65,7 +63,7 @@ func NewPipeline(cfg *config.Config, db *store.Store, client *client.Client) (*i
 		pipeline.StageParser,
 		pipeline.AsyncRunner(
 			NewBlockParserTask(),
-			//NewValidatorsParserTask(),
+			NewValidatorsParserTask(),
 		),
 	)
 
@@ -74,11 +72,8 @@ func NewPipeline(cfg *config.Config, db *store.Store, client *client.Client) (*i
 		pipeline.StageSequencer,
 		pipeline.AsyncRunner(
 			pipeline.RetryingTask(NewBlockSeqCreatorTask(db), isTransient, 3),
-			//pipeline.RetryingTask(NewTransactionSeqCreatorTask(db), isTransient, 3),
-			//pipeline.RetryingTask(NewStakingSeqCreatorTask(db), isTransient, 3),
-			//pipeline.RetryingTask(NewValidatorSeqCreatorTask(db), isTransient, 3),
-			//pipeline.RetryingTask(NewDelegationsSeqCreatorTask(db), isTransient, 3),
-			//pipeline.RetryingTask(NewDebondingDelegationsSeqCreatorTask(db), isTransient, 3),
+			pipeline.RetryingTask(NewValidatorSessionSeqCreatorTask(cfg, db), isTransient, 3),
+			pipeline.RetryingTask(NewValidatorEraSeqCreatorTask(cfg, db), isTransient, 3),
 		),
 	)
 
@@ -86,8 +81,7 @@ func NewPipeline(cfg *config.Config, db *store.Store, client *client.Client) (*i
 	p.SetStage(
 		pipeline.StageAggregator,
 		pipeline.AsyncRunner(
-			//pipeline.RetryingTask(NewAccountAggCreatorTask(db), isTransient, 3),
-			//pipeline.RetryingTask(NewValidatorAggCreatorTask(db), isTransient, 3),
+			pipeline.RetryingTask(NewValidatorAggCreatorTask(db), isTransient, 3),
 		),
 	)
 
@@ -97,8 +91,9 @@ func NewPipeline(cfg *config.Config, db *store.Store, client *client.Client) (*i
 		pipeline.AsyncRunner(
 			pipeline.RetryingTask(NewSyncerPersistorTask(db), isTransient, 3),
 			pipeline.RetryingTask(NewBlockSeqPersistorTask(db), isTransient, 3),
-			//pipeline.RetryingTask(NewValidatorSeqPersistorTask(db), isTransient, 3),
-			//pipeline.RetryingTask(NewValidatorAggPersistorTask(db), isTransient, 3),
+			pipeline.RetryingTask(NewValidatorSessionSeqPersistorTask(db), isTransient, 3),
+			pipeline.RetryingTask(NewValidatorEraSeqPersistorTask(db), isTransient, 3),
+			pipeline.RetryingTask(NewValidatorAggPersistorTask(db), isTransient, 3),
 		),
 	)
 

@@ -2,60 +2,92 @@ package indexer
 
 import (
 	"github.com/figment-networks/polkadothub-indexer/model"
+	"github.com/figment-networks/polkadothub-indexer/types"
 	"github.com/figment-networks/polkadothub-proxy/grpc/block/blockpb"
+	"github.com/figment-networks/polkadothub-proxy/grpc/staking/stakingpb"
+	"github.com/figment-networks/polkadothub-proxy/grpc/validatorperformance/validatorperformancepb"
 	"github.com/pkg/errors"
 )
 
-func BlockToSequence(syncable *model.Syncable, rawBlock *blockpb.Block, blockParsedData ParsedBlockData) (*model.BlockSeq, error) {
+var (
+	ErrBlockSequenceNotValid            = errors.New("block sequence not valid")
+	ErrValidatorSessionSequenceNotValid = errors.New("validator session sequence not valid")
+	ErrValidatorEraSequenceNotValid     = errors.New("validator era sequence not valid")
+)
+
+func ToBlockSequence(syncable *model.Syncable, rawBlock *blockpb.Block, blockParsedData ParsedBlockData) (*model.BlockSeq, error) {
 	e := &model.BlockSeq{
 		Sequence: &model.Sequence{
 			Height: syncable.Height,
 			Time:   syncable.Time,
 		},
 
-		ExtrinsicsCount: blockParsedData.ExtrinsicsCount,
-		SignedExtrinsicsCount: blockParsedData.SignedExtrinsicsCount,
+		ExtrinsicsCount:         blockParsedData.ExtrinsicsCount,
+		SignedExtrinsicsCount:   blockParsedData.SignedExtrinsicsCount,
 		UnsignedExtrinsicsCount: blockParsedData.UnsignedExtrinsicsCount,
 	}
 
 	if !e.Valid() {
-		return nil, errors.New("block sequence not valid")
+		return nil, ErrBlockSequenceNotValid
 	}
 
 	return e, nil
 }
 
-//func ValidatorToSequence(syncable *model.Syncable, rawValidators []*validatorpb.Validator, parsedValidators ParsedValidatorsData) ([]model.ValidatorSeq, error) {
-//	var validators []model.ValidatorSeq
-//	for _, rawValidator := range rawValidators {
-//		e := model.ValidatorSeq{
-//			Sequence: &model.Sequence{
-//				Height: syncable.Height,
-//				Time:   syncable.Time,
-//			},
-//
-//			EntityUID:    rawValidator.GetNode().GetEntityId(),
-//			Address:      rawValidator.GetAddress(),
-//			VotingPower:  rawValidator.GetVotingPower(),
-//		}
-//
-//		key := rawValidator.GetNode().GetEntityId()
-//		parsedValidator, ok := parsedValidators[key]
-//		if ok {
-//			e.PrecommitValidated = parsedValidator.PrecommitValidated
-//			e.Proposed = parsedValidator.Proposed
-//			e.TotalShares = parsedValidator.TotalShares
-//		}
-//
-//		if !e.Valid() {
-//			return nil, errors.New("validator sequence not valid")
-//		}
-//
-//		validators = append(validators, e)
-//	}
-//	return validators, nil
-//}
-//
+func ToValidatorSessionSequence(syncable *model.Syncable, firstHeight int64, rawValidatorPerformance []*validatorperformancepb.Validator) ([]model.ValidatorSessionSeq, error) {
+	var validators []model.ValidatorSessionSeq
+	for _, rawValidator := range rawValidatorPerformance {
+		e := model.ValidatorSessionSeq{
+			SessionSequence: &model.SessionSequence{
+				Session:     syncable.Session,
+				StartHeight: firstHeight,
+				EndHeight:   syncable.Height,
+			},
+
+			StashAccount: rawValidator.GetStashAccount(),
+			Online:       rawValidator.GetOnline(),
+		}
+
+		if !e.Valid() {
+			return nil, ErrValidatorSessionSequenceNotValid
+		}
+
+		validators = append(validators, e)
+	}
+	return validators, nil
+}
+
+func ToValidatorEraSequence(syncable *model.Syncable, firstHeight int64, rawStakingValidator []*stakingpb.Validator) ([]model.ValidatorEraSeq, error) {
+	var validators []model.ValidatorEraSeq
+	for i, rawValidator := range rawStakingValidator {
+		e := model.ValidatorEraSeq{
+			EraSequence: &model.EraSequence{
+				Era:         syncable.Era,
+				StartHeight: firstHeight,
+				EndHeight:   syncable.Height,
+			},
+
+			Index: int64(i),
+			StashAccount: rawValidator.GetStashAccount(),
+			ControllerAccount: rawValidator.GetControllerAccount(),
+			SessionAccounts: rawValidator.GetSessionKeys(),
+			TotalStake: types.NewQuantityFromInt64(rawValidator.GetTotalStake()),
+			OwnStake: types.NewQuantityFromInt64(rawValidator.GetOwnStake()),
+			StakersStake: types.NewQuantityFromInt64(rawValidator.GetStakersStake()),
+			RewardPoints: rawValidator.GetRewardPoints(),
+			Commission: rawValidator.GetCommission(),
+			StakersCount: len(rawValidator.GetStakers()),
+		}
+
+		if !e.Valid() {
+			return nil, ErrValidatorEraSequenceNotValid
+		}
+
+		validators = append(validators, e)
+	}
+	return validators, nil
+}
+
 //func TransactionToSequence(syncable *model.Syncable, rawTransactions []*transactionpb.Transaction) ([]model.TransactionSeq, error) {
 //	var transactions []model.TransactionSeq
 //	for _, rawTransaction := range rawTransactions {

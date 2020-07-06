@@ -4,6 +4,8 @@ import (
 	"github.com/figment-networks/indexing-engine/pipeline"
 	"github.com/figment-networks/polkadothub-indexer/model"
 	"github.com/figment-networks/polkadothub-proxy/grpc/block/blockpb"
+	"github.com/figment-networks/polkadothub-proxy/grpc/staking/stakingpb"
+	"github.com/figment-networks/polkadothub-proxy/grpc/validatorperformance/validatorperformancepb"
 )
 
 var (
@@ -33,19 +35,25 @@ type payload struct {
 	Syncable *model.Syncable
 
 	// Fetcher stage
-	RawBlock        *blockpb.Block
+	RawBlock                *blockpb.Block
+	RawValidatorPerformance []*validatorperformancepb.Validator
+	RawStaking              *stakingpb.Staking
 
 	// Parser stage
 	ParsedBlock      ParsedBlockData
-	//ParsedValidators ParsedValidatorsData
+	ParsedValidators ParsedValidatorsData
 
 	// Aggregator stage
+	NewValidatorAggregates     []model.ValidatorAgg
+	UpdatedValidatorAggregates []model.ValidatorAgg
 
 	// Sequencer stage
-	NewBlockSequence          *model.BlockSeq
-	UpdatedBlockSequence      *model.BlockSeq
-	//NewValidatorSequences     []model.ValidatorSeq
-	//UpdatedValidatorSequences []model.ValidatorSeq
+	NewBlockSequence                 *model.BlockSeq
+	UpdatedBlockSequence             *model.BlockSeq
+	NewValidatorSessionSequences     []model.ValidatorSessionSeq
+	UpdatedValidatorSessionSequences []model.ValidatorSessionSeq
+	NewValidatorEraSequences         []model.ValidatorEraSeq
+	UpdatedValidatorEraSequences     []model.ValidatorEraSeq
 
 	//TransactionSequences         []model.TransactionSeq
 }
