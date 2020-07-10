@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS validator_era_sequences
     index              BIGINT           NOT NULL,
     stash_account      TEXT             NOT NULL,
     controller_account TEXT             NOT NULL,
-    session_accounts   VARCHAR[]        NOT NULL,
+    session_accounts   VARCHAR[],
     total_stake        DECIMAL(65, 0)   NOT NULL,
     own_stake          DECIMAL(65, 0)   NOT NULL,
     stakers_stake      DECIMAL(65, 0)   NOT NULL,

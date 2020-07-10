@@ -99,6 +99,23 @@ func (s *ValidatorEraSeqStore) FindMostRecent() (*model.ValidatorEraSeq, error) 
 	return validatorSeq, nil
 }
 
+// FindLastByStashAccount finds last validator session sequences for given stash account
+func (s ValidatorEraSeqStore) FindLastByStashAccount(stashAccount string, limit int64) ([]model.ValidatorEraSeq, error) {
+	q := model.ValidatorEraSeq{
+		StashAccount: stashAccount,
+	}
+	var result []model.ValidatorEraSeq
+
+	err := s.db.
+		Where(&q).
+		Order("height DESC").
+		Limit(limit).
+		Find(&result).
+		Error
+
+	return result, checkErr(err)
+}
+
 // DeleteOlderThan deletes validator sequence older than given threshold
 func (s *ValidatorEraSeqStore) DeleteOlderThan(purgeThreshold time.Time) (*int64, error) {
 	tx := s.db.

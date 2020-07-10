@@ -18,7 +18,7 @@ func NewGetByHeightUseCase(db *store.Store, c *client.Client) *getByHeightUseCas
 	}
 }
 
-func (uc *getByHeightUseCase) Execute(address string, height *int64) (*DetailsView, error) {
+func (uc *getByHeightUseCase) Execute(address string, height *int64) (*HeightDetailsView, error) {
 	// Get last indexed height
 	mostRecentSynced, err := uc.db.Syncables.FindMostRecent()
 	if err != nil {
@@ -40,5 +40,5 @@ func (uc *getByHeightUseCase) Execute(address string, height *int64) (*DetailsVi
 		return nil, err
 	}
 
-	return ToDetailsView(res.GetAccount()), nil
+	return ToHeightDetailsView(res.GetAccount()), nil
 }

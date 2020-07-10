@@ -2,16 +2,18 @@ package model
 
 import (
 	"github.com/figment-networks/polkadothub-indexer/types"
+	"github.com/lib/pq"
 )
 
 type ValidatorEraSeq struct {
-	*Model
+	ID types.ID `json:"id"`
+
 	*EraSequence
 
-	Index             int64          `json:"index"`
 	StashAccount      string         `json:"stash_account"`
 	ControllerAccount string         `json:"controller_account"`
-	SessionAccounts   []string       `json:"session_accounts"`
+	SessionAccounts   pq.StringArray `json:"session_accounts"`
+	Index             int64          `json:"index"`
 	TotalStake        types.Quantity `json:"total_stake"`
 	OwnStake          types.Quantity `json:"own_stake"`
 	StakersStake      types.Quantity `json:"stakers_stake"`
@@ -26,12 +28,12 @@ func (ValidatorEraSeq) TableName() string {
 
 func (s *ValidatorEraSeq) Valid() bool {
 	return s.EraSequence.Valid() &&
+		s.StashAccount != "" &&
 		s.Index >= 0
 }
 
 func (s *ValidatorEraSeq) Equal(m ValidatorEraSeq) bool {
-	return s.Model.Equal(*m.Model) &&
-		s.Index == m.Index &&
+	return s.Index == m.Index &&
 		s.StashAccount == m.StashAccount
 }
 

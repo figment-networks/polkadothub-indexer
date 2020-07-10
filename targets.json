@@ -55,6 +55,19 @@
         "SyncerPersistor",
         "ValidatorAggPersistor"
       ]
+    },
+    {
+      "id": 5,
+      "name": "index_event_sequences",
+      "desc": "Creates and persists event sequences",
+      "tasks": [
+        "HeightMetaRetriever",
+        "MainSyncer",
+        "EventsFetcher",
+        "EventSeqCreator",
+        "SyncerPersistor",
+        "EventSeqPersistor"
+      ]
     }
   ]
 }

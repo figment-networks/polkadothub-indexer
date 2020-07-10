@@ -4,6 +4,7 @@ import (
 	"github.com/figment-networks/indexing-engine/pipeline"
 	"github.com/figment-networks/polkadothub-indexer/model"
 	"github.com/figment-networks/polkadothub-proxy/grpc/block/blockpb"
+	"github.com/figment-networks/polkadothub-proxy/grpc/event/eventpb"
 	"github.com/figment-networks/polkadothub-proxy/grpc/staking/stakingpb"
 	"github.com/figment-networks/polkadothub-proxy/grpc/validatorperformance/validatorperformancepb"
 )
@@ -38,6 +39,7 @@ type payload struct {
 	RawBlock                *blockpb.Block
 	RawValidatorPerformance []*validatorperformancepb.Validator
 	RawStaking              *stakingpb.Staking
+	RawEvents               []*eventpb.Event
 
 	// Parser stage
 	ParsedBlock      ParsedBlockData
@@ -54,8 +56,8 @@ type payload struct {
 	UpdatedValidatorSessionSequences []model.ValidatorSessionSeq
 	NewValidatorEraSequences         []model.ValidatorEraSeq
 	UpdatedValidatorEraSequences     []model.ValidatorEraSeq
-
-	//TransactionSequences         []model.TransactionSeq
+	NewEventSequences                []model.EventSeq
+	UpdatedEventSequences            []model.EventSeq
 }
 
 func (p *payload) MarkAsProcessed() {}

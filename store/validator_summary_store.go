@@ -101,11 +101,11 @@ func (s *ValidatorSummaryStore) FindSummary(interval types.SummaryInterval, peri
 	return res, nil
 }
 
-// FindSummaryByAddress gets summary for given validator
-func (s *ValidatorSummaryStore) FindSummaryByAddress(address string, interval types.SummaryInterval, period string) ([]model.ValidatorSummary, error) {
-	defer logQueryDuration(time.Now(), "ValidatorSummaryStore_FindSummaryByAddress")
+// FindSummaryByStashAccount gets summary for given validator
+func (s *ValidatorSummaryStore) FindSummaryByStashAccount(stashAccount string, interval types.SummaryInterval, period string) ([]model.ValidatorSummary, error) {
+	defer logQueryDuration(time.Now(), "ValidatorSummaryStore_FindSummaryByStashAccount")
 
-	rows, err := s.db.Raw(validatorSummaryForIntervalQuery, interval, period, address, interval).Rows()
+	rows, err := s.db.Raw(validatorSummaryForIntervalQuery, interval, period, stashAccount, interval).Rows()
 	if err != nil {
 		return nil, err
 	}

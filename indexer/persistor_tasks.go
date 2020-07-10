@@ -16,6 +16,7 @@ const (
 	ValidatorSessionSeqPersistorTaskName = "ValidatorSessionSeqPersistor"
 	ValidatorEraSeqPersistorTaskName     = "ValidatorEraSeqPersistor"
 	ValidatorAggPersistorTaskName        = "ValidatorAggPersistor"
+	EventSeqPersistorTaskName            = "EventSeqPersistor"
 )
 
 // NewSyncerPersistorTask is responsible for storing syncable to persistence layer
@@ -189,6 +190,43 @@ func (t *validatorAggPersistorTask) Run(ctx context.Context, p pipeline.Payload)
 
 	for _, aggregate := range payload.UpdatedValidatorAggregates {
 		if err := t.db.ValidatorAgg.Save(&aggregate); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// NewEventSeqPersistorTask is responsible for storing events info to persistence layer
+func NewEventSeqPersistorTask(db *store.Store) pipeline.Task {
+	return &eventSeqPersistorTask{
+		db: db,
+	}
+}
+
+type eventSeqPersistorTask struct {
+	db *store.Store
+}
+
+func (t *eventSeqPersistorTask) GetName() string {
+	return EventSeqPersistorTaskName
+}
+
+func (t *eventSeqPersistorTask) Run(ctx context.Context, p pipeline.Payload) error {
+	defer metric.LogIndexerTaskDuration(time.Now(), t.GetName())
+
+	payload := p.(*payload)
+
+	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
+
+	for _, sequence := range payload.NewEventSequences {
+		if err := t.db.EventSeq.Create(&sequence); err != nil {
+			return err
+		}
+	}
+
+	for _, sequence := range payload.UpdatedEventSequences {
+		if err := t.db.EventSeq.Save(&sequence); err != nil {
 			return err
 		}
 	}

@@ -1,7 +1,8 @@
-package account
+package validator
 
 import (
 	"github.com/figment-networks/polkadothub-indexer/client"
+	"github.com/figment-networks/polkadothub-indexer/config"
 	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/types"
 	"github.com/figment-networks/polkadothub-indexer/utils/logger"
@@ -15,32 +16,27 @@ var (
 )
 
 type getByHeightHttpHandler struct {
+	cfg    *config.Config
 	db     *store.Store
 	client *client.Client
 
 	useCase *getByHeightUseCase
 }
 
-func NewGetByHeightHttpHandler(db *store.Store, c *client.Client) *getByHeightHttpHandler {
+func NewGetByHeightHttpHandler(cfg *config.Config, db *store.Store, c *client.Client) *getByHeightHttpHandler {
 	return &getByHeightHttpHandler{
-		db: db,
+		cfg:    cfg,
+		db:     db,
 		client: c,
 	}
 }
 
-type Request struct {
-	Address string `uri:"address" binding:"required"`
+type GetByHeightRequest struct {
 	Height *int64 `form:"height" binding:"-"`
 }
 
 func (h *getByHeightHttpHandler) Handle(c *gin.Context) {
-	var req Request
-	if err := c.ShouldBindUri(&req); err != nil {
-		logger.Error(err)
-		err := errors.New("invalid stash account")
-		c.JSON(http.StatusBadRequest, err)
-		return
-	}
+	var req GetByHeightRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
 		logger.Error(err)
 		err := errors.New("invalid height")
@@ -48,7 +44,7 @@ func (h *getByHeightHttpHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	ds, err := h.getUseCase().Execute(req.Address, req.Height)
+	ds, err := h.getUseCase().Execute(req.Height)
 	if err != nil {
 		logger.Error(err)
 		c.JSON(http.StatusInternalServerError, err)
@@ -60,10 +56,7 @@ func (h *getByHeightHttpHandler) Handle(c *gin.Context) {
 
 func (h *getByHeightHttpHandler) getUseCase() *getByHeightUseCase {
 	if h.useCase == nil {
-		return NewGetByHeightUseCase(h.db, h.client)
+		return NewGetByHeightUseCase(h.cfg, h.db, h.client)
 	}
 	return h.useCase
 }
-
-
-

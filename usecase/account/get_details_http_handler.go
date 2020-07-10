@@ -11,32 +11,32 @@ import (
 )
 
 var (
-	_ types.HttpHandler = (*getIdentityHttpHandler)(nil)
+	_ types.HttpHandler = (*getDetailsHttpHandler)(nil)
 )
 
-type getIdentityHttpHandler struct {
+type getDetailsHttpHandler struct {
 	db     *store.Store
 	client *client.Client
 
-	useCase *getIdentityUseCase
+	useCase *getDetailsUseCase
 }
 
-func NewGetIdentityHttpHandler(db *store.Store, c *client.Client) *getIdentityHttpHandler {
-	return &getIdentityHttpHandler{
+func NewGetDetailsHttpHandler(db *store.Store, c *client.Client) *getDetailsHttpHandler {
+	return &getDetailsHttpHandler{
 		db: db,
 		client: c,
 	}
 }
 
-type GetIdentityRequest struct {
-	Address string `uri:"address" binding:"required"`
+type GetDetailsRequest struct {
+	StashAccount string `uri:"stash_account" binding:"required"`
 }
 
-func (h *getIdentityHttpHandler) Handle(c *gin.Context) {
+func (h *getDetailsHttpHandler) Handle(c *gin.Context) {
 	var req Request
 	if err := c.ShouldBindUri(&req); err != nil {
 		logger.Error(err)
-		err := errors.New("invalid address")
+		err := errors.New("invalid stash account")
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
@@ -51,9 +51,9 @@ func (h *getIdentityHttpHandler) Handle(c *gin.Context) {
 	c.JSON(http.StatusOK, ds)
 }
 
-func (h *getIdentityHttpHandler) getUseCase() *getIdentityUseCase {
+func (h *getDetailsHttpHandler) getUseCase() *getDetailsUseCase {
 	if h.useCase == nil {
-		return NewGetIdentityUseCase(h.db, h.client)
+		return NewGetDetailsUseCase(h.db, h.client)
 	}
 	return h.useCase
 }

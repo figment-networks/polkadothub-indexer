@@ -90,6 +90,23 @@ func (s ValidatorSessionSeqStore) FindBySession(session int64) ([]model.Validato
 	return result, checkErr(err)
 }
 
+// FindLastByStashAccount finds last validator session sequences for given stash account
+func (s ValidatorSessionSeqStore) FindLastByStashAccount(stashAccount string, limit int64) ([]model.ValidatorSessionSeq, error) {
+	q := model.ValidatorSessionSeq{
+		StashAccount: stashAccount,
+	}
+	var result []model.ValidatorSessionSeq
+
+	err := s.db.
+		Where(&q).
+		Order("height DESC").
+		Limit(limit).
+		Find(&result).
+		Error
+
+	return result, checkErr(err)
+}
+
 // FindMostRecent finds most recent validator session sequence
 func (s *ValidatorSessionSeqStore) FindMostRecent() (*model.ValidatorSessionSeq, error) {
 	validatorSeq := &model.ValidatorSessionSeq{}
