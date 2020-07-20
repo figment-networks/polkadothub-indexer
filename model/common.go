@@ -35,9 +35,10 @@ func (s *Sequence) Equal(m Sequence) bool {
 
 // SessionSequence is used for sequences recorded per session
 type SessionSequence struct {
-	Session     int64 `json:"session"`
-	StartHeight int64 `json:"start_height"`
-	EndHeight   int64 `json:"end_height"`
+	Session     int64      `json:"session"`
+	StartHeight int64      `json:"start_height"`
+	EndHeight   int64      `json:"end_height"`
+	Time        types.Time `json:"time"`
 }
 
 func (s *SessionSequence) Valid() bool {
@@ -52,9 +53,10 @@ func (s *SessionSequence) Equal(m SessionSequence) bool {
 
 // EraSequence is used for sequences recorded per era
 type EraSequence struct {
-	Era         int64 `json:"era"`
-	StartHeight int64 `json:"start_height"`
-	EndHeight   int64 `json:"end_height"`
+	Era         int64      `json:"era"`
+	StartHeight int64      `json:"start_height"`
+	EndHeight   int64      `json:"end_height"`
+	Time        types.Time `json:"time"`
 }
 
 func (s *EraSequence) Valid() bool {

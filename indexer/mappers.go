@@ -45,6 +45,7 @@ func ToValidatorSessionSequence(syncable *model.Syncable, firstHeight int64, raw
 				Session:     syncable.Session,
 				StartHeight: firstHeight,
 				EndHeight:   syncable.Height,
+				Time:        syncable.Time,
 			},
 
 			StashAccount: rawValidator.GetStashAccount(),
@@ -68,6 +69,7 @@ func ToValidatorEraSequence(syncable *model.Syncable, firstHeight int64, rawStak
 				Era:         syncable.Era,
 				StartHeight: firstHeight,
 				EndHeight:   syncable.Height,
+				Time:        syncable.Time,
 			},
 
 			Index:             int64(i),

@@ -143,6 +143,7 @@ func (s *ValidatorSessionSeqStore) Summarize(interval types.SummaryInterval, act
 	defer logQueryDuration(time.Now(), "ValidatorSessionSeqStore_Summarize")
 
 	tx := s.db.
+		Debug().
 		Table(model.ValidatorSessionSeq{}.TableName()).
 		Select(summarizeValidatorsForSessionQuerySelect, interval).
 		Order("time_bucket").

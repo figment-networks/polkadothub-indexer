@@ -19,8 +19,8 @@ const (
 	AVG(commission) AS commission_avg,
    	MAX(commission) AS commission_max,
    	MIN(commission) AS commission_min,
-	AVG(stakers_counts) AS stakers_counts_avg,
-   	MAX(stakers_counts) AS stakers_counts_max,
-   	MIN(stakers_counts) AS stakers_counts_min,
+	AVG(stakers_count) AS stakers_counts_avg,
+   	MAX(stakers_count) AS stakers_counts_max,
+   	MIN(stakers_count) AS stakers_counts_min
 `
 )

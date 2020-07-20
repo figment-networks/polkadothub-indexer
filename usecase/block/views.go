@@ -21,6 +21,7 @@ type DetailsView struct {
 
 type ExtrinsicDetailsView struct {
 	ExtrinsicIndex int64  `json:"extrinsic_index"`
+	Hash           string `json:"hash"`
 	IsSigned       bool   `json:"is_signed"`
 	Signature      string `json:"signature"`
 	PublicKey      string `json:"public_key"`
@@ -28,6 +29,7 @@ type ExtrinsicDetailsView struct {
 	Method         string `json:"method"`
 	Section        string `json:"section"`
 	Args           string `json:"args"`
+	IsSuccess      bool   `json:"is_success"`
 }
 
 func ToDetailsView(rawResponse *blockpb.GetByHeightResponse) *DetailsView {
@@ -49,6 +51,7 @@ func ToDetailsView(rawResponse *blockpb.GetByHeightResponse) *DetailsView {
 	for _, rawExtrinsic := range rawBlock.GetExtrinsics() {
 		view.Extrinsics = append(view.Extrinsics, ExtrinsicDetailsView{
 			ExtrinsicIndex: rawExtrinsic.GetExtrinsicIndex(),
+			Hash:           rawExtrinsic.GetHash(),
 			IsSigned:       rawExtrinsic.GetIsSignedTransaction(),
 			Signature:      rawExtrinsic.GetSignature(),
 			PublicKey:      rawExtrinsic.GetSigner(),
@@ -56,6 +59,7 @@ func ToDetailsView(rawResponse *blockpb.GetByHeightResponse) *DetailsView {
 			Method:         rawExtrinsic.GetMethod(),
 			Section:        rawExtrinsic.GetSection(),
 			Args:           rawExtrinsic.GetArgs(),
+			IsSuccess:      rawExtrinsic.GetIsSuccess(),
 		})
 	}
 

@@ -67,6 +67,7 @@ func NewValidatorsParserTask() *validatorsParserTask {
 
 type validatorsParserTask struct{}
 
+// ParsedValidatorsData normalized validator data
 type ParsedValidatorsData map[string]parsedValidator
 
 type parsedValidator struct {
@@ -97,9 +98,9 @@ func (t *validatorsParserTask) Run(ctx context.Context, p pipeline.Payload) erro
 		parsedData, ok := parsedValidatorsData[stashAccount]
 		if !ok {
 			parsedData = parsedValidator{}
-			parsedValidatorsData[stashAccount] = parsedData
 		}
 		parsedData.Staking = rawValidatorStakingInfo
+		parsedValidatorsData[stashAccount] = parsedData
 	}
 
 	// Get validator performance info
@@ -109,9 +110,9 @@ func (t *validatorsParserTask) Run(ctx context.Context, p pipeline.Payload) erro
 		parsedData, ok := parsedValidatorsData[stashAccount]
 		if !ok {
 			parsedData = parsedValidator{}
-			parsedValidatorsData[stashAccount] = parsedData
 		}
 		parsedData.Performance = rawValidatorPerf
+		parsedValidatorsData[stashAccount] = parsedData
 	}
 
 	payload.ParsedValidators = parsedValidatorsData
