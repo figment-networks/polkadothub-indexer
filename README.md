@@ -6,7 +6,7 @@ Polkadothub Indexer project is responsible for fetching and indexing Polkadot da
 This package connects via gRPC to a polkadothub-proxy which in turn connects to Polkadot node.
 
 ### External Packages:
-* `oasis-rpc-proxy` - Go proxy to Oasis node
+* `polkadothub-proxy` - Go proxy to Polkadot node
 * `indexing-engine` - A backbone for indexing process
 * `gin` - Http server
 * `gorm` - ORM with PostgreSQL interface
@@ -16,7 +16,7 @@ This package connects via gRPC to a polkadothub-proxy which in turn connects to 
 ### Environmental variables:
 
 * `APP_ENV` - application environment (development | production) 
-* `PROXY_URL` - url to oasis-rpc-proxy
+* `PROXY_URL` - url to polkadothub-proxy
 * `SERVER_ADDR` - address to use for API
 * `SERVER_PORT` - port to use for API
 * `FIRST_BLOCK_HEIGHT` - height of first block in chain
@@ -43,8 +43,8 @@ This package connects via gRPC to a polkadothub-proxy which in turn connects to 
 
 ### Available endpoints:
 
-| Method | Path                               | Description                                                 | Params                                                                                                                                                |
-|--------|------------------------------------|-------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Method | Path                                 | Description                                                 | Params                                                                                                                                                |
+|--------|------------------------------------  |-------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------|
 | GET    | `/health`                            | health endpoint                                             | -                                                                                                                                                     |
 | GET    | `/status`                            | status of the application and chain                         | -                                                                                                                                                     |
 | GET    | `/block`                             | return block by height                                      | height (optional) - height [Default: 0 = last]                                                                                                        |
@@ -55,7 +55,7 @@ This package connects via gRPC to a polkadothub-proxy which in turn connects to 
 | GET    | `/account_details/:stash_account`    | get account details                                         | stash_account (required) - stash account                                                                                                                  |
 | GET    | `/validators`                        | get list of validators                                      | height (optional) - height [Default: 0 = last]                                                                                                        |
 | GET    | `/validators/for_min_height/:height` | get the list of validators for height greater than provided | height (required) - height [Default: 0 = last]                                                                                                        |
-| GET    | `/validator/:stash_account`          | get validator by address                                 | stash_account (required) - validator's stash account    sessions_limit (optional) - number of last sessions to include    eras_limit (optional) - number of last eras to include                                                                                                      |
+| GET    | `/validator/:stash_account`          | get validator by address                                    | stash_account (required) - validator's stash account    sessions_limit (optional) - number of last sessions to include    eras_limit (optional) - number of last eras to include                                                                                                      |
 | GET    | `/validators_summary`                | validator summary                                           | interval (required) - time interval [hourly or daily] period (required) - summary period [ie. 24 hours]  stash_account (optional) - validator's stash account |
 
 ### Running app
@@ -79,7 +79,7 @@ Start the API server:
 polkadothub-indexer -config path/to/config.json -cmd=server
 ```
 
-IMPORTANT!!! Make sure that you have polkadothub-proxy running and connected to Oasis node.
+IMPORTANT!!! Make sure that you have polkadothub-proxy running and connected to Polkadot node.
 
 ### Running one-off commands
 
