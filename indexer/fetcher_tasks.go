@@ -3,10 +3,13 @@ package indexer
 import (
 	"context"
 	"fmt"
+	"github.com/figment-networks/polkadothub-proxy/grpc/block/blockpb"
+	"github.com/figment-networks/polkadothub-proxy/grpc/event/eventpb"
+	"github.com/figment-networks/polkadothub-proxy/grpc/staking/stakingpb"
+	"github.com/figment-networks/polkadothub-proxy/grpc/validatorperformance/validatorperformancepb"
 	"time"
 
 	"github.com/figment-networks/indexing-engine/pipeline"
-	"github.com/figment-networks/polkadothub-indexer/client"
 	"github.com/figment-networks/polkadothub-indexer/metric"
 	"github.com/figment-networks/polkadothub-indexer/utils/logger"
 )
@@ -18,19 +21,24 @@ const (
 	EventsFetcherTaskName               = "EventsFetcher"
 )
 
-func NewBlockFetcherTask(client *client.Client) pipeline.Task {
+func NewBlockFetcherTask(client BlockFetcherClient) pipeline.Task {
 	return &BlockFetcherTask{
 		client: client,
 	}
 }
 
+type BlockFetcherClient interface {
+	GetByHeight(int64) (*blockpb.GetByHeightResponse, error)
+}
+
 type BlockFetcherTask struct {
-	client *client.Client
+	client BlockFetcherClient
 }
 
 func (t *BlockFetcherTask) GetName() string {
 	return BlockFetcherTaskName
 }
+
 
 func (t *BlockFetcherTask) Run(ctx context.Context, p pipeline.Payload) error {
 	defer metric.LogIndexerTaskDuration(time.Now(), t.GetName())
@@ -39,7 +47,7 @@ func (t *BlockFetcherTask) Run(ctx context.Context, p pipeline.Payload) error {
 
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StageFetcher, t.GetName(), payload.CurrentHeight))
 
-	block, err := t.client.Block.GetByHeight(payload.CurrentHeight)
+	block, err := t.client.GetByHeight(payload.CurrentHeight)
 	if err != nil {
 		return err
 	}
@@ -55,14 +63,18 @@ func (t *BlockFetcherTask) Run(ctx context.Context, p pipeline.Payload) error {
 	return nil
 }
 
-func NewValidatorPerformanceFetcherTask(client *client.Client) pipeline.Task {
+func NewValidatorPerformanceFetcherTask(client ValidatorPerformanceFetcherClient) pipeline.Task {
 	return &ValidatorPerformanceFetcherTask{
 		client: client,
 	}
 }
 
+type ValidatorPerformanceFetcherClient interface {
+	GetByHeight(int64) (*validatorperformancepb.GetByHeightResponse, error)
+}
+
 type ValidatorPerformanceFetcherTask struct {
-	client *client.Client
+	client ValidatorPerformanceFetcherClient
 }
 
 func (t *ValidatorPerformanceFetcherTask) GetName() string {
@@ -81,7 +93,7 @@ func (t *ValidatorPerformanceFetcherTask) Run(ctx context.Context, p pipeline.Pa
 
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StageFetcher, t.GetName(), payload.CurrentHeight))
 
-	perf, err := t.client.ValidatorPerformance.GetByHeight(payload.CurrentHeight)
+	perf, err := t.client.GetByHeight(payload.CurrentHeight)
 	if err != nil {
 		return err
 	}
@@ -98,14 +110,19 @@ func (t *ValidatorPerformanceFetcherTask) Run(ctx context.Context, p pipeline.Pa
 	return nil
 }
 
-func NewStakingFetcherTask(client *client.Client) pipeline.Task {
+func NewStakingFetcherTask(client StakingFetcherClient) pipeline.Task {
 	return &StakingFetcherTask{
 		client: client,
 	}
 }
 
+type StakingFetcherClient interface {
+	GetByHeight(int64) (*stakingpb.GetByHeightResponse, error)
+}
+
+
 type StakingFetcherTask struct {
-	client *client.Client
+	client StakingFetcherClient
 }
 
 func (t *StakingFetcherTask) GetName() string {
@@ -124,7 +141,7 @@ func (t *StakingFetcherTask) Run(ctx context.Context, p pipeline.Payload) error 
 
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StageFetcher, t.GetName(), payload.CurrentHeight))
 
-	staking, err := t.client.Staking.GetByHeight(payload.CurrentHeight)
+	staking, err := t.client.GetByHeight(payload.CurrentHeight)
 	if err != nil {
 		return err
 	}
@@ -142,14 +159,18 @@ func (t *StakingFetcherTask) Run(ctx context.Context, p pipeline.Payload) error 
 }
 
 
-func NewEventsFetcherTask(client *client.Client) pipeline.Task {
+func NewEventsFetcherTask(client EventFetcherClient) pipeline.Task {
 	return &EventsFetcherTask{
 		client: client,
 	}
 }
 
+type EventFetcherClient interface {
+	GetByHeight(int64) (*eventpb.GetByHeightResponse, error)
+}
+
 type EventsFetcherTask struct {
-	client *client.Client
+	client EventFetcherClient
 }
 
 func (t *EventsFetcherTask) GetName() string {
@@ -163,7 +184,7 @@ func (t *EventsFetcherTask) Run(ctx context.Context, p pipeline.Payload) error {
 
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StageFetcher, t.GetName(), payload.CurrentHeight))
 
-	events, err := t.client.Event.GetByHeight(payload.CurrentHeight)
+	events, err := t.client.GetByHeight(payload.CurrentHeight)
 	if err != nil {
 		return err
 	}

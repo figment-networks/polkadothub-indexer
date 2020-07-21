@@ -52,10 +52,10 @@ func NewPipeline(cfg *config.Config, db *store.Store, client *client.Client) (*i
 	p.SetStage(
 		pipeline.StageFetcher,
 		pipeline.AsyncRunner(
-			pipeline.RetryingTask(NewBlockFetcherTask(client), isTransient, 3),
-			pipeline.RetryingTask(NewValidatorPerformanceFetcherTask(client), isTransient, 3),
-			pipeline.RetryingTask(NewStakingFetcherTask(client), isTransient, 3),
-			pipeline.RetryingTask(NewEventsFetcherTask(client), isTransient, 3),
+			pipeline.RetryingTask(NewBlockFetcherTask(client.Block), isTransient, 3),
+			pipeline.RetryingTask(NewValidatorPerformanceFetcherTask(client.ValidatorPerformance), isTransient, 3),
+			pipeline.RetryingTask(NewStakingFetcherTask(client.Staking), isTransient, 3),
+			pipeline.RetryingTask(NewEventsFetcherTask(client.Event), isTransient, 3),
 		),
 	)
 

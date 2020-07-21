@@ -22,7 +22,6 @@ const (
 var (
 	_ pipeline.Task = (*blockSeqCreatorTask)(nil)
 	_ pipeline.Task = (*validatorSessionSeqCreatorTask)(nil)
-	//_ pipeline.Task = (*transactionSeqCreatorTask)(nil)
 )
 
 // NewBlockSeqCreatorTask creates block sequences
