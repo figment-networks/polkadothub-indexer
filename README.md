@@ -6,7 +6,7 @@ Polkadothub Indexer project is responsible for fetching and indexing Polkadot da
 This package connects via gRPC to a polkadothub-proxy which in turn connects to Polkadot node.
 
 ### External Packages:
-* `polkadothub-rpc-proxy` - Go proxy to Polkadot node
+* `polkadothub-proxy` - Go proxy to Polkadot node
 * `indexing-engine` - A backbone for indexing process
 * `gin` - Http server
 * `gorm` - ORM with PostgreSQL interface
@@ -16,7 +16,7 @@ This package connects via gRPC to a polkadothub-proxy which in turn connects to 
 ### Environmental variables:
 
 * `APP_ENV` - application environment (development | production) 
-* `PROXY_URL` - url to polkadothub-rpc-proxy
+* `PROXY_URL` - url to polkadothub-proxy
 * `SERVER_ADDR` - address to use for API
 * `SERVER_PORT` - port to use for API
 * `FIRST_BLOCK_HEIGHT` - height of first block in chain
