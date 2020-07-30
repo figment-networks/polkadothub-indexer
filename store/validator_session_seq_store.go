@@ -99,7 +99,7 @@ func (s ValidatorSessionSeqStore) FindLastByStashAccount(stashAccount string, li
 
 	err := s.db.
 		Where(&q).
-		Order("height DESC").
+		Order("session DESC").
 		Limit(limit).
 		Find(&result).
 		Error
@@ -143,7 +143,6 @@ func (s *ValidatorSessionSeqStore) Summarize(interval types.SummaryInterval, act
 	defer logQueryDuration(time.Now(), "ValidatorSessionSeqStore_Summarize")
 
 	tx := s.db.
-		Debug().
 		Table(model.ValidatorSessionSeq{}.TableName()).
 		Select(summarizeValidatorsForSessionQuerySelect, interval).
 		Order("time_bucket").

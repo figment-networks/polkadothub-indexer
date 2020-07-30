@@ -114,6 +114,7 @@ type EventData struct {
 }
 
 type BalanceTransfer struct {
+	Hash        string `json:"hash"`
 	Amount      string `json:"amount"`
 	Kind        string `json:"kind"`
 	Participant string `json:"participant"`
@@ -174,7 +175,8 @@ func ToBalanceDeposits(balanceDepositsEvents []model.EventSeq) ([]*BalanceDeposi
 }
 
 type Bonded struct {
-	Amount string `json:"amount"`
+	Amount   string `json:"amount"`
+	Receiver string `json:"receiver"`
 }
 
 func ToBondedList(bondedEvents []model.EventSeq) ([]*Bonded, error) {

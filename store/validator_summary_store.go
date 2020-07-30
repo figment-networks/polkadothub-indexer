@@ -35,7 +35,6 @@ func (s *ValidatorSummaryStore) FindActivityPeriods(interval types.SummaryInterv
 	defer logQueryDuration(time.Now(), "ValidatorSummaryStore_FindActivityPeriods")
 
 	rows, err := s.db.
-		Debug().
 		Raw(validatorSummaryActivityPeriodsQuery, fmt.Sprintf("1%s", interval), interval, indexVersion).
 		Rows()
 

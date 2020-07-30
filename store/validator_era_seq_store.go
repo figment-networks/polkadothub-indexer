@@ -108,7 +108,7 @@ func (s ValidatorEraSeqStore) FindLastByStashAccount(stashAccount string, limit 
 
 	err := s.db.
 		Where(&q).
-		Order("height DESC").
+		Order("era DESC").
 		Limit(limit).
 		Find(&result).
 		Error

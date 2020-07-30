@@ -106,5 +106,6 @@ func ToSeqListView(validatorSessionSeqs []model.ValidatorSessionSeq, validatorEr
 
 	return &SeqListView{
 		SessionItems: sessionItems,
+		EraItems:     eraItems,
 	}
 }

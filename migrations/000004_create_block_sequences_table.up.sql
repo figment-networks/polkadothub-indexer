@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS block_sequences
 (
     id                        BIGSERIAL                NOT NULL,
 
-    height                    DOUBLE PRECISION         NOT NULL,
+    height                    DECIMAL(65, 0)           NOT NULL,
     time                      TIMESTAMP WITH TIME ZONE NOT NULL,
 
     extrinsics_count          DOUBLE PRECISION,

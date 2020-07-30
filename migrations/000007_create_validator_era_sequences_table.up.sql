@@ -2,9 +2,9 @@ CREATE TABLE IF NOT EXISTS validator_era_sequences
 (
     id                 BIGSERIAL                NOT NULL,
 
-    era                DOUBLE PRECISION         NOT NULL,
-    start_height       DOUBLE PRECISION         NOT NULL,
-    end_height         DOUBLE PRECISION         NOT NULL,
+    era                DECIMAL(65, 0)           NOT NULL,
+    start_height       DECIMAL(65, 0)           NOT NULL,
+    end_height         DECIMAL(65, 0)           NOT NULL,
     time               TIMESTAMP WITH TIME ZONE NOT NULL,
 
     index              BIGINT                   NOT NULL,
