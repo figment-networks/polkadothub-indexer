@@ -3,7 +3,7 @@ module github.com/figment-networks/polkadothub-indexer
 go 1.14
 
 require (
-	github.com/figment-networks/indexing-engine v0.1.5
+	github.com/figment-networks/indexing-engine v0.1.9
 	github.com/figment-networks/polkadothub-proxy/grpc v0.0.0-20200721092725-8554cd6e8a6f
 	github.com/gin-gonic/gin v1.5.0
 	github.com/golang-migrate/migrate/v4 v4.11.0
@@ -17,7 +17,6 @@ require (
 	github.com/prometheus/common v0.10.0 // indirect
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/rollbar/rollbar-go v1.2.0
-	github.com/stretchr/testify v1.5.1 // indirect
 	go.uber.org/zap v1.15.0
 	golang.org/x/sys v0.0.0-20200523222454-059865788121 // indirect
 	google.golang.org/grpc v1.29.1
