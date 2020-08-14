@@ -29,17 +29,15 @@ func (pf *payloadFactory) GetPayload(currentHeight int64) pipeline.Payload {
 type payload struct {
 	CurrentHeight int64
 
-	// Setup stage
-	HeightMeta HeightMeta
-
-	// Syncer stage
-	Syncable *model.Syncable
-
 	// Fetcher stage
+	HeightMeta              HeightMeta
 	RawBlock                *blockpb.Block
 	RawValidatorPerformance []*validatorperformancepb.Validator
 	RawStaking              *stakingpb.Staking
 	RawEvents               []*eventpb.Event
+
+	// Syncer stage
+	Syncable *model.Syncable
 
 	// Parser stage
 	ParsedBlock      ParsedBlockData
