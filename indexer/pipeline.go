@@ -15,7 +15,8 @@ import (
 )
 
 const (
-	CtxReport = "context_report"
+	CtxReport  = "context_report"
+	maxRetries = 3
 )
 
 type indexingPipeline struct {
@@ -35,12 +36,12 @@ func NewPipeline(cfg *config.Config, db *store.Store, client *client.Client) (*i
 
 	// Fetcher stage
 	p.AddStage(
-		pipeline.NewStageWithTasks(pipeline.StageFetcher, pipeline.RetryingTask(NewFetcherTask(client.Height), isTransient, 3)),
+		pipeline.NewStageWithTasks(pipeline.StageFetcher, pipeline.RetryingTask(NewFetcherTask(client.Height), isTransient, maxRetries)),
 	)
 
 	// Syncer stage
 	p.AddStage(
-		pipeline.NewStageWithTasks(pipeline.StageSyncer, pipeline.RetryingTask(NewMainSyncerTask(db), isTransient, 3)),
+		pipeline.NewStageWithTasks(pipeline.StageSyncer, pipeline.RetryingTask(NewMainSyncerTask(db), isTransient, maxRetries)),
 	)
 
 	// Set parser stage
@@ -56,10 +57,10 @@ func NewPipeline(cfg *config.Config, db *store.Store, client *client.Client) (*i
 	p.AddStage(
 		pipeline.NewAsyncStageWithTasks(
 			pipeline.StageSequencer,
-			pipeline.RetryingTask(NewBlockSeqCreatorTask(db), isTransient, 3),
-			pipeline.RetryingTask(NewValidatorSessionSeqCreatorTask(cfg, db), isTransient, 3),
-			pipeline.RetryingTask(NewValidatorEraSeqCreatorTask(cfg, db), isTransient, 3),
-			pipeline.RetryingTask(NewEventSeqCreatorTask(db), isTransient, 3),
+			pipeline.RetryingTask(NewBlockSeqCreatorTask(db), isTransient, maxRetries),
+			pipeline.RetryingTask(NewValidatorSessionSeqCreatorTask(cfg, db), isTransient, maxRetries),
+			pipeline.RetryingTask(NewValidatorEraSeqCreatorTask(cfg, db), isTransient, maxRetries),
+			pipeline.RetryingTask(NewEventSeqCreatorTask(db), isTransient, maxRetries),
 		),
 	)
 
@@ -67,7 +68,7 @@ func NewPipeline(cfg *config.Config, db *store.Store, client *client.Client) (*i
 	p.AddStage(
 		pipeline.NewStageWithTasks(
 			pipeline.StageAggregator,
-			pipeline.RetryingTask(NewValidatorAggCreatorTask(db), isTransient, 3),
+			pipeline.RetryingTask(NewValidatorAggCreatorTask(db), isTransient, maxRetries),
 		),
 	)
 
@@ -75,12 +76,12 @@ func NewPipeline(cfg *config.Config, db *store.Store, client *client.Client) (*i
 	p.AddStage(
 		pipeline.NewAsyncStageWithTasks(
 			pipeline.StagePersistor,
-			pipeline.RetryingTask(NewSyncerPersistorTask(db), isTransient, 3),
-			pipeline.RetryingTask(NewBlockSeqPersistorTask(db), isTransient, 3),
-			pipeline.RetryingTask(NewValidatorSessionSeqPersistorTask(db), isTransient, 3),
-			pipeline.RetryingTask(NewValidatorEraSeqPersistorTask(db), isTransient, 3),
-			pipeline.RetryingTask(NewValidatorAggPersistorTask(db), isTransient, 3),
-			pipeline.RetryingTask(NewEventSeqPersistorTask(db), isTransient, 3),
+			pipeline.RetryingTask(NewSyncerPersistorTask(db), isTransient, maxRetries),
+			pipeline.RetryingTask(NewBlockSeqPersistorTask(db), isTransient, maxRetries),
+			pipeline.RetryingTask(NewValidatorSessionSeqPersistorTask(db), isTransient, maxRetries),
+			pipeline.RetryingTask(NewValidatorEraSeqPersistorTask(db), isTransient, maxRetries),
+			pipeline.RetryingTask(NewValidatorAggPersistorTask(db), isTransient, maxRetries),
+			pipeline.RetryingTask(NewEventSeqPersistorTask(db), isTransient, maxRetries),
 		),
 	)
 
