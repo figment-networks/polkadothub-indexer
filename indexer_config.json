@@ -16,7 +16,7 @@
         "name": "index_block_sequences",
         "desc": "Creates and persists block sequences",
         "tasks": [
-          "BlockFetcher",
+          "Fetcher",
           "BlockParser",
           "BlockSeqCreator",
           "SyncerPersistor",
@@ -28,7 +28,7 @@
         "name": "index_validator_session_sequences",
         "desc": "Creates and persists validator session sequences",
         "tasks": [
-          "ValidatorPerformanceFetcher",
+          "Fetcher",
           "ValidatorSessionSeqCreator",
           "SyncerPersistor",
           "ValidatorSessionSeqPersistor"
@@ -39,7 +39,7 @@
         "name": "index_validator_era_sequences",
         "desc": "Creates and persists validator era sequences",
         "tasks": [
-          "StakingFetcher",
+          "Fetcher",
           "ValidatorEraSeqCreator",
           "SyncerPersistor",
           "ValidatorEraSeqPersistor"
@@ -50,8 +50,7 @@
         "name": "index_validator_aggregates",
         "desc": "Creates and persists validator aggregates",
         "tasks": [
-          "ValidatorPerformanceFetcher",
-          "StakingFetcher",
+          "Fetcher",
           "ValidatorsParser",
           "ValidatorAggCreator",
           "SyncerPersistor",
@@ -63,7 +62,7 @@
         "name": "index_event_sequences",
         "desc": "Creates and persists event sequences",
         "tasks": [
-          "EventsFetcher",
+          "Fetcher",
           "EventSeqCreator",
           "SyncerPersistor",
           "EventSeqPersistor"
