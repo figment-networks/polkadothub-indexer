@@ -7,7 +7,6 @@
         }
     ],
     "shared_targets": [
-        "HeightMetaRetriever",
         "MainSyncer"
     ],
     "available_targets": [

@@ -265,23 +265,18 @@ func (p *indexingPipeline) canRunBackfill(isParallel bool) error {
 }
 
 type RunConfig struct {
-	Height           int64
-	DesiredVersionID *int64
-	DesiredTargetID  *int64
-	Dry              bool
+	Height            int64
+	DesiredVersionIDs []int64
+	DesiredTargetIDs  []int64
+	Dry               bool
 }
 
 func (p *indexingPipeline) Run(ctx context.Context, runCfg RunConfig) (*payload, error) {
 	pipelineOptionsCreator := &pipelineOptionsCreator{
-		configParser: p.configParser,
-		dry:          runCfg.Dry,
-	}
-	if runCfg.DesiredVersionID != nil {
-		pipelineOptionsCreator.desiredVersionIds = []int64{*runCfg.DesiredVersionID}
-	}
-
-	if runCfg.DesiredTargetID != nil {
-		pipelineOptionsCreator.desiredTargetIds = []int64{*runCfg.DesiredTargetID}
+		configParser:      p.configParser,
+		dry:               runCfg.Dry,
+		desiredVersionIds: runCfg.DesiredVersionIDs,
+		desiredTargetIds:  runCfg.DesiredTargetIDs,
 	}
 
 	pipelineOptions, err := pipelineOptionsCreator.parse()
@@ -289,7 +284,11 @@ func (p *indexingPipeline) Run(ctx context.Context, runCfg RunConfig) (*payload,
 		return nil, err
 	}
 
-	logger.Info(fmt.Sprintf("running pipeline... [height=%d] [version=%d]", runCfg.Height, runCfg.DesiredTargetID))
+	logger.Info("running pipeline...",
+		logger.Field("height", runCfg.Height),
+		logger.Field("versions", runCfg.DesiredVersionIDs),
+		logger.Field("targets", runCfg.DesiredTargetIDs),
+	)
 
 	runPayload, err := p.pipeline.Run(ctx, runCfg.Height, pipelineOptions)
 	if err != nil {
