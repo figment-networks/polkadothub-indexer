@@ -15,6 +15,18 @@ type SyncablesStore struct {
 	baseStore
 }
 
+// FindSmallestIndexVersion returns smallest index version
+func (s SyncablesStore) FindSmallestIndexVersion() (*int64, error) {
+	result := &model.Syncable{}
+
+	err := s.db.
+		Where("processed_at IS NOT NULL").
+		Order("index_version").
+		First(result).Error
+
+	return &result.IndexVersion, checkErr(err)
+}
+
 // Exists returns true if a syncable exists at give height
 func (s SyncablesStore) FindByHeight(height int64) (syncable *model.Syncable, err error) {
 	result := &model.Syncable{}
