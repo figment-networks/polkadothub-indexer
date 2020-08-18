@@ -19,5 +19,5 @@
   "purge_block_hourly_summary_interval": "",
   "purge_validator_interval": "",
   "purge_validator_hourly_summary_interval": "",
-  "indexer_targets_file": "indexer_targets.json"
+  "indexer_config_file": "indexer_config.json"
 }
