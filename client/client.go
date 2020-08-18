@@ -16,6 +16,7 @@ func New(connStr string) (*Client, error) {
 		Chain:                NewChainClient(conn),
 		Account:              NewAccountClient(conn),
 		Block:                NewBlockClient(conn),
+		Height:               NewHeightClient(conn),
 		Transaction:          NewTransactionClient(conn),
 		ValidatorPerformance: NewValidatorPerformanceClient(conn),
 		Staking:              NewStakingClient(conn),
@@ -29,6 +30,7 @@ type Client struct {
 	Chain                ChainClient
 	Account              AccountClient
 	Block                BlockClient
+	Height               HeightClient
 	Transaction          TransactionClient
 	ValidatorPerformance ValidatorPerformanceClient
 	Staking              StakingClient

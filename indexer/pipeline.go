@@ -3,6 +3,7 @@ package indexer
 import (
 	"context"
 	"fmt"
+
 	"github.com/figment-networks/indexing-engine/pipeline"
 	"github.com/figment-networks/polkadothub-indexer/client"
 	"github.com/figment-networks/polkadothub-indexer/config"
@@ -14,7 +15,8 @@ import (
 )
 
 const (
-	CtxReport = "context_report"
+	CtxReport  = "context_report"
+	maxRetries = 3
 )
 
 type indexingPipeline struct {
@@ -23,67 +25,64 @@ type indexingPipeline struct {
 	client *client.Client
 
 	targetsReader *targetsReader
-	pipeline      pipeline.DefaultPipeline
+	pipeline      pipeline.CustomPipeline
 }
 
 func NewPipeline(cfg *config.Config, db *store.Store, client *client.Client) (*indexingPipeline, error) {
-	p := pipeline.NewDefault(NewPayloadFactory())
+	p := pipeline.NewCustom(NewPayloadFactory())
 
 	// Setup logger
 	p.SetLogger(NewLogger())
 
-	// Setup stage
-	p.SetTasks(
-		pipeline.StageSetup,
-		pipeline.RetryingTask(NewHeightMetaRetrieverTask(client), isTransient, 3),
+	// Fetcher stage
+	p.AddStage(
+		pipeline.NewStageWithTasks(pipeline.StageFetcher, pipeline.RetryingTask(NewFetcherTask(client.Height), isTransient, maxRetries)),
 	)
 
 	// Syncer stage
-	p.SetTasks(
-		pipeline.StageSyncer,
-		pipeline.RetryingTask(NewMainSyncerTask(db), isTransient, 3),
-	)
-
-	// Fetcher stage
-	p.SetAsyncTasks(
-		pipeline.StageFetcher,
-		pipeline.RetryingTask(NewBlockFetcherTask(client.Block), isTransient, 3),
-		pipeline.RetryingTask(NewValidatorPerformanceFetcherTask(client.ValidatorPerformance), isTransient, 3),
-		pipeline.RetryingTask(NewStakingFetcherTask(client.Staking), isTransient, 3),
-		pipeline.RetryingTask(NewEventsFetcherTask(client.Event), isTransient, 3),
+	p.AddStage(
+		pipeline.NewStageWithTasks(pipeline.StageSyncer, pipeline.RetryingTask(NewMainSyncerTask(db), isTransient, maxRetries)),
 	)
 
 	// Set parser stage
-	p.SetAsyncTasks(
-		pipeline.StageParser,
-		NewBlockParserTask(),
-		NewValidatorsParserTask(),
+	p.AddStage(
+		pipeline.NewAsyncStageWithTasks(
+			pipeline.StageParser,
+			NewBlockParserTask(),
+			NewValidatorsParserTask(),
+		),
 	)
 
 	// Set sequencer stage
-	p.SetAsyncTasks(
-		pipeline.StageSequencer,
-		pipeline.RetryingTask(NewBlockSeqCreatorTask(db), isTransient, 3),
-		pipeline.RetryingTask(NewValidatorSessionSeqCreatorTask(cfg, db), isTransient, 3),
-		pipeline.RetryingTask(NewValidatorEraSeqCreatorTask(cfg, db), isTransient, 3),
-		pipeline.RetryingTask(NewEventSeqCreatorTask(db), isTransient, 3),
+	p.AddStage(
+		pipeline.NewAsyncStageWithTasks(
+			pipeline.StageSequencer,
+			pipeline.RetryingTask(NewBlockSeqCreatorTask(db), isTransient, maxRetries),
+			pipeline.RetryingTask(NewValidatorSessionSeqCreatorTask(cfg, db), isTransient, maxRetries),
+			pipeline.RetryingTask(NewValidatorEraSeqCreatorTask(cfg, db), isTransient, maxRetries),
+			pipeline.RetryingTask(NewEventSeqCreatorTask(db), isTransient, maxRetries),
+		),
 	)
 
 	// Set aggregator stage
-	p.SetTasks(
-		pipeline.StageAggregator,
-		pipeline.RetryingTask(NewValidatorAggCreatorTask(db), isTransient, 3),
+	p.AddStage(
+		pipeline.NewStageWithTasks(
+			pipeline.StageAggregator,
+			pipeline.RetryingTask(NewValidatorAggCreatorTask(db), isTransient, maxRetries),
+		),
 	)
 
 	// Set persistor stage
-	p.SetAsyncTasks(
-		pipeline.StagePersistor,
-		pipeline.RetryingTask(NewSyncerPersistorTask(db), isTransient, 3),
-		pipeline.RetryingTask(NewBlockSeqPersistorTask(db), isTransient, 3),
-		pipeline.RetryingTask(NewValidatorSessionSeqPersistorTask(db), isTransient, 3),
-		pipeline.RetryingTask(NewValidatorEraSeqPersistorTask(db), isTransient, 3),
-		pipeline.RetryingTask(NewValidatorAggPersistorTask(db), isTransient, 3),
-		pipeline.RetryingTask(NewEventSeqPersistorTask(db), isTransient, 3),
+	p.AddStage(
+		pipeline.NewAsyncStageWithTasks(
+			pipeline.StagePersistor,
+			pipeline.RetryingTask(NewSyncerPersistorTask(db), isTransient, maxRetries),
+			pipeline.RetryingTask(NewBlockSeqPersistorTask(db), isTransient, maxRetries),
+			pipeline.RetryingTask(NewValidatorSessionSeqPersistorTask(db), isTransient, maxRetries),
+			pipeline.RetryingTask(NewValidatorEraSeqPersistorTask(db), isTransient, maxRetries),
+			pipeline.RetryingTask(NewValidatorAggPersistorTask(db), isTransient, maxRetries),
+			pipeline.RetryingTask(NewEventSeqPersistorTask(db), isTransient, maxRetries),
+		),
 	)
 
 	// Create targets reader
@@ -103,8 +102,8 @@ func NewPipeline(cfg *config.Config, db *store.Store, client *client.Client) (*i
 }
 
 type StartConfig struct {
-	BatchSize       int64
-	StartHeight     int64
+	BatchSize   int64
+	StartHeight int64
 }
 
 func (p *indexingPipeline) Start(ctx context.Context, startCfg StartConfig) error {
