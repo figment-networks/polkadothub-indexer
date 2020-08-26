@@ -30,6 +30,8 @@ type ExtrinsicDetailsView struct {
 	Section        string `json:"section"`
 	Args           string `json:"args"`
 	IsSuccess      bool   `json:"is_success"`
+	PartialFee     string `json:"partialFee"`
+	Tip            string `json:"tip"`
 }
 
 func ToDetailsView(rawResponse *blockpb.GetByHeightResponse) *DetailsView {
@@ -60,6 +62,8 @@ func ToDetailsView(rawResponse *blockpb.GetByHeightResponse) *DetailsView {
 			Section:        rawExtrinsic.GetSection(),
 			Args:           rawExtrinsic.GetArgs(),
 			IsSuccess:      rawExtrinsic.GetIsSuccess(),
+			PartialFee:     rawExtrinsic.GetPartialFee(),
+			Tip:            rawExtrinsic.GetTip(),
 		})
 	}
 
