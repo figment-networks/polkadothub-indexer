@@ -6,7 +6,7 @@
             "parallel": false
         }
     ],
-    "shared_targets": [
+    "shared_tasks": [
         "MainSyncer"
     ],
     "available_targets": [
