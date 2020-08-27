@@ -4,7 +4,7 @@ go 1.14
 
 require (
 	github.com/figment-networks/indexing-engine v0.1.9
-	github.com/figment-networks/polkadothub-proxy/grpc v0.0.0-20200814160247-86a060d550ae
+	github.com/figment-networks/polkadothub-proxy/grpc v0.0.0-20200827200529-18e1211da5fb
 	github.com/gin-gonic/gin v1.5.0
 	github.com/golang-migrate/migrate/v4 v4.11.0
 	github.com/golang/mock v1.4.3
