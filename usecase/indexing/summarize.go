@@ -3,10 +3,10 @@ package indexing
 import (
 	"context"
 	"fmt"
-	"github.com/figment-networks/polkadothub-indexer/indexer"
 	"time"
 
 	"github.com/figment-networks/polkadothub-indexer/config"
+	"github.com/figment-networks/polkadothub-indexer/indexer"
 	"github.com/figment-networks/polkadothub-indexer/metric"
 	"github.com/figment-networks/polkadothub-indexer/model"
 	"github.com/figment-networks/polkadothub-indexer/store"
@@ -29,11 +29,11 @@ func NewSummarizeUseCase(cfg *config.Config, db *store.Store) *summarizeUseCase 
 func (uc *summarizeUseCase) Execute(ctx context.Context) error {
 	defer metric.LogUseCaseDuration(time.Now(), "summarize")
 
-	targetsReader, err := indexer.NewTargetsReader(uc.cfg.IndexerTargetsFile)
+	configParser, err := indexer.NewConfigParser(uc.cfg.IndexerConfigFile)
 	if err != nil {
 		return err
 	}
-	currentIndexVersion := targetsReader.GetCurrentVersion()
+	currentIndexVersion := configParser.GetCurrentVersionId()
 
 	if err := uc.summarizeBlockSeq(types.IntervalHourly, currentIndexVersion); err != nil {
 		return err

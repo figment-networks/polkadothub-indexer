@@ -2,6 +2,7 @@ package indexing
 
 import (
 	"context"
+
 	"github.com/figment-networks/polkadothub-indexer/client"
 	"github.com/figment-networks/polkadothub-indexer/config"
 	"github.com/figment-networks/polkadothub-indexer/indexer"
@@ -38,7 +39,7 @@ func (uc *startUseCase) Execute(ctx context.Context, batchSize int64) error {
 		return err
 	}
 
-	return indexingPipeline.Start(ctx, indexer.StartConfig{
+	return indexingPipeline.Start(ctx, indexer.IndexConfig{
 		BatchSize: batchSize,
 	})
 }
@@ -54,4 +55,3 @@ func (uc *startUseCase) canExecute() error {
 	}
 	return ErrRunningSequentialReindex
 }
-
