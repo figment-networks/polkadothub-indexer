@@ -6,10 +6,6 @@ import (
 )
 
 type DetailsView struct {
-	Chain          string                 `json:"chain"`
-	SpecVersion    string                 `json:"spec_version"`
-	Session        int64                  `json:"session"`
-	Era            int64                  `json:"era"`
 	Height         int64                  `json:"height"`
 	Time           types.Time             `json:"time"`
 	Hash           string                 `json:"hash"`
@@ -38,13 +34,9 @@ func ToDetailsView(rawResponse *blockpb.GetByHeightResponse) *DetailsView {
 	rawBlock := rawResponse.GetBlock()
 
 	view := &DetailsView{
-		Chain:          rawResponse.GetChain(),
-		SpecVersion:    rawResponse.GetSpecVersion(),
-		Era:            rawResponse.GetEra(),
-		Session:        rawResponse.GetSession(),
 		Height:         rawBlock.GetHeader().GetHeight(),
 		Time:           *types.NewTimeFromTimestamp(*rawBlock.GetHeader().GetTime()),
-		Hash:           rawBlock.GetHeader().GetBlockHash(),
+		Hash:           rawBlock.GetBlockHash(),
 		ParentHash:     rawBlock.GetHeader().GetParentHash(),
 		ExtrinsicsRoot: rawBlock.GetHeader().GetExtrinsicsRoot(),
 		StateRoot:      rawBlock.GetHeader().GetStateRoot(),

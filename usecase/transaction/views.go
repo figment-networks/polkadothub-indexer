@@ -23,7 +23,7 @@ type ListView struct {
 func ToListView(rawTransactions []*transactionpb.Transaction) *ListView {
 	var items []ListItem
 	for _, rawTransaction := range rawTransactions {
-		item := ListItem{
+		items = append(items, ListItem{
 			Signature:  rawTransaction.GetSignature(),
 			PublicKey:  rawTransaction.GetSigner(),
 			Nonce:      rawTransaction.GetNonce(),
@@ -33,9 +33,7 @@ func ToListView(rawTransactions []*transactionpb.Transaction) *ListView {
 			IsSuccess:  rawTransaction.GetIsSuccess(),
 			PartialFee: rawTransaction.GetPartialFee(),
 			Tip:        rawTransaction.GetTip(),
-		}
-
-		items = append(items, item)
+		})
 	}
 
 	return &ListView{
