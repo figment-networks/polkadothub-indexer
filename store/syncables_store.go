@@ -15,6 +15,18 @@ type SyncablesStore struct {
 	baseStore
 }
 
+// FindSmallestIndexVersion returns smallest index version
+func (s SyncablesStore) FindSmallestIndexVersion() (*int64, error) {
+	result := &model.Syncable{}
+
+	err := s.db.
+		Where("processed_at IS NOT NULL").
+		Order("index_version").
+		First(result).Error
+
+	return &result.IndexVersion, checkErr(err)
+}
+
 // Exists returns true if a syncable exists at give height
 func (s SyncablesStore) FindByHeight(height int64) (syncable *model.Syncable, err error) {
 	result := &model.Syncable{}
@@ -34,6 +46,32 @@ func (s SyncablesStore) FindMostRecent() (*model.Syncable, error) {
 	err := s.db.
 		Order("height desc").
 		First(result).Error
+
+	return result, checkErr(err)
+}
+
+// FindLastInSession finds last syncable in given session
+func (s SyncablesStore) FindLastInSession(session int64) (syncable *model.Syncable, err error) {
+	result := &model.Syncable{}
+
+	err = s.db.
+		Where("session = ?", session).
+		Order("height DESC").
+		First(result).
+		Error
+
+	return result, checkErr(err)
+}
+
+// FindLastInEra finds last syncable in given era
+func (s SyncablesStore) FindLastInEra(era int64) (syncable *model.Syncable, err error) {
+	result := &model.Syncable{}
+
+	err = s.db.
+		Where("era = ?", era).
+		Order("height DESC").
+		First(result).
+		Error
 
 	return result, checkErr(err)
 }

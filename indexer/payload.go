@@ -4,6 +4,9 @@ import (
 	"github.com/figment-networks/indexing-engine/pipeline"
 	"github.com/figment-networks/polkadothub-indexer/model"
 	"github.com/figment-networks/polkadothub-proxy/grpc/block/blockpb"
+	"github.com/figment-networks/polkadothub-proxy/grpc/event/eventpb"
+	"github.com/figment-networks/polkadothub-proxy/grpc/staking/stakingpb"
+	"github.com/figment-networks/polkadothub-proxy/grpc/validatorperformance/validatorperformancepb"
 )
 
 var (
@@ -26,28 +29,33 @@ func (pf *payloadFactory) GetPayload(currentHeight int64) pipeline.Payload {
 type payload struct {
 	CurrentHeight int64
 
-	// Setup stage
-	HeightMeta HeightMeta
+	// Fetcher stage
+	HeightMeta              HeightMeta
+	RawBlock                *blockpb.Block
+	RawValidatorPerformance []*validatorperformancepb.Validator
+	RawStaking              *stakingpb.Staking
+	RawEvents               []*eventpb.Event
 
 	// Syncer stage
 	Syncable *model.Syncable
 
-	// Fetcher stage
-	RawBlock        *blockpb.Block
-
 	// Parser stage
 	ParsedBlock      ParsedBlockData
-	//ParsedValidators ParsedValidatorsData
+	ParsedValidators ParsedValidatorsData
 
 	// Aggregator stage
+	NewValidatorAggregates     []model.ValidatorAgg
+	UpdatedValidatorAggregates []model.ValidatorAgg
 
 	// Sequencer stage
-	NewBlockSequence          *model.BlockSeq
-	UpdatedBlockSequence      *model.BlockSeq
-	//NewValidatorSequences     []model.ValidatorSeq
-	//UpdatedValidatorSequences []model.ValidatorSeq
-
-	//TransactionSequences         []model.TransactionSeq
+	NewBlockSequence                 *model.BlockSeq
+	UpdatedBlockSequence             *model.BlockSeq
+	NewValidatorSessionSequences     []model.ValidatorSessionSeq
+	UpdatedValidatorSessionSequences []model.ValidatorSessionSeq
+	NewValidatorEraSequences         []model.ValidatorEraSeq
+	UpdatedValidatorEraSequences     []model.ValidatorEraSeq
+	NewEventSequences                []model.EventSeq
+	UpdatedEventSequences            []model.EventSeq
 }
 
 func (p *payload) MarkAsProcessed() {}

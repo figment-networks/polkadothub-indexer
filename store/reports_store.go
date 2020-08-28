@@ -53,11 +53,11 @@ func (s ReportsStore) Last() (*model.Report, error) {
 	return result, checkErr(err)
 }
 
-// DeleteReindexing deletes reports with kind reindexing sequential or parallel
-func (s *ReportsStore) DeleteReindexing() error {
+// DeleteByKinds deletes reports with kind reindexing sequential or parallel
+func (s *ReportsStore) DeleteByKinds(kinds []model.ReportKind) error {
 	err := s.db.
 		Unscoped().
-		Where("kind = ? OR kind = ?", model.ReportKindParallelReindex, model.ReportKindSequentialReindex).
+		Where("kind IN(?)", kinds).
 		Delete(&model.Report{}).
 		Error
 

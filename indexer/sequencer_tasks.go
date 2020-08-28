@@ -4,30 +4,27 @@ import (
 	"context"
 	"fmt"
 	"github.com/figment-networks/indexing-engine/pipeline"
+	"github.com/figment-networks/polkadothub-indexer/config"
 	"github.com/figment-networks/polkadothub-indexer/metric"
+	"github.com/figment-networks/polkadothub-indexer/model"
 	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/utils/logger"
 	"time"
 )
 
 const (
-	BlockSeqCreatorTaskName               = "BlockSeqCreator"
-	ValidatorSeqCreatorTaskName           = "ValidatorSeqCreator"
-	TransactionSeqCreatorTaskName         = "TransactionSeqCreator"
-	StakingSeqCreatorTaskName             = "StakingSeqCreator"
-	DelegationSeqCreatorTaskName          = "DelegationSeqCreator"
-	DebondingDelegationSeqCreatorTaskName = "DebondingDelegationSeqCreator"
+	BlockSeqCreatorTaskName            = "BlockSeqCreator"
+	ValidatorSessionSeqCreatorTaskName = "ValidatorSessionSeqCreator"
+	ValidatorEraSeqCreatorTaskName     = "ValidatorEraSeqCreator"
+	EventSeqCreatorTaskName            = "EventSeqCreator"
 )
 
 var (
 	_ pipeline.Task = (*blockSeqCreatorTask)(nil)
-	//_ pipeline.Task = (*validatorSeqCreatorTask)(nil)
-	//_ pipeline.Task = (*transactionSeqCreatorTask)(nil)
-	//_ pipeline.Task = (*stakingSeqCreatorTask)(nil)
-	//_ pipeline.Task = (*delegationSeqCreatorTask)(nil)
-	//_ pipeline.Task = (*debondingDelegationSeqCreatorTask)(nil)
+	_ pipeline.Task = (*validatorSessionSeqCreatorTask)(nil)
 )
 
+// NewBlockSeqCreatorTask creates block sequences
 func NewBlockSeqCreatorTask(db *store.Store) *blockSeqCreatorTask {
 	return &blockSeqCreatorTask{
 		db: db,
@@ -49,7 +46,7 @@ func (t *blockSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) error
 
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StageSequencer, t.GetName(), payload.CurrentHeight))
 
-	rawBlockSeq, err := BlockToSequence(payload.Syncable, payload.RawBlock, payload.ParsedBlock)
+	mappedBlockSeq, err := ToBlockSequence(payload.Syncable, payload.RawBlock, payload.ParsedBlock)
 	if err != nil {
 		return err
 	}
@@ -57,299 +54,203 @@ func (t *blockSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) error
 	blockSeq, err := t.db.BlockSeq.FindByHeight(payload.CurrentHeight)
 	if err != nil {
 		if err == store.ErrNotFound {
-			payload.NewBlockSequence = rawBlockSeq
+			payload.NewBlockSequence = mappedBlockSeq
 			return nil
 		} else {
 			return err
 		}
 	}
 
-	blockSeq.Update(*rawBlockSeq)
+	blockSeq.Update(*mappedBlockSeq)
 	payload.UpdatedBlockSequence = blockSeq
 
 	return nil
 }
-//
-//func NewValidatorSeqCreatorTask(db *store.Store) *validatorSeqCreatorTask {
-//	return &validatorSeqCreatorTask{
-//		db: db,
-//	}
-//}
-//
-//type validatorSeqCreatorTask struct {
-//	db *store.Store
-//}
-//
-//func (t *validatorSeqCreatorTask) GetName() string {
-//	return ValidatorSeqCreatorTaskName
-//}
-//
-//func (t *validatorSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) error {
-//	defer metric.LogIndexerTaskDuration(time.Now(), t.GetName())
-//
-//	payload := p.(*payload)
-//
-//	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StageSequencer, t.GetName(), payload.CurrentHeight))
-//
-//	rawValidatorSeqs, err := ValidatorToSequence(payload.Syncable, payload.RawValidators, payload.ParsedValidators)
-//	if err != nil {
-//		return err
-//	}
-//
-//	var newValidatorSeqs []model.ValidatorSeq
-//	var updatedValidatorSeqs []model.ValidatorSeq
-//	for _, rawValidatorSeq := range rawValidatorSeqs {
-//		validatorSeq, err := t.db.ValidatorSeq.FindByHeightAndEntityUID(payload.CurrentHeight, rawValidatorSeq.EntityUID)
-//		if err != nil {
-//			if err == store.ErrNotFound {
-//				newValidatorSeqs = append(newValidatorSeqs, rawValidatorSeq)
-//				continue
-//			} else {
-//				return err
-//			}
-//		}
-//
-//		validatorSeq.Update(rawValidatorSeq)
-//		updatedValidatorSeqs = append(updatedValidatorSeqs, *validatorSeq)
-//	}
-//
-//	payload.NewValidatorSequences = newValidatorSeqs
-//	payload.UpdatedValidatorSequences = updatedValidatorSeqs
-//
-//	return nil
-//}
-//
-//func NewTransactionSeqCreatorTask(db *store.Store) *transactionSeqCreatorTask {
-//	return &transactionSeqCreatorTask{
-//		db: db,
-//	}
-//}
-//
-//type transactionSeqCreatorTask struct {
-//	db *store.Store
-//}
-//
-//func (t *transactionSeqCreatorTask) GetName() string {
-//	return TransactionSeqCreatorTaskName
-//}
-//
-//func (t *transactionSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) error {
-//	defer metric.LogIndexerTaskDuration(time.Now(), t.GetName())
-//
-//	payload := p.(*payload)
-//
-//	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StageSequencer, t.GetName(), payload.CurrentHeight))
-//
-//	var res []model.TransactionSeq
-//	sequenced, err := t.db.TransactionSeq.FindByHeight(payload.CurrentHeight)
-//	if err != nil {
-//		return err
-//	}
-//
-//	toSequence, err := TransactionToSequence(payload.Syncable, payload.RawTransactions)
-//	if err != nil {
-//		return err
-//	}
-//
-//	// Nothing to sequence
-//	if len(toSequence) == 0 {
-//		payload.TransactionSequences = res
-//		return nil
-//	}
-//
-//	// Everything sequenced and saved to persistence
-//	if len(sequenced) == len(toSequence) {
-//		payload.TransactionSequences = sequenced
-//		return nil
-//	}
-//
-//	isSequenced := func(vs model.TransactionSeq) bool {
-//		for _, sv := range sequenced {
-//			if sv.Equal(vs) {
-//				return true
-//			}
-//		}
-//		return false
-//	}
-//
-//	for _, vs := range toSequence {
-//		if !isSequenced(vs) {
-//			if err := t.db.TransactionSeq.Create(&vs); err != nil {
-//				return err
-//			}
-//		}
-//		res = append(res, vs)
-//	}
-//	payload.TransactionSequences = res
-//	return nil
-//}
-//
-//func NewStakingSeqCreatorTask(db *store.Store) *stakingSeqCreatorTask {
-//	return &stakingSeqCreatorTask{
-//		db: db,
-//	}
-//}
-//
-//type stakingSeqCreatorTask struct {
-//	db *store.Store
-//}
-//
-//func (t *stakingSeqCreatorTask) GetName() string {
-//	return StakingSeqCreatorTaskName
-//}
-//
-//func (t *stakingSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) error {
-//	defer metric.LogIndexerTaskDuration(time.Now(), t.GetName())
-//
-//	payload := p.(*payload)
-//
-//	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StageSequencer, t.GetName(), payload.CurrentHeight))
-//
-//	sequenced, err := t.db.StakingSeq.FindByHeight(payload.CurrentHeight)
-//	if err != nil {
-//		if err == store.ErrNotFound {
-//			toSequence, err := StakingToSequence(payload.Syncable, payload.RawState)
-//			if err != nil {
-//				return err
-//			}
-//			if err := t.db.StakingSeq.Create(toSequence); err != nil {
-//				return err
-//			}
-//			payload.StakingSequence = toSequence
-//			return nil
-//		}
-//		return err
-//	}
-//	payload.StakingSequence = sequenced
-//	return nil
-//}
-//
-//type delegationSeqCreatorTask struct {
-//	db *store.Store
-//}
-//
-//func (t *delegationSeqCreatorTask) GetName() string {
-//	return DelegationSeqCreatorTaskName
-//}
-//
-//func NewDelegationsSeqCreatorTask(db *store.Store) *delegationSeqCreatorTask {
-//	return &delegationSeqCreatorTask{
-//		db: db,
-//	}
-//}
-//
-//func (t *delegationSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) error {
-//	defer metric.LogIndexerTaskDuration(time.Now(), t.GetName())
-//
-//	payload := p.(*payload)
-//
-//	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StageSequencer, t.GetName(), payload.CurrentHeight))
-//
-//	var res []model.DelegationSeq
-//	sequenced, err := t.db.DelegationSeq.FindByHeight(payload.CurrentHeight)
-//	if err != nil {
-//		return err
-//	}
-//
-//	toSequence, err := DelegationToSequence(payload.Syncable, payload.RawState)
-//	if err != nil {
-//		return err
-//	}
-//
-//	// Nothing to sequence
-//	if len(toSequence) == 0 {
-//		payload.DelegationSequences = res
-//		return nil
-//	}
-//
-//	// Everything sequenced and saved to persistence
-//	if len(sequenced) == len(toSequence) {
-//		payload.DelegationSequences = sequenced
-//		return nil
-//	}
-//
-//	isSequenced := func(vs model.DelegationSeq) bool {
-//		for _, sv := range sequenced {
-//			if sv.Equal(vs) {
-//				return true
-//			}
-//		}
-//		return false
-//	}
-//
-//	for _, vs := range toSequence {
-//		if !isSequenced(vs) {
-//			if err := t.db.DelegationSeq.Create(&vs); err != nil {
-//				return err
-//			}
-//		}
-//		res = append(res, vs)
-//	}
-//	payload.DelegationSequences = res
-//	return nil
-//}
-//
-//func NewDebondingDelegationsSeqCreatorTask(db *store.Store) *debondingDelegationSeqCreatorTask {
-//	return &debondingDelegationSeqCreatorTask{
-//		db: db,
-//	}
-//}
-//
-//type debondingDelegationSeqCreatorTask struct {
-//	db *store.Store
-//}
-//
-//func (t *debondingDelegationSeqCreatorTask) GetName() string {
-//	return DebondingDelegationSeqCreatorTaskName
-//}
-//
-//func (t *debondingDelegationSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) error {
-//	defer metric.LogIndexerTaskDuration(time.Now(), t.GetName())
-//
-//	payload := p.(*payload)
-//
-//	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StageSequencer, t.GetName(), payload.CurrentHeight))
-//
-//	var res []model.DebondingDelegationSeq
-//	sequenced, err := t.db.DebondingDelegationSeq.FindByHeight(payload.CurrentHeight)
-//	if err != nil {
-//		return err
-//	}
-//
-//	toSequence, err := DebondingDelegationToSequence(payload.Syncable, payload.RawState)
-//	if err != nil {
-//		return err
-//	}
-//
-//	// Nothing to sequence
-//	if len(toSequence) == 0 {
-//		payload.DebondingDelegationSequences = res
-//		return nil
-//	}
-//
-//	// Everything sequenced and saved to persistence
-//	if len(sequenced) == len(toSequence) {
-//		payload.DebondingDelegationSequences = sequenced
-//		return nil
-//	}
-//
-//	isSequenced := func(vs model.DebondingDelegationSeq) bool {
-//		for _, sv := range sequenced {
-//			if sv.Equal(vs) {
-//				return true
-//			}
-//		}
-//		return false
-//	}
-//
-//	for _, vs := range toSequence {
-//		if !isSequenced(vs) {
-//			if err := t.db.DebondingDelegationSeq.Create(&vs); err != nil {
-//				return err
-//			}
-//		}
-//		res = append(res, vs)
-//	}
-//	payload.DebondingDelegationSequences = res
-//	return nil
-//}
+
+// NewValidatorSessionSeqCreatorTask creates validator session sequences
+func NewValidatorSessionSeqCreatorTask(cfg *config.Config, db *store.Store) *validatorSessionSeqCreatorTask {
+	return &validatorSessionSeqCreatorTask{
+		cfg: cfg,
+		db:  db,
+	}
+}
+
+type validatorSessionSeqCreatorTask struct {
+	cfg *config.Config
+	db  *store.Store
+}
+
+func (t *validatorSessionSeqCreatorTask) GetName() string {
+	return ValidatorSessionSeqCreatorTaskName
+}
+
+func (t *validatorSessionSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) error {
+	defer metric.LogIndexerTaskDuration(time.Now(), t.GetName())
+
+	payload := p.(*payload)
+
+	if !payload.Syncable.LastInSession {
+		logger.Info(fmt.Sprintf("indexer task skipped because height is not last in session [stage=%s] [task=%s] [height=%d]", pipeline.StageFetcher, t.GetName(), payload.CurrentHeight))
+		return nil
+	}
+
+	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StageSequencer, t.GetName(), payload.CurrentHeight))
+
+	var firstHeightInSession int64
+	lastSyncableInPrevSession, err := t.db.Syncables.FindLastInSession(payload.Syncable.Session - 1)
+	if err != nil {
+		if err == store.ErrNotFound {
+			firstHeightInSession = t.cfg.FirstBlockHeight
+		} else {
+			return err
+		}
+	} else {
+		firstHeightInSession = lastSyncableInPrevSession.Height + 1
+	}
+
+	mappedValidatorSessionSeqs, err := ToValidatorSessionSequence(payload.Syncable, firstHeightInSession, payload.RawValidatorPerformance)
+	if err != nil {
+		return err
+	}
+
+	var newValidatorSessionSeqs []model.ValidatorSessionSeq
+	var updatedValidatorSessionSeqs []model.ValidatorSessionSeq
+	for _, rawValidatorSessionSeq := range mappedValidatorSessionSeqs {
+		validatorSessionSeq, err := t.db.ValidatorSessionSeq.FindBySessionAndStashAccount(payload.Syncable.Session, rawValidatorSessionSeq.StashAccount)
+		if err != nil {
+			if err == store.ErrNotFound {
+				newValidatorSessionSeqs = append(newValidatorSessionSeqs, rawValidatorSessionSeq)
+				continue
+			} else {
+				return err
+			}
+		}
+
+		validatorSessionSeq.Update(rawValidatorSessionSeq)
+		updatedValidatorSessionSeqs = append(updatedValidatorSessionSeqs, *validatorSessionSeq)
+	}
+
+	payload.NewValidatorSessionSequences = newValidatorSessionSeqs
+	payload.UpdatedValidatorSessionSequences = updatedValidatorSessionSeqs
+
+	return nil
+}
+
+// NewValidatorEraSeqCreatorTask creates validator era sequences
+func NewValidatorEraSeqCreatorTask(cfg *config.Config, db *store.Store) *validatorEraSeqCreatorTask {
+	return &validatorEraSeqCreatorTask{
+		cfg: cfg,
+		db:  db,
+	}
+}
+
+type validatorEraSeqCreatorTask struct {
+	cfg *config.Config
+	db  *store.Store
+}
+
+func (t *validatorEraSeqCreatorTask) GetName() string {
+	return ValidatorEraSeqCreatorTaskName
+}
+
+func (t *validatorEraSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) error {
+	defer metric.LogIndexerTaskDuration(time.Now(), t.GetName())
+
+	payload := p.(*payload)
+
+	if !payload.Syncable.LastInEra {
+		logger.Info(fmt.Sprintf("indexer task skipped because height is not last in era [stage=%s] [task=%s] [height=%d]", pipeline.StageFetcher, t.GetName(), payload.CurrentHeight))
+		return nil
+	}
+
+	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StageSequencer, t.GetName(), payload.CurrentHeight))
+
+	var firstHeightInEra int64
+	lastSyncableInPrevEra, err := t.db.Syncables.FindLastInEra(payload.Syncable.Era - 1)
+	if err != nil {
+		if err == store.ErrNotFound {
+			firstHeightInEra = t.cfg.FirstBlockHeight
+		} else {
+			return err
+		}
+	} else {
+		firstHeightInEra = lastSyncableInPrevEra.Height + 1
+	}
+
+	mappedValidatorEraSeqs, err := ToValidatorEraSequence(payload.Syncable, firstHeightInEra, payload.RawStaking.GetValidators())
+	if err != nil {
+		return err
+	}
+
+	var newValidatorEraSeqs []model.ValidatorEraSeq
+	var updatedValidatorEraSeqs []model.ValidatorEraSeq
+	for _, rawValidatorEraSeq := range mappedValidatorEraSeqs {
+		validatorEraSeq, err := t.db.ValidatorEraSeq.FindByEraAndStashAccount(payload.Syncable.Era, rawValidatorEraSeq.StashAccount)
+		if err != nil {
+			if err == store.ErrNotFound {
+				newValidatorEraSeqs = append(newValidatorEraSeqs, rawValidatorEraSeq)
+				continue
+			} else {
+				return err
+			}
+		}
+
+		validatorEraSeq.Update(rawValidatorEraSeq)
+		updatedValidatorEraSeqs = append(updatedValidatorEraSeqs, *validatorEraSeq)
+	}
+
+	payload.NewValidatorEraSequences = newValidatorEraSeqs
+	payload.UpdatedValidatorEraSequences = updatedValidatorEraSeqs
+
+	return nil
+}
+
+// NewEventSeqCreatorTask creates block sequences
+func NewEventSeqCreatorTask(db *store.Store) *eventSeqCreatorTask {
+	return &eventSeqCreatorTask{
+		db: db,
+	}
+}
+
+type eventSeqCreatorTask struct {
+	db *store.Store
+}
+
+func (t *eventSeqCreatorTask) GetName() string {
+	return EventSeqCreatorTaskName
+}
+
+func (t *eventSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) error {
+	defer metric.LogIndexerTaskDuration(time.Now(), t.GetName())
+
+	payload := p.(*payload)
+
+	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StageSequencer, t.GetName(), payload.CurrentHeight))
+
+	mappedEventSeqs, err := EventToSequence(payload.Syncable, payload.RawEvents)
+	if err != nil {
+		return err
+	}
+
+	var newEventSeqs []model.EventSeq
+	var updatedEventSeqs []model.EventSeq
+	for _, rawEventSeq := range mappedEventSeqs {
+		validatorSeq, err := t.db.EventSeq.FindByHeightAndIndex(payload.CurrentHeight, rawEventSeq.Index)
+		if err != nil {
+			if err == store.ErrNotFound {
+				newEventSeqs = append(newEventSeqs, rawEventSeq)
+				continue
+			} else {
+				return err
+			}
+		}
+
+		validatorSeq.Update(rawEventSeq)
+		updatedEventSeqs = append(updatedEventSeqs, *validatorSeq)
+	}
+
+	payload.NewEventSequences = newEventSeqs
+	payload.UpdatedEventSequences = updatedEventSeqs
+
+	return nil
+}

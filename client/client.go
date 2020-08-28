@@ -13,18 +13,28 @@ func New(connStr string) (*Client, error) {
 	return &Client{
 		conn: conn,
 
-		Chain:               NewChainClient(conn),
-		Block:               NewBlockClient(conn),
-		Transaction:         NewTransactionClient(conn),
+		Chain:                NewChainClient(conn),
+		Account:              NewAccountClient(conn),
+		Block:                NewBlockClient(conn),
+		Height:               NewHeightClient(conn),
+		Transaction:          NewTransactionClient(conn),
+		ValidatorPerformance: NewValidatorPerformanceClient(conn),
+		Staking:              NewStakingClient(conn),
+		Event:                NewEventClient(conn),
 	}, nil
 }
 
 type Client struct {
 	conn *grpc.ClientConn
 
-	Chain               ChainClient
-	Block               BlockClient
-	Transaction         TransactionClient
+	Chain                ChainClient
+	Account              AccountClient
+	Block                BlockClient
+	Height               HeightClient
+	Transaction          TransactionClient
+	ValidatorPerformance ValidatorPerformanceClient
+	Staking              StakingClient
+	Event                EventClient
 }
 
 func (c *Client) Close() error {

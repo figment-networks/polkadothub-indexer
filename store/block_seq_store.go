@@ -85,8 +85,7 @@ func (s *BlockSeqStore) FindMostRecent() (*model.BlockSeq, error) {
 // DeleteOlderThan deletes block sequence older than given threshold
 func (s *BlockSeqStore) DeleteOlderThan(purgeThreshold time.Time, activityPeriods []ActivityPeriodRow) (*int64, error) {
 	tx := s.db.
-		Debug()
-	//Unscoped()
+		Unscoped()
 
 	hasIntervals := false
 	for _, activityPeriod := range activityPeriods {
@@ -123,7 +122,6 @@ func (s *BlockSeqStore) Summarize(interval types.SummaryInterval, activityPeriod
 	defer logQueryDuration(time.Now(), "BlockSummaryStore_Summarize")
 
 	tx := s.db.
-		Debug().
 		Table(model.BlockSeq{}.TableName()).
 		Select(summarizeBlocksQuerySelect, interval).
 		Order("time_bucket").

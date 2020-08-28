@@ -25,9 +25,15 @@ func New(connStr string) (*Store, error) {
 		Syncables: NewSyncablesStore(conn),
 		Reports:   NewReportsStore(conn),
 
-		BlockSeq:               NewBlockSeqStore(conn),
+		BlockSeq:            NewBlockSeqStore(conn),
+		ValidatorSessionSeq: NewValidatorSessionSeqStore(conn),
+		ValidatorEraSeq:     NewValidatorEraSeqStore(conn),
+		EventSeq:            NewEventSeqStore(conn),
+
+		ValidatorAgg: NewValidatorAggStore(conn),
 
 		BlockSummary:     NewBlockSummaryStore(conn),
+		ValidatorSummary: NewValidatorSummaryStore(conn),
 	}, nil
 }
 
@@ -39,9 +45,15 @@ type Store struct {
 	Syncables *SyncablesStore
 	Reports   *ReportsStore
 
-	BlockSeq               *BlockSeqStore
+	BlockSeq            *BlockSeqStore
+	ValidatorSessionSeq *ValidatorSessionSeqStore
+	ValidatorEraSeq     *ValidatorEraSeqStore
+	EventSeq            *EventSeqStore
+
+	ValidatorAgg *ValidatorAggStore
 
 	BlockSummary     *BlockSummaryStore
+	ValidatorSummary *ValidatorSummaryStore
 }
 
 // Test checks the connection status

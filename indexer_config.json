@@ -1,0 +1,71 @@
+{
+    "versions": [
+        {
+            "id": 1,
+            "targets": [1,2,3,4,5],
+            "parallel": false
+        }
+    ],
+    "shared_tasks": [
+        "MainSyncer"
+    ],
+    "available_targets": [
+      {
+        "id": 1,
+        "name": "index_block_sequences",
+        "desc": "Creates and persists block sequences",
+        "tasks": [
+          "Fetcher",
+          "BlockParser",
+          "BlockSeqCreator",
+          "SyncerPersistor",
+          "BlockSeqPersistor"
+        ]
+      },
+      {
+        "id": 2,
+        "name": "index_validator_session_sequences",
+        "desc": "Creates and persists validator session sequences",
+        "tasks": [
+          "Fetcher",
+          "ValidatorSessionSeqCreator",
+          "SyncerPersistor",
+          "ValidatorSessionSeqPersistor"
+        ]
+      },
+      {
+        "id": 3,
+        "name": "index_validator_era_sequences",
+        "desc": "Creates and persists validator era sequences",
+        "tasks": [
+          "Fetcher",
+          "ValidatorEraSeqCreator",
+          "SyncerPersistor",
+          "ValidatorEraSeqPersistor"
+        ]
+      },
+      {
+        "id": 4,
+        "name": "index_validator_aggregates",
+        "desc": "Creates and persists validator aggregates",
+        "tasks": [
+          "Fetcher",
+          "ValidatorsParser",
+          "ValidatorAggCreator",
+          "SyncerPersistor",
+          "ValidatorAggPersistor"
+        ]
+      },
+      {
+        "id": 5,
+        "name": "index_event_sequences",
+        "desc": "Creates and persists event sequences",
+        "tasks": [
+          "Fetcher",
+          "EventSeqCreator",
+          "SyncerPersistor",
+          "EventSeqPersistor"
+        ]
+      }
+    ]
+  }
