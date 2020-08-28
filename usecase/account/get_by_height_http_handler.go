@@ -23,18 +23,18 @@ type getByHeightHttpHandler struct {
 
 func NewGetByHeightHttpHandler(db *store.Store, c *client.Client) *getByHeightHttpHandler {
 	return &getByHeightHttpHandler{
-		db: db,
+		db:     db,
 		client: c,
 	}
 }
 
-type Request struct {
-	Address string `uri:"address" binding:"required"`
-	Height *int64 `form:"height" binding:"-"`
+type GetByHeightRequest struct {
+	StashAccount string `uri:"stash_account" binding:"required"`
+	Height       *int64 `form:"height" binding:"-"`
 }
 
 func (h *getByHeightHttpHandler) Handle(c *gin.Context) {
-	var req Request
+	var req GetByHeightRequest
 	if err := c.ShouldBindUri(&req); err != nil {
 		logger.Error(err)
 		err := errors.New("invalid stash account")
@@ -48,7 +48,7 @@ func (h *getByHeightHttpHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	ds, err := h.getUseCase().Execute(req.Address, req.Height)
+	ds, err := h.getUseCase().Execute(req.StashAccount, req.Height)
 	if err != nil {
 		logger.Error(err)
 		c.JSON(http.StatusInternalServerError, err)
@@ -64,6 +64,3 @@ func (h *getByHeightHttpHandler) getUseCase() *getByHeightUseCase {
 	}
 	return h.useCase
 }
-
-
-
