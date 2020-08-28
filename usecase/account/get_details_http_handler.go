@@ -33,7 +33,7 @@ type GetDetailsRequest struct {
 }
 
 func (h *getDetailsHttpHandler) Handle(c *gin.Context) {
-	var req Request
+	var req GetDetailsRequest
 	if err := c.ShouldBindUri(&req); err != nil {
 		logger.Error(err)
 		err := errors.New("invalid stash account")
@@ -41,7 +41,7 @@ func (h *getDetailsHttpHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	ds, err := h.getUseCase().Execute(req.Address)
+	ds, err := h.getUseCase().Execute(req.StashAccount)
 	if err != nil {
 		logger.Error(err)
 		c.JSON(http.StatusInternalServerError, err)
