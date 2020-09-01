@@ -12,7 +12,7 @@ type ListItem struct {
 	Section    string `json:"section"`
 	Args       string `json:"args"`
 	IsSuccess  bool   `json:"is_success"`
-	PartialFee string `json:"partialFee"`
+	PartialFee string `json:"partial_fee"`
 	Tip        string `json:"tip"`
 }
 
