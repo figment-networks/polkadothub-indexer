@@ -3,6 +3,7 @@ package account
 import (
 	"encoding/json"
 	"github.com/figment-networks/polkadothub-indexer/model"
+	"github.com/figment-networks/polkadothub-indexer/types"
 	"github.com/figment-networks/polkadothub-proxy/grpc/account/accountpb"
 	"github.com/pkg/errors"
 )
@@ -37,18 +38,20 @@ type DetailsView struct {
 
 	*Identity
 
-	Transfers []*BalanceTransfer `json:"transfers"`
-	Deposits  []*BalanceDeposit  `json:"deposits"`
-	Bonded    []*Bonded          `json:"bonded"`
-	Unbonded  []*Unbonded        `json:"unbonded"`
-	Withdrawn []*Withdrawn       `json:"withdrawn"`
+	Transfers   []*BalanceTransfer `json:"transfers"`
+	Deposits    []*BalanceDeposit  `json:"deposits"`
+	Bonded      []*Bonded          `json:"bonded"`
+	Unbonded    []*Unbonded        `json:"unbonded"`
+	Withdrawn   []*Withdrawn       `json:"withdrawn"`
+	Delegations []*Delegation      `json:"delegations"`
 }
 
-func ToDetailsView(address string, rawAccountIdentity *accountpb.AccountIdentity, balanceTransferModels []model.EventSeq, balanceDepositModels []model.EventSeq, bondedModels []model.EventSeq, unbondedModels []model.EventSeq, withdrawnModels []model.EventSeq) (*DetailsView, error) {
+func ToDetailsView(address string, rawAccountIdentity *accountpb.AccountIdentity, accountEraSeqs []model.AccountEraSeq, balanceTransferModels []model.EventSeq, balanceDepositModels []model.EventSeq, bondedModels []model.EventSeq, unbondedModels []model.EventSeq, withdrawnModels []model.EventSeq) (*DetailsView, error) {
 	view := &DetailsView{
 		Address: address,
 
-		Identity: ToIdentity(rawAccountIdentity),
+		Identity:    ToIdentity(rawAccountIdentity),
+		Delegations: ToDelegations(accountEraSeqs),
 	}
 
 	transfers, err := ToBalanceTransfers(address, balanceTransferModels)
@@ -106,6 +109,24 @@ func ToIdentity(rawAccountIdentity *accountpb.AccountIdentity) *Identity {
 		TwitterName: rawAccountIdentity.GetTwitterName(),
 		Image:       rawAccountIdentity.GetImage(),
 	}
+}
+
+type Delegation struct {
+	Era            int64          `json:"era"`
+	ValidatorStash string         `json:"validator_stash"`
+	Amount         types.Quantity `json:"amount"`
+}
+
+func ToDelegations(accountEraSeqs []model.AccountEraSeq) []*Delegation {
+	var delegations []*Delegation
+	for _, accountEraSeq := range accountEraSeqs {
+		delegations = append(delegations, &Delegation{
+			Era:            accountEraSeq.Era,
+			ValidatorStash: accountEraSeq.ValidatorStashAccount,
+			Amount:         accountEraSeq.Stake,
+		})
+	}
+	return delegations
 }
 
 type EventData struct {

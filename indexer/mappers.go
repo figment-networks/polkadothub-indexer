@@ -15,6 +15,7 @@ var (
 	ErrBlockSequenceNotValid            = errors.New("block sequence not valid")
 	ErrValidatorSessionSequenceNotValid = errors.New("validator session sequence not valid")
 	ErrValidatorEraSequenceNotValid     = errors.New("validator era sequence not valid")
+	ErrAccountEraSequenceNotValid       = errors.New("account era sequence not valid")
 	ErrEventSequenceNotValid            = errors.New("event sequence not valid")
 )
 
@@ -93,7 +94,7 @@ func ToValidatorEraSequence(syncable *model.Syncable, firstHeight int64, rawStak
 	return validators, nil
 }
 
-func EventToSequence(syncable *model.Syncable, rawEvents []*eventpb.Event) ([]model.EventSeq, error) {
+func ToEventSequence(syncable *model.Syncable, rawEvents []*eventpb.Event) ([]model.EventSeq, error) {
 	var transactions []model.EventSeq
 	for _, rawEvent := range rawEvents {
 		eventData := rawEvent.GetData()
@@ -123,4 +124,49 @@ func EventToSequence(syncable *model.Syncable, rawEvents []*eventpb.Event) ([]mo
 		transactions = append(transactions, e)
 	}
 	return transactions, nil
+}
+
+func ToAccountEraSequence(syncable *model.Syncable, firstHeight int64, rawStakingValidator *stakingpb.Validator) ([]model.AccountEraSeq, error) {
+	var accountEraSeqs []model.AccountEraSeq
+
+	eraSeq := &model.EraSequence{
+		Era:         syncable.Era,
+		StartHeight: firstHeight,
+		EndHeight:   syncable.Height,
+		Time:        syncable.Time,
+	}
+	validatorStashAccount := rawStakingValidator.GetStashAccount()
+	validatorControllerAccount := rawStakingValidator.GetControllerAccount()
+
+	e := model.AccountEraSeq{
+		EraSequence: eraSeq,
+
+		StashAccount:               validatorStashAccount,
+		ControllerAccount:          validatorControllerAccount,
+		ValidatorStashAccount:      validatorStashAccount,
+		ValidatorControllerAccount: validatorControllerAccount,
+		Stake:                      types.NewQuantityFromInt64(rawStakingValidator.GetOwnStake()),
+	}
+
+	accountEraSeqs = append(accountEraSeqs, e)
+
+	for _, rawStakingNominator := range rawStakingValidator.GetStakers() {
+		e = model.AccountEraSeq{
+			EraSequence: eraSeq,
+
+			StashAccount:               rawStakingNominator.GetStashAccount(),
+			ControllerAccount:          rawStakingNominator.GetControllerAccount(),
+			ValidatorStashAccount:      validatorStashAccount,
+			ValidatorControllerAccount: validatorControllerAccount,
+			Stake:                      types.NewQuantityFromInt64(rawStakingNominator.GetStake()),
+		}
+
+		accountEraSeqs = append(accountEraSeqs, e)
+	}
+
+	if !e.Valid() {
+		return nil, ErrAccountEraSequenceNotValid
+	}
+
+	return accountEraSeqs, nil
 }

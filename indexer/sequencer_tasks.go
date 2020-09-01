@@ -17,6 +17,7 @@ const (
 	ValidatorSessionSeqCreatorTaskName = "ValidatorSessionSeqCreator"
 	ValidatorEraSeqCreatorTaskName     = "ValidatorEraSeqCreator"
 	EventSeqCreatorTaskName            = "EventSeqCreator"
+	AccountEraSeqCreatorTaskName       = "AccountEraSeqCreator"
 )
 
 var (
@@ -227,7 +228,7 @@ func (t *eventSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) error
 
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StageSequencer, t.GetName(), payload.CurrentHeight))
 
-	mappedEventSeqs, err := EventToSequence(payload.Syncable, payload.RawEvents)
+	mappedEventSeqs, err := ToEventSequence(payload.Syncable, payload.RawEvents)
 	if err != nil {
 		return err
 	}
@@ -251,6 +252,76 @@ func (t *eventSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) error
 
 	payload.NewEventSequences = newEventSeqs
 	payload.UpdatedEventSequences = updatedEventSeqs
+
+	return nil
+}
+
+// NewAccountEraSeqCreatorTask creates account era sequences
+func NewAccountEraSeqCreatorTask(cfg *config.Config, db *store.Store) *accountEraSeqCreatorTask {
+	return &accountEraSeqCreatorTask{
+		cfg: cfg,
+		db:  db,
+	}
+}
+
+type accountEraSeqCreatorTask struct {
+	cfg *config.Config
+	db  *store.Store
+}
+
+func (t *accountEraSeqCreatorTask) GetName() string {
+	return AccountEraSeqCreatorTaskName
+}
+
+func (t *accountEraSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) error {
+	defer metric.LogIndexerTaskDuration(time.Now(), t.GetName())
+
+	payload := p.(*payload)
+
+	if !payload.Syncable.LastInEra {
+		logger.Info(fmt.Sprintf("indexer task skipped because height is not last in era [stage=%s] [task=%s] [height=%d]", pipeline.StageFetcher, t.GetName(), payload.CurrentHeight))
+		return nil
+	}
+
+	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StageSequencer, t.GetName(), payload.CurrentHeight))
+
+	var firstHeightInEra int64
+	lastSyncableInPrevEra, err := t.db.Syncables.FindLastInEra(payload.Syncable.Era - 1)
+	if err != nil {
+		if err == store.ErrNotFound {
+			firstHeightInEra = t.cfg.FirstBlockHeight
+		} else {
+			return err
+		}
+	} else {
+		firstHeightInEra = lastSyncableInPrevEra.Height + 1
+	}
+
+	var newAccountEraSeqs []model.AccountEraSeq
+	var updatedAccountEraSeqs []model.AccountEraSeq
+	for _, stakingValidator := range payload.RawStaking.GetValidators() {
+		mappedAccountEraSeqs, err := ToAccountEraSequence(payload.Syncable, firstHeightInEra, stakingValidator)
+		if err != nil {
+			return err
+		}
+
+		for _, mappedAccountEraSeq := range mappedAccountEraSeqs {
+			validatorEraSeq, err := t.db.AccountEraSeq.FindByHeightAndStashAccounts(payload.Syncable.Era, mappedAccountEraSeq.StashAccount, mappedAccountEraSeq.StashAccount)
+			if err != nil {
+				if err == store.ErrNotFound {
+					newAccountEraSeqs = append(newAccountEraSeqs, mappedAccountEraSeq)
+					continue
+				} else {
+					return err
+				}
+			}
+
+			validatorEraSeq.Update(mappedAccountEraSeq)
+			updatedAccountEraSeqs = append(updatedAccountEraSeqs, *validatorEraSeq)
+		}
+	}
+	payload.NewAccountEraSequences = newAccountEraSeqs
+	payload.UpdatedAccountEraSequences = updatedAccountEraSeqs
 
 	return nil
 }

@@ -18,7 +18,13 @@ func NewGetDetailsUseCase(db *store.Store, c *client.Client) *getDetailsUseCase 
 }
 
 func (uc *getDetailsUseCase) Execute(address string) (*DetailsView, error) {
-	identityRes, err := uc.client.Account.GetIdentity(address)
+	identity, err := uc.client.Account.GetIdentity(address)
+	if err != nil {
+		return nil, err
+	}
+
+	eraLimit := int64(1)
+	accountEraSeqs, err := uc.db.AccountEraSeq.FindLastByStashAccount(address, eraLimit)
 	if err != nil {
 		return nil, err
 	}
@@ -48,6 +54,6 @@ func (uc *getDetailsUseCase) Execute(address string) (*DetailsView, error) {
 		return nil, err
 	}
 
-	return ToDetailsView(address, identityRes.GetIdentity(), balanceTransfers, balanceDeposits, bonded, unbonded, withdrawn)
+	return ToDetailsView(address, identity.GetIdentity(), accountEraSeqs, balanceTransfers, balanceDeposits, bonded, unbonded, withdrawn)
 }
 
