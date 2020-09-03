@@ -148,6 +148,10 @@ func ToAccountEraSequence(syncable *model.Syncable, firstHeight int64, rawStakin
 		Stake:                      types.NewQuantityFromInt64(rawStakingValidator.GetOwnStake()),
 	}
 
+	if !e.Valid() {
+		return nil, ErrAccountEraSequenceNotValid
+	}
+
 	accountEraSeqs = append(accountEraSeqs, e)
 
 	for _, rawStakingNominator := range rawStakingValidator.GetStakers() {
@@ -161,11 +165,11 @@ func ToAccountEraSequence(syncable *model.Syncable, firstHeight int64, rawStakin
 			Stake:                      types.NewQuantityFromInt64(rawStakingNominator.GetStake()),
 		}
 
-		accountEraSeqs = append(accountEraSeqs, e)
-	}
+		if !e.Valid() {
+			return nil, ErrAccountEraSequenceNotValid
+		}
 
-	if !e.Valid() {
-		return nil, ErrAccountEraSequenceNotValid
+		accountEraSeqs = append(accountEraSeqs, e)
 	}
 
 	return accountEraSeqs, nil

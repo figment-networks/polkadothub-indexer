@@ -22,13 +22,12 @@ func (AccountEraSeq) TableName() string {
 
 func (s *AccountEraSeq) Valid() bool {
 	return s.EraSequence.Valid() &&
-		s.ValidatorStashAccount != "" &&
-		s.ControllerAccount != ""
+		s.ValidatorStashAccount != ""
 }
 
 func (s *AccountEraSeq) Equal(m AccountEraSeq) bool {
 	return s.ValidatorStashAccount == m.ValidatorStashAccount &&
-		s.ControllerAccount == m.ControllerAccount
+		s.ValidatorControllerAccount == m.ValidatorControllerAccount
 }
 
 func (b *AccountEraSeq) Update(m AccountEraSeq) {
