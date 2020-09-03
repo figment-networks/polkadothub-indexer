@@ -31,8 +31,13 @@ func (uc *getByStashAccountUseCase) Execute(stashAccount string, sessionsLimit i
 		return nil, err
 	}
 
+	eraLimit := int64(1)
+	accountEraSeqs, err := uc.db.AccountEraSeq.FindLastByValidatorStashAccount(stashAccount, eraLimit)
+	if err != nil {
+		return nil, err
+	}
 
-	return ToAggDetailsView(validatorAggs, sessionSequences, eraSequences), nil
+	return ToAggDetailsView(validatorAggs, sessionSequences, eraSequences, accountEraSeqs), nil
 }
 
 func (uc *getByStashAccountUseCase) getSessionSequences(stashAccount string, sequencesLimit int64) ([]model.ValidatorSessionSeq, error) {

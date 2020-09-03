@@ -120,6 +120,28 @@ func (s AccountEraSeqStore) FindLastByStashAccount(stashAccount string, eraLimit
 	return res, nil
 }
 
+// FindLastByValidatorStashAccount finds last account era sequences for given validator stash account and era limit
+func (s AccountEraSeqStore) FindLastByValidatorStashAccount(validatorStashAccount string, eraLimit int64) ([]model.AccountEraSeq, error) {
+	rows, err := s.db.
+		Raw(findLastAccountEraSeqByValidatorStashQuery, validatorStashAccount, validatorStashAccount, eraLimit).
+		Rows()
+
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var res []model.AccountEraSeq
+	for rows.Next() {
+		var row model.AccountEraSeq
+		if err := s.db.ScanRows(rows, &row); err != nil {
+			return nil, err
+		}
+		res = append(res, row)
+	}
+	return res, nil
+}
+
 // DeleteOlderThan deletes account sequence older than given threshold
 func (s *AccountEraSeqStore) DeleteOlderThan(purgeThreshold time.Time) (*int64, error) {
 	tx := s.db.
