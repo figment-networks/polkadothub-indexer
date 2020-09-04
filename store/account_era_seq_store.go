@@ -16,16 +16,26 @@ type AccountEraSeqStore struct {
 	baseStore
 }
 
-// CreateIfNotExists creates the account if it does not exist
-func (s AccountEraSeqStore) CreateIfNotExists(account *model.AccountEraSeq) error {
-	_, err := s.FindByHeight(account.Era)
-	if isNotFound(err) {
-		return s.Create(account)
+// FindByEraAndStashAccounts finds account era sequence by era and stash accounts
+func (s AccountEraSeqStore) FindByEraAndStashAccounts(era int64, stash string, validatorStash string) (*model.AccountEraSeq, error) {
+	q := model.AccountEraSeq{
+		EraSequence: &model.EraSequence{
+			Era: era,
+		},
+		StashAccount: stash,
+		ValidatorStashAccount: validatorStash,
 	}
-	return nil
+	var result model.AccountEraSeq
+
+	err := s.db.
+		Where(&q).
+		First(&result).
+		Error
+
+	return &result, checkErr(err)
 }
 
-// FindByHeightAndStashAccount finds account by height and stash account
+// FindByHeightAndStashAccount finds account are sequence by height and stash accounts
 func (s AccountEraSeqStore) FindByHeightAndStashAccounts(height int64, stash string, validatorStash string) (*model.AccountEraSeq, error) {
 	q := model.AccountEraSeq{
 		StashAccount: stash,

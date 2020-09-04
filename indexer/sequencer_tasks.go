@@ -306,7 +306,7 @@ func (t *accountEraSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) 
 		}
 
 		for _, mappedAccountEraSeq := range mappedAccountEraSeqs {
-			validatorEraSeq, err := t.db.AccountEraSeq.FindByHeightAndStashAccounts(payload.Syncable.Era, mappedAccountEraSeq.StashAccount, mappedAccountEraSeq.StashAccount)
+			validatorEraSeq, err := t.db.AccountEraSeq.FindByEraAndStashAccounts(payload.Syncable.Era, mappedAccountEraSeq.StashAccount, mappedAccountEraSeq.StashAccount)
 			if err != nil {
 				if err == store.ErrNotFound {
 					newAccountEraSeqs = append(newAccountEraSeqs, mappedAccountEraSeq)

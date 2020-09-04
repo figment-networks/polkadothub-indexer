@@ -9,8 +9,10 @@ type AccountEraSeq struct {
 
 	*EraSequence
 
+	// Origin accounts
 	StashAccount               string         `json:"stash_account"`
 	ControllerAccount          string         `json:"controller_account"`
+	// Destination accounts
 	ValidatorStashAccount      string         `json:"validator_stash_account"`
 	ValidatorControllerAccount string         `json:"validator_controller_account"`
 	Stake                      types.Quantity `json:"own_stake"`
