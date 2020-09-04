@@ -3,6 +3,7 @@ package validator
 import (
 	"github.com/figment-networks/polkadothub-indexer/model"
 	"github.com/figment-networks/polkadothub-indexer/types"
+	"github.com/figment-networks/polkadothub-indexer/usecase/common"
 	"github.com/lib/pq"
 )
 
@@ -26,9 +27,10 @@ type AggDetailsView struct {
 
 	LastSessionSequences []model.ValidatorSessionSeq `json:"last_session_sequences"`
 	LastEraSequences     []model.ValidatorEraSeq     `json:"last_era_sequences"`
+	LastDelegations      []*common.Delegation        `json:"delegations"`
 }
 
-func ToAggDetailsView(m *model.ValidatorAgg, sessionSequences []model.ValidatorSessionSeq, eraSequences []model.ValidatorEraSeq) *AggDetailsView {
+func ToAggDetailsView(m *model.ValidatorAgg, sessionSequences []model.ValidatorSessionSeq, eraSequences []model.ValidatorEraSeq, accountEraSequences []model.AccountEraSeq) *AggDetailsView {
 	return &AggDetailsView{
 		Model:     m.Model,
 		Aggregate: m.Aggregate,
@@ -39,6 +41,7 @@ func ToAggDetailsView(m *model.ValidatorAgg, sessionSequences []model.ValidatorS
 
 		LastSessionSequences: sessionSequences,
 		LastEraSequences:     eraSequences,
+		LastDelegations:      common.ToDelegations(accountEraSequences),
 	}
 }
 

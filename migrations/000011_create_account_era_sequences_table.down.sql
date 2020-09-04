@@ -1,0 +1,1 @@
+DROP TABLE IF EXISTS account_era_sequences;

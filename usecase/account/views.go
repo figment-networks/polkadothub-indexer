@@ -3,6 +3,7 @@ package account
 import (
 	"encoding/json"
 	"github.com/figment-networks/polkadothub-indexer/model"
+	"github.com/figment-networks/polkadothub-indexer/usecase/common"
 	"github.com/figment-networks/polkadothub-proxy/grpc/account/accountpb"
 	"github.com/pkg/errors"
 )
@@ -37,18 +38,20 @@ type DetailsView struct {
 
 	*Identity
 
-	Transfers []*BalanceTransfer `json:"transfers"`
-	Deposits  []*BalanceDeposit  `json:"deposits"`
-	Bonded    []*Bonded          `json:"bonded"`
-	Unbonded  []*Unbonded        `json:"unbonded"`
-	Withdrawn []*Withdrawn       `json:"withdrawn"`
+	Transfers   []*BalanceTransfer   `json:"transfers"`
+	Deposits    []*BalanceDeposit    `json:"deposits"`
+	Bonded      []*Bonded            `json:"bonded"`
+	Unbonded    []*Unbonded          `json:"unbonded"`
+	Withdrawn   []*Withdrawn         `json:"withdrawn"`
+	Delegations []*common.Delegation `json:"delegations"`
 }
 
-func ToDetailsView(address string, rawAccountIdentity *accountpb.AccountIdentity, balanceTransferModels []model.EventSeq, balanceDepositModels []model.EventSeq, bondedModels []model.EventSeq, unbondedModels []model.EventSeq, withdrawnModels []model.EventSeq) (*DetailsView, error) {
+func ToDetailsView(address string, rawAccountIdentity *accountpb.AccountIdentity, accountEraSeqs []model.AccountEraSeq, balanceTransferModels []model.EventSeq, balanceDepositModels []model.EventSeq, bondedModels []model.EventSeq, unbondedModels []model.EventSeq, withdrawnModels []model.EventSeq) (*DetailsView, error) {
 	view := &DetailsView{
 		Address: address,
 
-		Identity: ToIdentity(rawAccountIdentity),
+		Identity:    ToIdentity(rawAccountIdentity),
+		Delegations: common.ToDelegations(accountEraSeqs),
 	}
 
 	transfers, err := ToBalanceTransfers(address, balanceTransferModels)

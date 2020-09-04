@@ -56,6 +56,8 @@ type payload struct {
 	UpdatedValidatorEraSequences     []model.ValidatorEraSeq
 	NewEventSequences                []model.EventSeq
 	UpdatedEventSequences            []model.EventSeq
+	NewAccountEraSequences           []model.AccountEraSeq
+	UpdatedAccountEraSequences       []model.AccountEraSeq
 }
 
 func (p *payload) MarkAsProcessed() {}
