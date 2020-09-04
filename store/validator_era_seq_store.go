@@ -43,11 +43,11 @@ func (s ValidatorEraSeqStore) FindByHeightAndStashAccount(height int64, stash st
 	return &result, checkErr(err)
 }
 
-// FindByEraAndStashAccount finds validator by session and stash account
-func (s ValidatorEraSeqStore) FindByEraAndStashAccount(session int64, stash string) (*model.ValidatorEraSeq, error) {
+// FindByEraAndStashAccount finds validator by era and stash account
+func (s ValidatorEraSeqStore) FindByEraAndStashAccount(era int64, stash string) (*model.ValidatorEraSeq, error) {
 	q := model.ValidatorEraSeq{
 		EraSequence: &model.EraSequence{
-			Era: session,
+			Era: era,
 		},
 		StashAccount: stash,
 	}
@@ -61,7 +61,7 @@ func (s ValidatorEraSeqStore) FindByEraAndStashAccount(session int64, stash stri
 	return &result, checkErr(err)
 }
 
-// FindByHeight finds validator session sequences by height
+// FindByHeight finds validator era sequences by height
 func (s ValidatorEraSeqStore) FindByHeight(h int64) ([]model.ValidatorEraSeq, error) {
 	var result []model.ValidatorEraSeq
 
@@ -73,11 +73,11 @@ func (s ValidatorEraSeqStore) FindByHeight(h int64) ([]model.ValidatorEraSeq, er
 	return result, checkErr(err)
 }
 
-// FindByHeight finds validator session sequences by session
-func (s ValidatorEraSeqStore) FindByEra(session int64) ([]model.ValidatorEraSeq, error) {
+// FindByHeight finds validator era sequences by era
+func (s ValidatorEraSeqStore) FindByEra(era int64) ([]model.ValidatorEraSeq, error) {
 	q := model.ValidatorEraSeq{
 		EraSequence: &model.EraSequence{
-			Era: session,
+			Era: era,
 		},
 	}
 	var result []model.ValidatorEraSeq
@@ -90,7 +90,7 @@ func (s ValidatorEraSeqStore) FindByEra(session int64) ([]model.ValidatorEraSeq,
 	return result, checkErr(err)
 }
 
-// FindMostRecent finds most recent validator session sequence
+// FindMostRecent finds most recent validator era sequence
 func (s *ValidatorEraSeqStore) FindMostRecent() (*model.ValidatorEraSeq, error) {
 	validatorSeq := &model.ValidatorEraSeq{}
 	if err := findMostRecent(s.db, "time", validatorSeq); err != nil {
@@ -99,7 +99,7 @@ func (s *ValidatorEraSeqStore) FindMostRecent() (*model.ValidatorEraSeq, error) 
 	return validatorSeq, nil
 }
 
-// FindLastByStashAccount finds last validator session sequences for given stash account
+// FindLastByStashAccount finds last validator era sequences for given stash account
 func (s ValidatorEraSeqStore) FindLastByStashAccount(stashAccount string, limit int64) ([]model.ValidatorEraSeq, error) {
 	q := model.ValidatorEraSeq{
 		StashAccount: stashAccount,

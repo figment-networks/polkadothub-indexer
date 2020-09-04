@@ -25,4 +25,4 @@ CREATE TABLE IF NOT EXISTS validator_era_sequences
 CREATE index idx_validator_era_sequences_era on validator_era_sequences (era);
 CREATE index idx_validator_era_sequences_heights on validator_era_sequences (start_height, end_height);
 CREATE index idx_validator_era_sequences_time on validator_era_sequences (time);
-CREATE index idx_validator_era_sequences_validator_stash_account on validator_era_sequences (stash_account);
+CREATE index idx_validator_era_sequences_stash_account on validator_era_sequences (stash_account);

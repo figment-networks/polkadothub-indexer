@@ -17,6 +17,7 @@ const (
 	ValidatorEraSeqPersistorTaskName     = "ValidatorEraSeqPersistor"
 	ValidatorAggPersistorTaskName        = "ValidatorAggPersistor"
 	EventSeqPersistorTaskName            = "EventSeqPersistor"
+	AccountEraSeqPersistorTaskName       = "AccountEraSeqPersistor"
 )
 
 // NewSyncerPersistorTask is responsible for storing syncable to persistence layer
@@ -227,6 +228,48 @@ func (t *eventSeqPersistorTask) Run(ctx context.Context, p pipeline.Payload) err
 
 	for _, sequence := range payload.UpdatedEventSequences {
 		if err := t.db.EventSeq.Save(&sequence); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// NewAccountEraSeqPersistorTask is responsible for storing account era info to persistence layer
+func NewAccountEraSeqPersistorTask(db *store.Store) pipeline.Task {
+	return &accountEraSeqPersistorTask{
+		db: db,
+	}
+}
+
+type accountEraSeqPersistorTask struct {
+	db *store.Store
+}
+
+func (t *accountEraSeqPersistorTask) GetName() string {
+	return AccountEraSeqPersistorTaskName
+}
+
+func (t *accountEraSeqPersistorTask) Run(ctx context.Context, p pipeline.Payload) error {
+	defer metric.LogIndexerTaskDuration(time.Now(), t.GetName())
+
+	payload := p.(*payload)
+
+	if !payload.Syncable.LastInEra {
+		logger.Info(fmt.Sprintf("indexer task skipped because height is not last in era [stage=%s] [task=%s] [height=%d]", pipeline.StageFetcher, t.GetName(), payload.CurrentHeight))
+		return nil
+	}
+
+	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
+
+	for _, sequence := range payload.NewAccountEraSequences {
+		if err := t.db.AccountEraSeq.Create(&sequence); err != nil {
+			return err
+		}
+	}
+
+	for _, sequence := range payload.UpdatedAccountEraSequences {
+		if err := t.db.AccountEraSeq.Save(&sequence); err != nil {
 			return err
 		}
 	}

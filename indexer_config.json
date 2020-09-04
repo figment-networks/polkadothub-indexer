@@ -2,7 +2,7 @@
     "versions": [
         {
             "id": 1,
-            "targets": [1,2,3,4,5],
+            "targets": [1,2,3,4,5,6],
             "parallel": false
         }
     ],
@@ -65,6 +65,17 @@
           "EventSeqCreator",
           "SyncerPersistor",
           "EventSeqPersistor"
+        ]
+      },
+      {
+        "id": 6,
+        "name": "index_account_era_sequences",
+        "desc": "Creates and persists account era sequences",
+        "tasks": [
+          "Fetcher",
+          "AccountEraSeqCreator",
+          "SyncerPersistor",
+          "AccountEraSeqPersistor"
         ]
       }
     ]

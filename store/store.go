@@ -28,6 +28,7 @@ func New(connStr string) (*Store, error) {
 		BlockSeq:            NewBlockSeqStore(conn),
 		ValidatorSessionSeq: NewValidatorSessionSeqStore(conn),
 		ValidatorEraSeq:     NewValidatorEraSeqStore(conn),
+		AccountEraSeq:       NewAccountEraSeqStore(conn),
 		EventSeq:            NewEventSeqStore(conn),
 
 		ValidatorAgg: NewValidatorAggStore(conn),
@@ -49,6 +50,7 @@ type Store struct {
 	ValidatorSessionSeq *ValidatorSessionSeqStore
 	ValidatorEraSeq     *ValidatorEraSeqStore
 	EventSeq            *EventSeqStore
+	AccountEraSeq       *AccountEraSeqStore
 
 	ValidatorAgg *ValidatorAggStore
 
