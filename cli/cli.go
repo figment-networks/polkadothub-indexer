@@ -3,19 +3,20 @@ package cli
 import (
 	"flag"
 	"fmt"
+	"strconv"
+	"strings"
+
 	"github.com/figment-networks/polkadothub-indexer/client"
 	"github.com/figment-networks/polkadothub-indexer/config"
 	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/utils/logger"
 	"github.com/figment-networks/polkadothub-indexer/utils/reporting"
 	"github.com/pkg/errors"
-	"strconv"
-	"strings"
 )
 
 type Flags struct {
-	configPath string
-	runCommand string
+	configPath  string
+	runCommand  string
 	showVersion bool
 
 	batchSize int64
@@ -129,8 +130,7 @@ func initConfig(path string) (*config.Config, error) {
 }
 
 func initLogger(cfg *config.Config) error {
-	_, err := logger.Init(cfg)
-	return err
+	return logger.Init(cfg)
 }
 
 func initClient(cfg *config.Config) (*client.Client, error) {

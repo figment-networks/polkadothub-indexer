@@ -8,7 +8,7 @@ DOCKER_TAG   ?= latest
 # Generate mocks
 mockgen:
 	@echo "[mockgen] generating mocks"
-	@mockgen -destination mock/indexer/mocks.go github.com/figment-networks/polkadothub-indexer/indexer ConfigParser,FetcherClient,ReportStore
+	@mockgen -destination mock/indexer/mocks.go github.com/figment-networks/polkadothub-indexer/indexer ConfigParser,FetcherClient,ReportStore,ValidatorAggCreatorTaskStore
 
 # Build the binary
 build:

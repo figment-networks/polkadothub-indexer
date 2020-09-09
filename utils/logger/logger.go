@@ -3,17 +3,18 @@ package logger
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/figment-networks/polkadothub-indexer/config"
+	"strings"
+
+	"github.com/figment-networks/oasishub-indexer/config"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"strings"
 )
 
 var (
 	Log Logger
 )
 
-func Init(cfg *config.Config) (*Logger, error) {
+func Init(cfg *config.Config) error {
 	logConfig := zap.Config{
 		OutputPaths: []string{cfg.LogOutput},
 		Encoding:    "json",
@@ -30,18 +31,16 @@ func Init(cfg *config.Config) (*Logger, error) {
 
 	log, err := logConfig.Build()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	Log.log = log
+	Log.Logger = log
 
-	return &Logger{
-		log: log,
-	}, nil
+	return nil
 }
 
 type Logger struct {
-	log *zap.Logger
+	*zap.Logger
 }
 
 func Field(key string, value interface{}) zap.Field {
@@ -49,30 +48,30 @@ func Field(key string, value interface{}) zap.Field {
 }
 
 func Info(msg string, tags ...zap.Field) {
-	Log.log.Info(msg, tags...)
-	Log.log.Sync()
+	Log.Info(msg, tags...)
+	Log.Sync()
 }
 
 func Debug(msg string, tags ...zap.Field) {
-	Log.log.Debug(msg, tags...)
-	Log.log.Sync()
+	Log.Debug(msg, tags...)
+	Log.Sync()
 }
 
 func DebugJSON(msg interface{}, tags ...zap.Field) {
 	jsonMsg, _ := json.Marshal(msg)
-	Log.log.Debug(string(jsonMsg), tags...)
-	Log.log.Sync()
+	Log.Debug(string(jsonMsg), tags...)
+	Log.Sync()
 }
 
 func Warn(msg string, tags ...zap.Field) {
-	Log.log.Warn(msg, tags...)
-	Log.log.Sync()
+	Log.Warn(msg, tags...)
+	Log.Sync()
 }
 
 func Error(err error, tags ...zap.Field) {
 	msg := fmt.Sprintf("[ERROR: %v]", err)
-	Log.log.Error(msg, tags...)
-	Log.log.Sync()
+	Log.Error(msg, tags...)
+	Log.Sync()
 }
 
 func getLevel(level string) zapcore.Level {

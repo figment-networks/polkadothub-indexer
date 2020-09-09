@@ -3,12 +3,13 @@ package indexer
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/figment-networks/indexing-engine/pipeline"
 	"github.com/figment-networks/polkadothub-indexer/metric"
 	"github.com/figment-networks/polkadothub-indexer/model"
 	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/utils/logger"
-	"time"
 )
 
 const (
@@ -19,14 +20,18 @@ var (
 	_ pipeline.Task = (*validatorAggCreatorTask)(nil)
 )
 
-func NewValidatorAggCreatorTask(db *store.Store) *validatorAggCreatorTask {
+func NewValidatorAggCreatorTask(db ValidatorAggCreatorTaskStore) *validatorAggCreatorTask {
 	return &validatorAggCreatorTask{
 		db: db,
 	}
 }
 
+type ValidatorAggCreatorTaskStore interface {
+	FindByStashAccount(key string) (*model.ValidatorAgg, error)
+}
+
 type validatorAggCreatorTask struct {
-	db *store.Store
+	db ValidatorAggCreatorTaskStore
 }
 
 func (t *validatorAggCreatorTask) GetName() string {
@@ -45,7 +50,7 @@ func (t *validatorAggCreatorTask) Run(ctx context.Context, p pipeline.Payload) e
 	var newValidatorAggs []model.ValidatorAgg
 	var updatedValidatorAggs []model.ValidatorAgg
 	for stashAccount, validatorData := range parsedValidators {
-		existing, err := t.db.ValidatorAgg.FindByStashAccount(stashAccount)
+		existing, err := t.db.FindByStashAccount(stashAccount)
 		if err != nil {
 			if err == store.ErrNotFound {
 				// Create new
@@ -92,6 +97,9 @@ func (t *validatorAggCreatorTask) Run(ctx context.Context, p pipeline.Payload) e
 					validator.AccumulatedUptime = existing.AccumulatedUptime
 				}
 				validator.AccumulatedUptimeCount = existing.AccumulatedUptimeCount + 1
+			} else {
+				validator.AccumulatedUptime = existing.AccumulatedUptime
+				validator.AccumulatedUptimeCount = existing.AccumulatedUptimeCount
 			}
 
 			existing.Update(validator)
