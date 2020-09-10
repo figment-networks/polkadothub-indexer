@@ -1,12 +1,11 @@
 package store
 
 import (
-	"fmt"
-	"github.com/figment-networks/polkadothub-indexer/types"
-	"github.com/jinzhu/gorm"
 	"time"
 
 	"github.com/figment-networks/polkadothub-indexer/model"
+	"github.com/figment-networks/polkadothub-indexer/types"
+	"github.com/jinzhu/gorm"
 )
 
 func NewValidatorEraSeqStore(db *gorm.DB) *ValidatorEraSeqStore {
@@ -173,11 +172,11 @@ func (s *ValidatorEraSeqStore) Summarize(interval types.SummaryInterval, activit
 			if isLast {
 				tx = tx.Or("time >= ?", activityPeriod.Max)
 			} else {
-				duration, err := time.ParseDuration(fmt.Sprintf("1%s", interval))
+				duration, err := interval.Duration()
 				if err != nil {
 					return nil, err
 				}
-				tx = tx.Or("time >= ? AND time < ?", activityPeriod.Max.Add(duration), activityPeriods[i+1].Min)
+				tx = tx.Or("time >= ? AND time < ?", activityPeriod.Max.Add(*duration), activityPeriods[i+1].Min)
 			}
 		}
 	}
