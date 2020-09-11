@@ -22,7 +22,7 @@ func (s AccountEraSeqStore) FindByEraAndStashAccounts(era int64, stash string, v
 		EraSequence: &model.EraSequence{
 			Era: era,
 		},
-		StashAccount: stash,
+		StashAccount:          stash,
 		ValidatorStashAccount: validatorStash,
 	}
 	var result model.AccountEraSeq
@@ -38,14 +38,14 @@ func (s AccountEraSeqStore) FindByEraAndStashAccounts(era int64, stash string, v
 // FindByHeightAndStashAccount finds account are sequence by height and stash accounts
 func (s AccountEraSeqStore) FindByHeightAndStashAccounts(height int64, stash string, validatorStash string) (*model.AccountEraSeq, error) {
 	q := model.AccountEraSeq{
-		StashAccount: stash,
+		StashAccount:          stash,
 		ValidatorStashAccount: validatorStash,
 	}
 	var result model.AccountEraSeq
 
 	err := s.db.
 		Where(&q).
-		Where("start_height >= ? AND end_height <= ?", height, height).
+		Where("start_height <= ? AND end_height >= ?", height, height).
 		First(&result).
 		Error
 
@@ -75,7 +75,7 @@ func (s AccountEraSeqStore) FindByHeight(h int64) ([]model.AccountEraSeq, error)
 	var result []model.AccountEraSeq
 
 	err := s.db.
-		Where("start_height >= ? AND end_height <= ?", h, h).
+		Where("start_height <= ? AND end_height >= ?", h, h).
 		Find(&result).
 		Error
 

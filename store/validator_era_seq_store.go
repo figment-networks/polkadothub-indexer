@@ -36,7 +36,7 @@ func (s ValidatorEraSeqStore) FindByHeightAndStashAccount(height int64, stash st
 
 	err := s.db.
 		Where(&q).
-		Where("start_height >= ? AND end_height <= ?", height, height).
+		Where("start_height <= ? AND end_height >= ?", height, height).
 		First(&result).
 		Error
 
@@ -66,7 +66,7 @@ func (s ValidatorEraSeqStore) FindByHeight(h int64) ([]model.ValidatorEraSeq, er
 	var result []model.ValidatorEraSeq
 
 	err := s.db.
-		Where("start_height >= ? AND end_height <= ?", h, h).
+		Where("start_height <= ? AND end_height >= ?", h, h).
 		Find(&result).
 		Error
 
