@@ -84,13 +84,13 @@ func NewPipeline(cfg *config.Config, db *store.Store, client *client.Client) (*i
 	p.AddStage(
 		pipeline.NewAsyncStageWithTasks(
 			pipeline.StagePersistor,
-			pipeline.RetryingTask(NewSyncerPersistorTask(db), isTransient, maxRetries),
-			pipeline.RetryingTask(NewBlockSeqPersistorTask(db), isTransient, maxRetries),
-			pipeline.RetryingTask(NewValidatorSessionSeqPersistorTask(db), isTransient, maxRetries),
-			pipeline.RetryingTask(NewValidatorEraSeqPersistorTask(db), isTransient, maxRetries),
-			pipeline.RetryingTask(NewValidatorAggPersistorTask(db), isTransient, maxRetries),
-			pipeline.RetryingTask(NewEventSeqPersistorTask(db), isTransient, maxRetries),
-			pipeline.RetryingTask(NewAccountEraSeqPersistorTask(db), isTransient, maxRetries),
+			pipeline.RetryingTask(NewSyncerPersistorTask(db.Syncables), isTransient, maxRetries),
+			pipeline.RetryingTask(NewBlockSeqPersistorTask(db.BlockSeq), isTransient, maxRetries),
+			pipeline.RetryingTask(NewValidatorSessionSeqPersistorTask(db.ValidatorSessionSeq), isTransient, maxRetries),
+			pipeline.RetryingTask(NewValidatorEraSeqPersistorTask(db.ValidatorEraSeq), isTransient, maxRetries),
+			pipeline.RetryingTask(NewValidatorAggPersistorTask(db.ValidatorAgg), isTransient, maxRetries),
+			pipeline.RetryingTask(NewEventSeqPersistorTask(db.EventSeq), isTransient, maxRetries),
+			pipeline.RetryingTask(NewAccountEraSeqPersistorTask(db.AccountEraSeq), isTransient, maxRetries),
 		),
 	)
 

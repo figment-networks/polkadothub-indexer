@@ -3,12 +3,13 @@ package indexer
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/figment-networks/indexing-engine/pipeline"
 	"github.com/figment-networks/polkadothub-indexer/metric"
 	"github.com/figment-networks/polkadothub-indexer/utils/logger"
 	"github.com/figment-networks/polkadothub-proxy/grpc/staking/stakingpb"
 	"github.com/figment-networks/polkadothub-proxy/grpc/validatorperformance/validatorperformancepb"
-	"time"
 )
 
 const (
@@ -71,8 +72,8 @@ type validatorsParserTask struct{}
 type ParsedValidatorsData map[string]parsedValidator
 
 type parsedValidator struct {
-	Staking        *stakingpb.Validator
-	Performance    *validatorperformancepb.Validator
+	Staking     *stakingpb.Validator
+	Performance *validatorperformancepb.Validator
 }
 
 func (t *validatorsParserTask) GetName() string {

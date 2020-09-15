@@ -3,11 +3,12 @@ package indexer
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/figment-networks/indexing-engine/pipeline"
 	"github.com/figment-networks/polkadothub-indexer/metric"
-	"github.com/figment-networks/polkadothub-indexer/store"
+	"github.com/figment-networks/polkadothub-indexer/model"
 	"github.com/figment-networks/polkadothub-indexer/utils/logger"
-	"time"
 )
 
 const (
@@ -21,14 +22,18 @@ const (
 )
 
 // NewSyncerPersistorTask is responsible for storing syncable to persistence layer
-func NewSyncerPersistorTask(db *store.Store) pipeline.Task {
+func NewSyncerPersistorTask(db SyncerPersistorTaskStore) pipeline.Task {
 	return &syncerPersistorTask{
 		db: db,
 	}
 }
 
 type syncerPersistorTask struct {
-	db *store.Store
+	db SyncerPersistorTaskStore
+}
+
+type SyncerPersistorTaskStore interface {
+	CreateOrUpdate(val *model.Syncable) error
 }
 
 func (t *syncerPersistorTask) GetName() string {
@@ -42,18 +47,23 @@ func (t *syncerPersistorTask) Run(ctx context.Context, p pipeline.Payload) error
 
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
 
-	return t.db.Syncables.CreateOrUpdate(payload.Syncable)
+	return t.db.CreateOrUpdate(payload.Syncable)
 }
 
 // NewBlockSeqPersistorTask is responsible for storing block to persistence layer
-func NewBlockSeqPersistorTask(db *store.Store) pipeline.Task {
+func NewBlockSeqPersistorTask(db BlockSeqPersistorTaskStore) pipeline.Task {
 	return &blockSeqPersistorTask{
 		db: db,
 	}
 }
 
 type blockSeqPersistorTask struct {
-	db *store.Store
+	db BlockSeqPersistorTaskStore
+}
+
+type BlockSeqPersistorTaskStore interface {
+	Create(record interface{}) error
+	Save(record interface{}) error
 }
 
 func (t *blockSeqPersistorTask) GetName() string {
@@ -68,25 +78,30 @@ func (t *blockSeqPersistorTask) Run(ctx context.Context, p pipeline.Payload) err
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
 
 	if payload.NewBlockSequence != nil {
-		return t.db.BlockSeq.Create(payload.NewBlockSequence)
+		return t.db.Create(payload.NewBlockSequence)
 	}
 
 	if payload.UpdatedBlockSequence != nil {
-		return t.db.BlockSeq.Save(payload.UpdatedBlockSequence)
+		return t.db.Save(payload.UpdatedBlockSequence)
 	}
 
 	return nil
 }
 
 // NewValidatorSessionSeqPersistorTask is responsible for storing validator session info to persistence layer
-func NewValidatorSessionSeqPersistorTask(db *store.Store) pipeline.Task {
+func NewValidatorSessionSeqPersistorTask(db ValidatorSessionSeqPersistorTaskStore) pipeline.Task {
 	return &validatorSessionSeqPersistorTask{
 		db: db,
 	}
 }
 
 type validatorSessionSeqPersistorTask struct {
-	db *store.Store
+	db ValidatorSessionSeqPersistorTaskStore
+}
+
+type ValidatorSessionSeqPersistorTaskStore interface {
+	Create(record interface{}) error
+	Save(record interface{}) error
 }
 
 func (t *validatorSessionSeqPersistorTask) GetName() string {
@@ -106,13 +121,13 @@ func (t *validatorSessionSeqPersistorTask) Run(ctx context.Context, p pipeline.P
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
 
 	for _, sequence := range payload.NewValidatorSessionSequences {
-		if err := t.db.ValidatorSessionSeq.Create(&sequence); err != nil {
+		if err := t.db.Create(&sequence); err != nil {
 			return err
 		}
 	}
 
 	for _, sequence := range payload.UpdatedValidatorSessionSequences {
-		if err := t.db.ValidatorSessionSeq.Save(&sequence); err != nil {
+		if err := t.db.Save(&sequence); err != nil {
 			return err
 		}
 	}
@@ -121,14 +136,19 @@ func (t *validatorSessionSeqPersistorTask) Run(ctx context.Context, p pipeline.P
 }
 
 // NewValidatorEraSeqPersistorTask is responsible for storing validator era info to persistence layer
-func NewValidatorEraSeqPersistorTask(db *store.Store) pipeline.Task {
+func NewValidatorEraSeqPersistorTask(db ValidatorEraSeqPersistorTaskStore) pipeline.Task {
 	return &validatorEraSeqPersistorTask{
 		db: db,
 	}
 }
 
 type validatorEraSeqPersistorTask struct {
-	db *store.Store
+	db ValidatorEraSeqPersistorTaskStore
+}
+
+type ValidatorEraSeqPersistorTaskStore interface {
+	Create(record interface{}) error
+	Save(record interface{}) error
 }
 
 func (t *validatorEraSeqPersistorTask) GetName() string {
@@ -148,13 +168,13 @@ func (t *validatorEraSeqPersistorTask) Run(ctx context.Context, p pipeline.Paylo
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
 
 	for _, sequence := range payload.NewValidatorEraSequences {
-		if err := t.db.ValidatorEraSeq.Create(&sequence); err != nil {
+		if err := t.db.Create(&sequence); err != nil {
 			return err
 		}
 	}
 
 	for _, sequence := range payload.UpdatedValidatorEraSequences {
-		if err := t.db.ValidatorEraSeq.Save(&sequence); err != nil {
+		if err := t.db.Save(&sequence); err != nil {
 			return err
 		}
 	}
@@ -162,14 +182,19 @@ func (t *validatorEraSeqPersistorTask) Run(ctx context.Context, p pipeline.Paylo
 	return nil
 }
 
-func NewValidatorAggPersistorTask(db *store.Store) pipeline.Task {
+func NewValidatorAggPersistorTask(db ValidatorAggPersistorTaskStore) pipeline.Task {
 	return &validatorAggPersistorTask{
 		db: db,
 	}
 }
 
 type validatorAggPersistorTask struct {
-	db *store.Store
+	db ValidatorAggPersistorTaskStore
+}
+
+type ValidatorAggPersistorTaskStore interface {
+	Create(record interface{}) error
+	Save(record interface{}) error
 }
 
 func (t *validatorAggPersistorTask) GetName() string {
@@ -184,13 +209,13 @@ func (t *validatorAggPersistorTask) Run(ctx context.Context, p pipeline.Payload)
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
 
 	for _, aggregate := range payload.NewValidatorAggregates {
-		if err := t.db.ValidatorAgg.Create(&aggregate); err != nil {
+		if err := t.db.Create(&aggregate); err != nil {
 			return err
 		}
 	}
 
 	for _, aggregate := range payload.UpdatedValidatorAggregates {
-		if err := t.db.ValidatorAgg.Save(&aggregate); err != nil {
+		if err := t.db.Save(&aggregate); err != nil {
 			return err
 		}
 	}
@@ -199,14 +224,18 @@ func (t *validatorAggPersistorTask) Run(ctx context.Context, p pipeline.Payload)
 }
 
 // NewEventSeqPersistorTask is responsible for storing events info to persistence layer
-func NewEventSeqPersistorTask(db *store.Store) pipeline.Task {
+func NewEventSeqPersistorTask(db EventSeqPersistorTaskStore) pipeline.Task {
 	return &eventSeqPersistorTask{
 		db: db,
 	}
 }
 
 type eventSeqPersistorTask struct {
-	db *store.Store
+	db EventSeqPersistorTaskStore
+}
+type EventSeqPersistorTaskStore interface {
+	Create(record interface{}) error
+	Save(record interface{}) error
 }
 
 func (t *eventSeqPersistorTask) GetName() string {
@@ -221,13 +250,13 @@ func (t *eventSeqPersistorTask) Run(ctx context.Context, p pipeline.Payload) err
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
 
 	for _, sequence := range payload.NewEventSequences {
-		if err := t.db.EventSeq.Create(&sequence); err != nil {
+		if err := t.db.Create(&sequence); err != nil {
 			return err
 		}
 	}
 
 	for _, sequence := range payload.UpdatedEventSequences {
-		if err := t.db.EventSeq.Save(&sequence); err != nil {
+		if err := t.db.Save(&sequence); err != nil {
 			return err
 		}
 	}
@@ -236,14 +265,19 @@ func (t *eventSeqPersistorTask) Run(ctx context.Context, p pipeline.Payload) err
 }
 
 // NewAccountEraSeqPersistorTask is responsible for storing account era info to persistence layer
-func NewAccountEraSeqPersistorTask(db *store.Store) pipeline.Task {
+func NewAccountEraSeqPersistorTask(db AccountEraPersistorTaskStore) pipeline.Task {
 	return &accountEraSeqPersistorTask{
 		db: db,
 	}
 }
 
 type accountEraSeqPersistorTask struct {
-	db *store.Store
+	db AccountEraPersistorTaskStore
+}
+
+type AccountEraPersistorTaskStore interface {
+	Create(record interface{}) error
+	Save(record interface{}) error
 }
 
 func (t *accountEraSeqPersistorTask) GetName() string {
@@ -263,13 +297,13 @@ func (t *accountEraSeqPersistorTask) Run(ctx context.Context, p pipeline.Payload
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
 
 	for _, sequence := range payload.NewAccountEraSequences {
-		if err := t.db.AccountEraSeq.Create(&sequence); err != nil {
+		if err := t.db.Create(&sequence); err != nil {
 			return err
 		}
 	}
 
 	for _, sequence := range payload.UpdatedAccountEraSequences {
-		if err := t.db.AccountEraSeq.Save(&sequence); err != nil {
+		if err := t.db.Save(&sequence); err != nil {
 			return err
 		}
 	}
