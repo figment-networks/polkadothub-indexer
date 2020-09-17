@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	mock "github.com/figment-networks/polkadothub-indexer/mock/indexer"
+	mock "github.com/figment-networks/polkadothub-indexer/mock/store"
 	"github.com/figment-networks/polkadothub-indexer/model"
 	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/types"
@@ -126,7 +126,7 @@ func TestValidatorAggCreatorTask_Run(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			ctx := context.Background()
 
-			dbMock := mock.NewMockValidatorAggCreatorTaskStore(ctrl)
+			dbMock := mock.NewMockValidatorAgg(ctrl)
 
 			pld := &payload{
 				ParsedValidators: tt.parsedValidators,
@@ -303,7 +303,7 @@ func TestValidatorAggCreatorTask_Run(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			ctx := context.Background()
 
-			dbMock := mock.NewMockValidatorAggCreatorTaskStore(ctrl)
+			dbMock := mock.NewMockValidatorAgg(ctrl)
 
 			pld := &payload{
 				ParsedValidators: tt.parsedValidators,

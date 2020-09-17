@@ -15,13 +15,13 @@ var (
 )
 
 type getDetailsHttpHandler struct {
-	db     *store.Store
+	db     store.Store
 	client *client.Client
 
 	useCase *getDetailsUseCase
 }
 
-func NewGetDetailsHttpHandler(db *store.Store, c *client.Client) *getDetailsHttpHandler {
+func NewGetDetailsHttpHandler(db store.Store, c *client.Client) *getDetailsHttpHandler {
 	return &getDetailsHttpHandler{
 		db: db,
 		client: c,

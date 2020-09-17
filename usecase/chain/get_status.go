@@ -7,11 +7,11 @@ import (
 )
 
 type getStatusUseCase struct {
-	db     *store.Store
+	db     store.Store
 	client *client.Client
 }
 
-func NewGetStatusUseCase(db *store.Store, c *client.Client) *getStatusUseCase {
+func NewGetStatusUseCase(db store.Store, c *client.Client) *getStatusUseCase {
 	return &getStatusUseCase{
 		db:     db,
 		client: c,
@@ -19,7 +19,7 @@ func NewGetStatusUseCase(db *store.Store, c *client.Client) *getStatusUseCase {
 }
 
 func (uc *getStatusUseCase) Execute(ctx  context.Context) (*DetailsView, error) {
-	mostRecentSyncable, err := uc.db.Syncables.FindMostRecent()
+	mostRecentSyncable, err := uc.db.GetSyncables().FindMostRecent()
 	if err != nil {
 		if err != store.ErrNotFound {
 			return nil, err

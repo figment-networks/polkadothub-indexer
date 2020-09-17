@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/figment-networks/oasishub-indexer/config"
+	"github.com/figment-networks/polkadothub-indexer/config"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )

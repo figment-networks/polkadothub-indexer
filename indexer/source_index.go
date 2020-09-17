@@ -2,6 +2,7 @@ package indexer
 
 import (
 	"context"
+
 	"github.com/figment-networks/indexing-engine/pipeline"
 	"github.com/figment-networks/polkadothub-indexer/client"
 	"github.com/figment-networks/polkadothub-indexer/config"
@@ -16,11 +17,11 @@ var (
 )
 
 type IndexSourceConfig struct {
-	BatchSize      int64
-	StartHeight    int64
+	BatchSize   int64
+	StartHeight int64
 }
 
-func NewIndexSource(cfg *config.Config, db *store.Store, client *client.Client, sourceCfg *IndexSourceConfig) (*indexSource, error) {
+func NewIndexSource(cfg *config.Config, db store.Store, client *client.Client, sourceCfg *IndexSourceConfig) (*indexSource, error) {
 	src := &indexSource{
 		cfg:    cfg,
 		db:     db,
@@ -35,9 +36,9 @@ func NewIndexSource(cfg *config.Config, db *store.Store, client *client.Client, 
 }
 
 type indexSource struct {
-	cfg           *config.Config
-	db            *store.Store
-	client        *client.Client
+	cfg    *config.Config
+	db     store.Store
+	client *client.Client
 
 	sourceCfg *IndexSourceConfig
 
@@ -86,7 +87,7 @@ func (s *indexSource) setStartHeight() error {
 	if s.sourceCfg.StartHeight > 0 {
 		startH = s.sourceCfg.StartHeight
 	} else {
-		syncable, err := s.db.Syncables.FindMostRecent()
+		syncable, err := s.db.GetSyncables().FindMostRecent()
 		if err != nil {
 			if err != store.ErrNotFound {
 				return err

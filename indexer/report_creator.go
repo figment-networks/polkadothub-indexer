@@ -15,15 +15,9 @@ type reportCreator struct {
 	startHeight  int64
 	endHeight    int64
 
-	store ReportStore
+	store store.Reports
 
 	report *model.Report
-}
-
-type ReportStore interface {
-	FindNotCompletedByIndexVersion(int64, ...model.ReportKind) (*model.Report, error)
-	Create(interface{}) error
-	Save(interface{}) error
 }
 
 func (o *reportCreator) createIfNotExists(kinds ...model.ReportKind) error {

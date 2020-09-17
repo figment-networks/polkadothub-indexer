@@ -11,13 +11,13 @@ import (
 
 type SummarizeCmdHandler struct {
 	cfg    *config.Config
-	db     *store.Store
+	db     store.Store
 	client *client.Client
 
 	useCase *summarizeUseCase
 }
 
-func NewSummarizeCmdHandler(cfg *config.Config, db *store.Store, c *client.Client) *SummarizeCmdHandler {
+func NewSummarizeCmdHandler(cfg *config.Config, db store.Store, c *client.Client) *SummarizeCmdHandler {
 	return &SummarizeCmdHandler{
 		cfg:    cfg,
 		db:     db,

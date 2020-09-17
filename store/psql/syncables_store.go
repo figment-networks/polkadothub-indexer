@@ -2,6 +2,7 @@ package psql
 
 import (
 	"github.com/figment-networks/polkadothub-indexer/model"
+	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/types"
 	"github.com/jinzhu/gorm"
 )
@@ -104,7 +105,7 @@ func (s SyncablesStore) FindMostRecentByDifferentIndexVersion(indexVersion int64
 func (s SyncablesStore) CreateOrUpdate(val *model.Syncable) error {
 	existing, err := s.FindByHeight(val.Height)
 	if err != nil {
-		if err == ErrNotFound {
+		if err == store.ErrNotFound {
 			return s.Create(val)
 		}
 		return err

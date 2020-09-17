@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	mock "github.com/figment-networks/polkadothub-indexer/mock/indexer"
+	mock "github.com/figment-networks/polkadothub-indexer/mock/store"
 	"github.com/figment-networks/polkadothub-indexer/model"
 	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/types"
@@ -17,7 +17,7 @@ func TestReportCreator_createIfNotExists(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		reportStoreMock := mock.NewMockReportStore(ctrl)
+		reportStoreMock := mock.NewMockReports(ctrl)
 
 		reportStoreMock.EXPECT().FindNotCompletedByIndexVersion(gomock.Any(), gomock.Any()).Return(getTestReport(model.ReportKindSequentialReindex), nil).Times(1)
 
@@ -40,7 +40,7 @@ func TestReportCreator_createIfNotExists(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		reportStoreMock := mock.NewMockReportStore(ctrl)
+		reportStoreMock := mock.NewMockReports(ctrl)
 
 		reportStoreMock.EXPECT().FindNotCompletedByIndexVersion(gomock.Any(), gomock.Any()).Return(getTestReport(model.ReportKindIndex), nil).Times(1)
 
@@ -62,7 +62,7 @@ func TestReportCreator_createIfNotExists(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		reportStoreMock := mock.NewMockReportStore(ctrl)
+		reportStoreMock := mock.NewMockReports(ctrl)
 
 		reportStoreMock.EXPECT().FindNotCompletedByIndexVersion(gomock.Any(), gomock.Any()).Return(nil, errors.New("test error")).Times(1)
 
@@ -84,7 +84,7 @@ func TestReportCreator_createIfNotExists(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		reportStoreMock := mock.NewMockReportStore(ctrl)
+		reportStoreMock := mock.NewMockReports(ctrl)
 
 		testErr := errors.New("test error")
 		reportStoreMock.EXPECT().FindNotCompletedByIndexVersion(gomock.Any(), gomock.Any()).Return(nil, store.ErrNotFound).Times(1)
@@ -108,7 +108,7 @@ func TestReportCreator_createIfNotExists(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		reportStoreMock := mock.NewMockReportStore(ctrl)
+		reportStoreMock := mock.NewMockReports(ctrl)
 
 		reportStoreMock.EXPECT().FindNotCompletedByIndexVersion(gomock.Any(), gomock.Any()).Return(nil, store.ErrNotFound).Times(1)
 		reportStoreMock.EXPECT().Create(gomock.Any()).Return(nil).Times(1)
@@ -134,7 +134,7 @@ func TestReportCreator_complete(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		reportStoreMock := mock.NewMockReportStore(ctrl)
+		reportStoreMock := mock.NewMockReports(ctrl)
 
 		reportStoreMock.EXPECT().Save(gomock.Any()).Return(nil).Times(1)
 
@@ -153,7 +153,7 @@ func TestReportCreator_complete(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		reportStoreMock := mock.NewMockReportStore(ctrl)
+		reportStoreMock := mock.NewMockReports(ctrl)
 
 		testErr := errors.New("test error")
 		reportStoreMock.EXPECT().Save(gomock.Any()).Return(testErr).Times(1)

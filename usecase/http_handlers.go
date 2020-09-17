@@ -13,7 +13,7 @@ import (
 	"github.com/figment-networks/polkadothub-indexer/usecase/validator"
 )
 
-func NewHttpHandlers(cfg *config.Config, db *store.Store, c *client.Client) *HttpHandlers {
+func NewHttpHandlers(cfg *config.Config, db store.Store, c *client.Client) *HttpHandlers {
 	return &HttpHandlers{
 		Health:                     health.NewHealthHttpHandler(),
 		GetStatus:                  chain.NewGetStatusHttpHandler(db, c),

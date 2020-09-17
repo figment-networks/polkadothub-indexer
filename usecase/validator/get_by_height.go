@@ -9,11 +9,11 @@ import (
 
 type getByHeightUseCase struct {
 	cfg    *config.Config
-	db     *store.Store
+	db     store.Store
 	client *client.Client
 }
 
-func NewGetByHeightUseCase(cfg *config.Config, db *store.Store, client *client.Client) *getByHeightUseCase {
+func NewGetByHeightUseCase(cfg *config.Config, db store.Store, client *client.Client) *getByHeightUseCase {
 	return &getByHeightUseCase{
 		cfg:    cfg,
 		db:     db,
@@ -23,7 +23,7 @@ func NewGetByHeightUseCase(cfg *config.Config, db *store.Store, client *client.C
 
 func (uc *getByHeightUseCase) Execute(height *int64) (*SeqListView, error) {
 	// Get last indexed height
-	mostRecentSynced, err := uc.db.Syncables.FindMostRecent()
+	mostRecentSynced, err := uc.db.GetSyncables().FindMostRecent()
 	if err != nil {
 		return nil, err
 	}
@@ -38,12 +38,12 @@ func (uc *getByHeightUseCase) Execute(height *int64) (*SeqListView, error) {
 		return nil, errors.New("height is not indexed yet")
 	}
 
-	validatorSessionSequences, err := uc.db.ValidatorSessionSeq.FindByHeight(*height)
+	validatorSessionSequences, err := uc.db.GetValidatorSessionSeq().FindByHeight(*height)
 	if err != nil && err != store.ErrNotFound {
 		return nil, err
 	}
 
-	validatorEraSequences, err := uc.db.ValidatorEraSeq.FindByHeight(*height)
+	validatorEraSequences, err := uc.db.GetValidatorEraSeq().FindByHeight(*height)
 	if err != nil && err != store.ErrNotFound {
 		return nil, err
 	}

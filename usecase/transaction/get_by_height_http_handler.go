@@ -15,13 +15,13 @@ var (
 )
 
 type getByHeightHttpHandler struct {
-	db     *store.Store
+	db     store.Store
 	client *client.Client
 
 	useCase *getByHeightUseCase
 }
 
-func NewGetByHeightHttpHandler(db *store.Store, c *client.Client) *getByHeightHttpHandler {
+func NewGetByHeightHttpHandler(db store.Store, c *client.Client) *getByHeightHttpHandler {
 	return &getByHeightHttpHandler{
 		db: db,
 		client: c,

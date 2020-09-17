@@ -14,13 +14,13 @@ var (
 )
 
 type getBlockTimesHttpHandler struct {
-	db     *store.Store
+	db     store.Store
 	client *client.Client
 
 	useCase *getBlockTimesUseCase
 }
 
-func NewGetBlockTimesHttpHandler(db *store.Store, client *client.Client) *getBlockTimesHttpHandler {
+func NewGetBlockTimesHttpHandler(db store.Store, client *client.Client) *getBlockTimesHttpHandler {
 	return &getBlockTimesHttpHandler{
 		db:     db,
 		client: client,

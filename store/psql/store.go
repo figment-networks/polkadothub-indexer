@@ -1,15 +1,41 @@
 package psql
 
 import (
+	"reflect"
+	"time"
+
 	"github.com/figment-networks/polkadothub-indexer/metric"
+	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/types"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
-	"reflect"
-	"time"
 )
 
-// NewIndexerMetric returns a new store from the connection string
+var (
+	_ store.Store = (*Store)(nil)
+)
+
+// Store handles all database operations
+type Store struct {
+	db *gorm.DB
+
+	Database  store.Database
+	Syncables store.Syncables
+	Reports   store.Reports
+
+	BlockSeq            store.BlockSeq
+	ValidatorSessionSeq store.ValidatorSessionSeq
+	ValidatorEraSeq     store.ValidatorEraSeq
+	EventSeq            store.EventSeq
+	AccountEraSeq       store.AccountEraSeq
+
+	ValidatorAgg store.ValidatorAgg
+
+	BlockSummary     *BlockSummaryStore
+	ValidatorSummary *ValidatorSummaryStore
+}
+
+// New returns a new postgres store from the connection string
 func New(connStr string) (*Store, error) {
 	conn, err := gorm.Open("postgres", connStr)
 	if err != nil {
@@ -38,34 +64,69 @@ func New(connStr string) (*Store, error) {
 	}, nil
 }
 
-// Store handles all database operations
-type Store struct {
-	db *gorm.DB
+// Close closes the database connection
+func (s *Store) Close() error {
+	return s.db.Close()
+}
 
-	Database  *DatabaseStore
-	Syncables *SyncablesStore
-	Reports   *ReportsStore
+// GetAccountEraSeq gets AccountEraSeq
+func (s *Store) GetAccountEraSeq() store.AccountEraSeq {
+	return s.AccountEraSeq
+}
 
-	BlockSeq            *BlockSeqStore
-	ValidatorSessionSeq *ValidatorSessionSeqStore
-	ValidatorEraSeq     *ValidatorEraSeqStore
-	EventSeq            *EventSeqStore
-	AccountEraSeq       *AccountEraSeqStore
+// GetBlockSeq gets BlockSeq
+func (s *Store) GetBlockSeq() store.BlockSeq {
+	return s.BlockSeq
+}
 
-	ValidatorAgg *ValidatorAggStore
+// GetBlockSummary gets BlockSummary
+func (s *Store) GetBlockSummary() store.BlockSummary {
+	return s.BlockSummary
+}
 
-	BlockSummary     *BlockSummaryStore
-	ValidatorSummary *ValidatorSummaryStore
+// GetDatabase gets Database
+func (s *Store) GetDatabase() store.Database {
+	return s.Database
+}
+
+// GetEventSeq gets EventSeq
+func (s *Store) GetEventSeq() store.EventSeq {
+	return s.EventSeq
+}
+
+// GetReports gets Reports
+func (s *Store) GetReports() store.Reports {
+	return s.Reports
+}
+
+// GetSyncables gets Syncables
+func (s *Store) GetSyncables() store.Syncables {
+	return s.Syncables
+}
+
+// GetValidatorAgg gets ValidatorAgg
+func (s *Store) GetValidatorAgg() store.ValidatorAgg {
+	return s.ValidatorAgg
+}
+
+// GetValidatorEraSeq gets ValidatorEraSeq
+func (s *Store) GetValidatorEraSeq() store.ValidatorEraSeq {
+	return s.ValidatorEraSeq
+}
+
+// GetValidatorSessionSeq gets ValidatorSessionSeq
+func (s *Store) GetValidatorSessionSeq() store.ValidatorSessionSeq {
+	return s.ValidatorSessionSeq
+}
+
+// GetValidatorSummary gets ValidatorSummary
+func (s *Store) GetValidatorSummary() store.ValidatorSummary {
+	return s.ValidatorSummary
 }
 
 // Test checks the connection status
 func (s *Store) Test() error {
 	return s.db.DB().Ping()
-}
-
-// Close closes the database connection
-func (s *Store) Close() error {
-	return s.db.Close()
 }
 
 // SetDebugMode enabled detailed query logging

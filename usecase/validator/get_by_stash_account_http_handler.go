@@ -15,13 +15,13 @@ var (
 )
 
 type getByStashAccountHttpHandler struct {
-	db     *store.Store
+	db     store.Store
 	client *client.Client
 
 	useCase *getByStashAccountUseCase
 }
 
-func NewGetByStashAccountHttpHandler(db *store.Store, c *client.Client) *getByStashAccountHttpHandler {
+func NewGetByStashAccountHttpHandler(db store.Store, c *client.Client) *getByStashAccountHttpHandler {
 	return &getByStashAccountHttpHandler{
 		db:     db,
 		client: c,

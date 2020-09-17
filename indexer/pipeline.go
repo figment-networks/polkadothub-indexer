@@ -27,7 +27,7 @@ var (
 
 type indexingPipeline struct {
 	cfg    *config.Config
-	db     *store.Store
+	db     store.Store
 	client *client.Client
 
 	status       *pipelineStatus
@@ -35,7 +35,7 @@ type indexingPipeline struct {
 	pipeline     pipeline.CustomPipeline
 }
 
-func NewPipeline(cfg *config.Config, db *store.Store, client *client.Client) (*indexingPipeline, error) {
+func NewPipeline(cfg *config.Config, db store.Store, client *client.Client) (*indexingPipeline, error) {
 	p := pipeline.NewCustom(NewPayloadFactory())
 
 	// Setup logger
@@ -48,7 +48,7 @@ func NewPipeline(cfg *config.Config, db *store.Store, client *client.Client) (*i
 
 	// Syncer stage
 	p.AddStage(
-		pipeline.NewStageWithTasks(pipeline.StageSyncer, pipeline.RetryingTask(NewMainSyncerTask(db), isTransient, maxRetries)),
+		pipeline.NewStageWithTasks(pipeline.StageSyncer, pipeline.RetryingTask(NewMainSyncerTask(db.GetSyncables()), isTransient, maxRetries)),
 	)
 
 	// Set parser stage
@@ -60,11 +60,10 @@ func NewPipeline(cfg *config.Config, db *store.Store, client *client.Client) (*i
 		),
 	)
 
-	// Set sequencer stage
 	p.AddStage(
 		pipeline.NewAsyncStageWithTasks(
 			pipeline.StageSequencer,
-			pipeline.RetryingTask(NewBlockSeqCreatorTask(db), isTransient, maxRetries),
+			pipeline.RetryingTask(NewBlockSeqCreatorTask(db.GetBlockSeq()), isTransient, maxRetries),
 			pipeline.RetryingTask(NewValidatorSessionSeqCreatorTask(cfg, db), isTransient, maxRetries),
 			pipeline.RetryingTask(NewValidatorEraSeqCreatorTask(cfg, db), isTransient, maxRetries),
 			pipeline.RetryingTask(NewEventSeqCreatorTask(db), isTransient, maxRetries),
@@ -76,7 +75,7 @@ func NewPipeline(cfg *config.Config, db *store.Store, client *client.Client) (*i
 	p.AddStage(
 		pipeline.NewStageWithTasks(
 			pipeline.StageAggregator,
-			pipeline.RetryingTask(NewValidatorAggCreatorTask(db.ValidatorAgg), isTransient, maxRetries),
+			pipeline.RetryingTask(NewValidatorAggCreatorTask(db.GetValidatorAgg()), isTransient, maxRetries),
 		),
 	)
 
@@ -84,13 +83,13 @@ func NewPipeline(cfg *config.Config, db *store.Store, client *client.Client) (*i
 	p.AddStage(
 		pipeline.NewAsyncStageWithTasks(
 			pipeline.StagePersistor,
-			pipeline.RetryingTask(NewSyncerPersistorTask(db.Syncables), isTransient, maxRetries),
-			pipeline.RetryingTask(NewBlockSeqPersistorTask(db.BlockSeq), isTransient, maxRetries),
-			pipeline.RetryingTask(NewValidatorSessionSeqPersistorTask(db.ValidatorSessionSeq), isTransient, maxRetries),
-			pipeline.RetryingTask(NewValidatorEraSeqPersistorTask(db.ValidatorEraSeq), isTransient, maxRetries),
-			pipeline.RetryingTask(NewValidatorAggPersistorTask(db.ValidatorAgg), isTransient, maxRetries),
-			pipeline.RetryingTask(NewEventSeqPersistorTask(db.EventSeq), isTransient, maxRetries),
-			pipeline.RetryingTask(NewAccountEraSeqPersistorTask(db.AccountEraSeq), isTransient, maxRetries),
+			pipeline.RetryingTask(NewSyncerPersistorTask(db.GetSyncables()), isTransient, maxRetries),
+			pipeline.RetryingTask(NewBlockSeqPersistorTask(db.GetBlockSeq()), isTransient, maxRetries),
+			pipeline.RetryingTask(NewValidatorSessionSeqPersistorTask(db.GetValidatorSessionSeq()), isTransient, maxRetries),
+			pipeline.RetryingTask(NewValidatorEraSeqPersistorTask(db.GetValidatorEraSeq()), isTransient, maxRetries),
+			pipeline.RetryingTask(NewValidatorAggPersistorTask(db.GetValidatorAgg()), isTransient, maxRetries),
+			pipeline.RetryingTask(NewEventSeqPersistorTask(db.GetEventSeq()), isTransient, maxRetries),
+			pipeline.RetryingTask(NewAccountEraSeqPersistorTask(db.GetAccountEraSeq()), isTransient, maxRetries),
 		),
 	)
 
@@ -100,7 +99,7 @@ func NewPipeline(cfg *config.Config, db *store.Store, client *client.Client) (*i
 		return nil, err
 	}
 
-	statusChecker := pipelineStatusChecker{db.Syncables, configParser.GetCurrentVersionId()}
+	statusChecker := pipelineStatusChecker{db.GetSyncables(), configParser.GetCurrentVersionId()}
 	pipelineStatus, err := statusChecker.getStatus()
 	if err != nil {
 		return nil, err
@@ -145,7 +144,7 @@ func (p *indexingPipeline) Start(ctx context.Context, indexCfg IndexConfig) erro
 		indexVersion: indexVersion,
 		startHeight:  source.startHeight,
 		endHeight:    source.endHeight,
-		store:        p.db.Reports,
+		store:        p.db.GetReports(),
 	}
 
 	if err := reportCreator.create(); err != nil {
@@ -211,7 +210,7 @@ func (p *indexingPipeline) Backfill(ctx context.Context, backfillCfg BackfillCon
 	}
 
 	if backfillCfg.Force {
-		if err := p.db.Reports.DeleteByKinds([]model.ReportKind{model.ReportKindParallelReindex, model.ReportKindSequentialReindex}); err != nil {
+		if err := p.db.GetReports().DeleteByKinds([]model.ReportKind{model.ReportKindParallelReindex, model.ReportKindSequentialReindex}); err != nil {
 			return err
 		}
 	}
@@ -221,7 +220,7 @@ func (p *indexingPipeline) Backfill(ctx context.Context, backfillCfg BackfillCon
 		indexVersion: indexVersion,
 		startHeight:  source.startHeight,
 		endHeight:    source.endHeight,
-		store:        p.db.Reports,
+		store:        p.db.GetReports(),
 	}
 
 	versionIds := p.status.missingVersionIds
@@ -234,7 +233,7 @@ func (p *indexingPipeline) Backfill(ctx context.Context, backfillCfg BackfillCon
 		return err
 	}
 
-	if err := p.db.Syncables.SetProcessedAtForRange(reportCreator.report.ID, source.startHeight, source.endHeight); err != nil {
+	if err := p.db.GetSyncables().SetProcessedAtForRange(reportCreator.report.ID, source.startHeight, source.endHeight); err != nil {
 		return err
 	}
 

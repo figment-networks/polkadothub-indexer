@@ -10,13 +10,13 @@ import (
 
 type PurgeCmdHandler struct {
 	cfg    *config.Config
-	db     *store.Store
+	db     store.Store
 	client *client.Client
 
 	useCase *purgeUseCase
 }
 
-func NewPurgeCmdHandler(cfg *config.Config, db *store.Store, c *client.Client) *PurgeCmdHandler {
+func NewPurgeCmdHandler(cfg *config.Config, db store.Store, c *client.Client) *PurgeCmdHandler {
 	return &PurgeCmdHandler{
 		cfg:    cfg,
 		db:     db,

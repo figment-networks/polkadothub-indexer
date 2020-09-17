@@ -11,13 +11,13 @@ import (
 
 type StartCmdHandler struct {
 	cfg    *config.Config
-	db     *store.Store
+	db     store.Store
 	client *client.Client
 
 	useCase *startUseCase
 }
 
-func NewStartCmdHandler(cfg *config.Config, db *store.Store, c *client.Client) *StartCmdHandler {
+func NewStartCmdHandler(cfg *config.Config, db store.Store, c *client.Client) *StartCmdHandler {
 	return &StartCmdHandler{
 		cfg:    cfg,
 		db:     db,

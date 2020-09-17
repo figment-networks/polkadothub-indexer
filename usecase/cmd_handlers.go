@@ -8,7 +8,7 @@ import (
 	"github.com/figment-networks/polkadothub-indexer/usecase/indexing"
 )
 
-func NewCmdHandlers(cfg *config.Config, db *store.Store, c *client.Client) *CmdHandlers {
+func NewCmdHandlers(cfg *config.Config, db store.Store, c *client.Client) *CmdHandlers {
 	return &CmdHandlers{
 		GetStatus:        chain.NewGetStatusCmdHandler(db, c),
 		StartIndexer:     indexing.NewStartCmdHandler(cfg, db, c),

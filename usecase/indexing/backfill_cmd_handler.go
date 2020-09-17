@@ -2,6 +2,7 @@ package indexing
 
 import (
 	"context"
+
 	"github.com/figment-networks/polkadothub-indexer/client"
 	"github.com/figment-networks/polkadothub-indexer/config"
 	"github.com/figment-networks/polkadothub-indexer/store"
@@ -10,13 +11,13 @@ import (
 
 type BackfillCmdHandler struct {
 	cfg    *config.Config
-	db     *store.Store
+	db     store.Store
 	client *client.Client
 
 	useCase *backfillUseCase
 }
 
-func NewBackfillCmdHandler(cfg *config.Config, db *store.Store, c *client.Client) *BackfillCmdHandler {
+func NewBackfillCmdHandler(cfg *config.Config, db store.Store, c *client.Client) *BackfillCmdHandler {
 	return &BackfillCmdHandler{
 		cfg:    cfg,
 		db:     db,

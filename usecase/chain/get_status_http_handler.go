@@ -14,13 +14,13 @@ var (
 )
 
 type getStatusHttpHandler struct {
-	db     *store.Store
+	db     store.Store
 	client *client.Client
 
 	useCase *getStatusUseCase
 }
 
-func NewGetStatusHttpHandler(db *store.Store, client *client.Client) *getStatusHttpHandler {
+func NewGetStatusHttpHandler(db store.Store, client *client.Client) *getStatusHttpHandler {
 	return &getStatusHttpHandler{
 		db:     db,
 		client: client,

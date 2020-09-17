@@ -15,13 +15,13 @@ var (
 
 type summarizeWorkerHandler struct {
 	cfg    *config.Config
-	db     *store.Store
+	db     store.Store
 	client *client.Client
 
 	useCase *summarizeUseCase
 }
 
-func NewSummarizeWorkerHandler(cfg *config.Config, db *store.Store, c *client.Client) *summarizeWorkerHandler {
+func NewSummarizeWorkerHandler(cfg *config.Config, db store.Store, c *client.Client) *summarizeWorkerHandler {
 	return &summarizeWorkerHandler{
 		cfg:    cfg,
 		db:     db,

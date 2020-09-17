@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/figment-networks/polkadothub-indexer/model"
+	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/types"
 	"github.com/jinzhu/gorm"
 )
@@ -129,16 +130,8 @@ func (s *ValidatorSessionSeqStore) DeleteOlderThan(purgeThreshold time.Time) (*i
 	return &tx.RowsAffected, nil
 }
 
-type ValidatorSessionSeqSummary struct {
-	StashAccount string     `json:"stash_account"`
-	TimeBucket   types.Time `json:"time_bucket"`
-	UptimeAvg    float64    `json:"uptime_avg"`
-	UptimeMin    int64      `json:"uptime_min"`
-	UptimeMax    int64      `json:"uptime_max"`
-}
-
 // Summarize gets the summarized version of validator sequences
-func (s *ValidatorSessionSeqStore) Summarize(interval types.SummaryInterval, activityPeriods []ActivityPeriodRow) ([]ValidatorSessionSeqSummary, error) {
+func (s *ValidatorSessionSeqStore) Summarize(interval types.SummaryInterval, activityPeriods []store.ActivityPeriodRow) ([]store.ValidatorSessionSeqSummary, error) {
 	defer logQueryDuration(time.Now(), "ValidatorSessionSeqStore_Summarize")
 
 	tx := s.db.
@@ -172,9 +165,9 @@ func (s *ValidatorSessionSeqStore) Summarize(interval types.SummaryInterval, act
 	}
 	defer rows.Close()
 
-	var models []ValidatorSessionSeqSummary
+	var models []store.ValidatorSessionSeqSummary
 	for rows.Next() {
-		var summary ValidatorSessionSeqSummary
+		var summary store.ValidatorSessionSeqSummary
 		if err := s.db.ScanRows(rows, &summary); err != nil {
 			return nil, err
 		}

@@ -17,13 +17,13 @@ var (
 )
 
 type getBlockSummaryHttpHandler struct {
-	db     *store.Store
+	db     store.Store
 	client *client.Client
 
 	useCase *getBlockSummaryUseCase
 }
 
-func NewGetBlockSummaryHttpHandler(db *store.Store, client *client.Client) *getBlockSummaryHttpHandler {
+func NewGetBlockSummaryHttpHandler(db store.Store, client *client.Client) *getBlockSummaryHttpHandler {
 	return &getBlockSummaryHttpHandler{
 		db:     db,
 		client: client,

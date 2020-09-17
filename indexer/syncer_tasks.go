@@ -3,9 +3,10 @@ package indexer
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/figment-networks/polkadothub-indexer/metric"
 	"github.com/figment-networks/polkadothub-indexer/types"
-	"time"
 
 	"github.com/figment-networks/indexing-engine/pipeline"
 	"github.com/figment-networks/polkadothub-indexer/model"
@@ -17,14 +18,14 @@ const (
 	MainSyncerTaskName = "MainSyncer"
 )
 
-func NewMainSyncerTask(db *store.Store) pipeline.Task {
+func NewMainSyncerTask(db store.Syncables) pipeline.Task {
 	return &mainSyncerTask{
 		db: db,
 	}
 }
 
 type mainSyncerTask struct {
-	db *store.Store
+	db store.Syncables
 }
 
 func (t *mainSyncerTask) GetName() string {
@@ -38,12 +39,12 @@ func (t *mainSyncerTask) Run(ctx context.Context, p pipeline.Payload) error {
 
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StageSyncer, t.GetName(), payload.CurrentHeight))
 
-	syncable, err := t.db.Syncables.FindByHeight(payload.CurrentHeight)
+	syncable, err := t.db.FindByHeight(payload.CurrentHeight)
 	if err != nil {
 		if err == store.ErrNotFound {
 			syncable = &model.Syncable{
-				Height:       payload.CurrentHeight,
-				Time:         payload.HeightMeta.Time,
+				Height: payload.CurrentHeight,
+				Time:   payload.HeightMeta.Time,
 
 				ChainUID:      payload.HeightMeta.ChainUID,
 				SpecVersion:   payload.HeightMeta.SpecVersion,

@@ -1,13 +1,10 @@
 package psql
 
 import (
-	"errors"
 	"fmt"
-	"github.com/jinzhu/gorm"
-)
 
-var (
-	ErrNotFound = errors.New("record not found")
+	"github.com/figment-networks/polkadothub-indexer/store"
+	"github.com/jinzhu/gorm"
 )
 
 // baseStore implements generic store operations
@@ -48,7 +45,7 @@ func scoped(conn *gorm.DB, m interface{}) baseStore {
 }
 
 func isNotFound(err error) bool {
-	return gorm.IsRecordNotFoundError(err) || err == ErrNotFound
+	return gorm.IsRecordNotFoundError(err) || err == store.ErrNotFound
 }
 
 func findBy(db *gorm.DB, dst interface{}, key string, value interface{}) error {
@@ -68,7 +65,7 @@ func findMostRecent(db *gorm.DB, orderField string, record interface{}) error {
 
 func checkErr(err error) error {
 	if gorm.IsRecordNotFoundError(err) {
-		return ErrNotFound
+		return store.ErrNotFound
 	}
 	return err
 }

@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/figment-networks/polkadothub-indexer/model"
+	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/types"
 	"github.com/jinzhu/gorm"
 )
@@ -129,31 +130,8 @@ func (s *ValidatorEraSeqStore) DeleteOlderThan(purgeThreshold time.Time) (*int64
 	return &tx.RowsAffected, nil
 }
 
-type ValidatorEraSeqSummary struct {
-	StashAccount    string         `json:"stash_account"`
-	TimeBucket      types.Time     `json:"time_bucket"`
-	TotalStakeAvg   types.Quantity `json:"total_stake_avg"`
-	TotalStakeMin   types.Quantity `json:"total_stake_min"`
-	TotalStakeMax   types.Quantity `json:"total_stake_max"`
-	OwnStakeAvg     types.Quantity `json:"own_stake_avg"`
-	OwnStakeMin     types.Quantity `json:"own_stake_min"`
-	OwnStakeMax     types.Quantity `json:"own_stake_max"`
-	StakersStakeAvg types.Quantity `json:"stakers_stake_avg"`
-	StakersStakeMin types.Quantity `json:"stakers_stake_min"`
-	StakersStakeMax types.Quantity `json:"stakers_stake_max"`
-	RewardPointsAvg float64        `json:"reward_points_avg"`
-	RewardPointsMin int64          `json:"reward_points_min"`
-	RewardPointsMax int64          `json:"reward_points_max"`
-	CommissionAvg   float64        `json:"commission_avg"`
-	CommissionMin   int64          `json:"commission_min"`
-	CommissionMax   int64          `json:"commission_max"`
-	StakersCountAvg float64        `json:"stakers_count_avg"`
-	StakersCountMin int64          `json:"stakers_count_min"`
-	StakersCountMax int64          `json:"stakers_count_max"`
-}
-
 // Summarize gets the summarized version of validator sequences
-func (s *ValidatorEraSeqStore) Summarize(interval types.SummaryInterval, activityPeriods []ActivityPeriodRow) ([]ValidatorEraSeqSummary, error) {
+func (s *ValidatorEraSeqStore) Summarize(interval types.SummaryInterval, activityPeriods []store.ActivityPeriodRow) ([]store.ValidatorEraSeqSummary, error) {
 	defer logQueryDuration(time.Now(), "ValidatorEraSeqStore_Summarize")
 
 	tx := s.db.
@@ -187,9 +165,9 @@ func (s *ValidatorEraSeqStore) Summarize(interval types.SummaryInterval, activit
 	}
 	defer rows.Close()
 
-	var models []ValidatorEraSeqSummary
+	var models []store.ValidatorEraSeqSummary
 	for rows.Next() {
-		var summary ValidatorEraSeqSummary
+		var summary store.ValidatorEraSeqSummary
 		if err := s.db.ScanRows(rows, &summary); err != nil {
 			return nil, err
 		}

@@ -8,7 +8,7 @@ import (
 	"github.com/figment-networks/polkadothub-indexer/usecase/indexing"
 )
 
-func NewWorkerHandlers(cfg *config.Config, db *store.Store, c *client.Client) *WorkerHandlers {
+func NewWorkerHandlers(cfg *config.Config, db store.Store, c *client.Client) *WorkerHandlers {
 	return &WorkerHandlers{
 		RunIndexer:       indexing.NewRunWorkerHandler(cfg, db, c),
 		SummarizeIndexer: indexing.NewSummarizeWorkerHandler(cfg, db, c),

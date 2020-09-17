@@ -16,13 +16,13 @@ var (
 
 type runWorkerHandler struct {
 	cfg    *config.Config
-	db     *store.Store
+	db     store.Store
 	client *client.Client
 
 	useCase *startUseCase
 }
 
-func NewRunWorkerHandler(cfg *config.Config, db *store.Store, c *client.Client) *runWorkerHandler {
+func NewRunWorkerHandler(cfg *config.Config, db store.Store, c *client.Client) *runWorkerHandler {
 	return &runWorkerHandler{
 		cfg:    cfg,
 		db:     db,

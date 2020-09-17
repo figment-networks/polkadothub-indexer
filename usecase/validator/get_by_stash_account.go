@@ -6,17 +6,17 @@ import (
 )
 
 type getByStashAccountUseCase struct {
-	db *store.Store
+	db store.Store
 }
 
-func NewGetByStashAccountUseCase(db *store.Store) *getByStashAccountUseCase {
+func NewGetByStashAccountUseCase(db store.Store) *getByStashAccountUseCase {
 	return &getByStashAccountUseCase{
 		db: db,
 	}
 }
 
 func (uc *getByStashAccountUseCase) Execute(stashAccount string, sessionsLimit int64, erasLimit int64) (*AggDetailsView, error) {
-	validatorAggs, err := uc.db.ValidatorAgg.FindByStashAccount(stashAccount)
+	validatorAggs, err := uc.db.GetValidatorAgg().FindByStashAccount(stashAccount)
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +32,7 @@ func (uc *getByStashAccountUseCase) Execute(stashAccount string, sessionsLimit i
 	}
 
 	eraLimit := int64(1)
-	accountEraSeqs, err := uc.db.AccountEraSeq.FindLastByValidatorStashAccount(stashAccount, eraLimit)
+	accountEraSeqs, err := uc.db.GetAccountEraSeq().FindLastByValidatorStashAccount(stashAccount, eraLimit)
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +44,7 @@ func (uc *getByStashAccountUseCase) getSessionSequences(stashAccount string, seq
 	var sequences []model.ValidatorSessionSeq
 	var err error
 	if sequencesLimit > 0 {
-		sequences, err = uc.db.ValidatorSessionSeq.FindLastByStashAccount(stashAccount, sequencesLimit)
+		sequences, err = uc.db.GetValidatorSessionSeq().FindLastByStashAccount(stashAccount, sequencesLimit)
 		if err != nil {
 			return nil, err
 		}
@@ -56,7 +56,7 @@ func (uc *getByStashAccountUseCase) getEraSequences(stashAccount string, sequenc
 	var sequences []model.ValidatorEraSeq
 	var err error
 	if sequencesLimit > 0 {
-		sequences, err = uc.db.ValidatorEraSeq.FindLastByStashAccount(stashAccount, sequencesLimit)
+		sequences, err = uc.db.GetValidatorEraSeq().FindLastByStashAccount(stashAccount, sequencesLimit)
 		if err != nil {
 			return nil, err
 		}

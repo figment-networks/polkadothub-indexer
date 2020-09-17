@@ -2,6 +2,7 @@ package indexing
 
 import (
 	"context"
+
 	"github.com/figment-networks/polkadothub-indexer/client"
 	"github.com/figment-networks/polkadothub-indexer/config"
 	"github.com/figment-networks/polkadothub-indexer/indexer"
@@ -16,11 +17,11 @@ var (
 
 type backfillUseCase struct {
 	cfg    *config.Config
-	db     *store.Store
+	db     store.Store
 	client *client.Client
 }
 
-func NewBackfillUseCase(cfg *config.Config, db *store.Store, c *client.Client) *backfillUseCase {
+func NewBackfillUseCase(cfg *config.Config, db store.Store, c *client.Client) *backfillUseCase {
 	return &backfillUseCase{
 		cfg:    cfg,
 		db:     db,
@@ -35,9 +36,9 @@ type BackfillUseCaseConfig struct {
 }
 
 func (uc *backfillUseCase) Execute(ctx context.Context, useCaseConfig BackfillUseCaseConfig) error {
-	//if err := uc.canExecute(); err != nil {
-	//	return err
-	//}
+	if err := uc.canExecute(); err != nil {
+		return err
+	}
 
 	indexingPipeline, err := indexer.NewPipeline(uc.cfg, uc.db, uc.client)
 	if err != nil {
@@ -54,7 +55,7 @@ func (uc *backfillUseCase) Execute(ctx context.Context, useCaseConfig BackfillUs
 // canExecute checks if reindex is already running
 // if is it running we skip indexing
 func (uc *backfillUseCase) canExecute() error {
-	if _, err := uc.db.Reports.FindNotCompletedByKind(model.ReportKindSequentialReindex, model.ReportKindParallelReindex); err != nil {
+	if _, err := uc.db.GetReports().FindNotCompletedByKind(model.ReportKindSequentialReindex, model.ReportKindParallelReindex); err != nil {
 		if err == store.ErrNotFound {
 			return nil
 		} else {

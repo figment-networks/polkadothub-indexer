@@ -17,13 +17,13 @@ var (
 
 type getByHeightHttpHandler struct {
 	cfg    *config.Config
-	db     *store.Store
+	db     store.Store
 	client *client.Client
 
 	useCase *getByHeightUseCase
 }
 
-func NewGetByHeightHttpHandler(cfg *config.Config, db *store.Store, c *client.Client) *getByHeightHttpHandler {
+func NewGetByHeightHttpHandler(cfg *config.Config, db store.Store, c *client.Client) *getByHeightHttpHandler {
 	return &getByHeightHttpHandler{
 		cfg:    cfg,
 		db:     db,

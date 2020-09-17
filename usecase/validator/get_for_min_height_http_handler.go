@@ -15,13 +15,13 @@ var (
 )
 
 type getForMinHeightHttpHandler struct {
-	db     *store.Store
+	db     store.Store
 	client *client.Client
 
 	useCase *getForMinHeightUseCase
 }
 
-func NewGetForMinHeightHttpHandler(db *store.Store, c *client.Client) *getForMinHeightHttpHandler {
+func NewGetForMinHeightHttpHandler(db store.Store, c *client.Client) *getForMinHeightHttpHandler {
 	return &getForMinHeightHttpHandler{
 		db:     db,
 		client: c,

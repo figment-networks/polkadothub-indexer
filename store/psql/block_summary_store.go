@@ -2,10 +2,12 @@ package psql
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/figment-networks/polkadothub-indexer/model"
+	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/types"
 	"github.com/jinzhu/gorm"
-	"time"
 )
 
 func NewBlockSummaryStore(db *gorm.DB) *BlockSummaryStore {
@@ -52,14 +54,8 @@ func (s *BlockSummaryStore) FindMostRecentByInterval(interval types.SummaryInter
 	return &result, checkErr(err)
 }
 
-type ActivityPeriodRow struct {
-	Period int64
-	Min    types.Time
-	Max    types.Time
-}
-
 // FindActivityPeriods Finds activity periods
-func (s *BlockSummaryStore) FindActivityPeriods(interval types.SummaryInterval, indexVersion int64) ([]ActivityPeriodRow, error) {
+func (s *BlockSummaryStore) FindActivityPeriods(interval types.SummaryInterval, indexVersion int64) ([]store.ActivityPeriodRow, error) {
 	defer logQueryDuration(time.Now(), "BlockSummaryStore_FindActivityPeriods")
 
 	rows, err := s.db.
@@ -71,9 +67,9 @@ func (s *BlockSummaryStore) FindActivityPeriods(interval types.SummaryInterval, 
 	}
 	defer rows.Close()
 
-	var res []ActivityPeriodRow
+	var res []store.ActivityPeriodRow
 	for rows.Next() {
-		var row ActivityPeriodRow
+		var row store.ActivityPeriodRow
 		if err := s.db.ScanRows(rows, &row); err != nil {
 			return nil, err
 		}

@@ -6,7 +6,8 @@ import (
 	"testing"
 	"time"
 
-	mock "github.com/figment-networks/polkadothub-indexer/mock/indexer"
+	mock "github.com/figment-networks/polkadothub-indexer/mock/store"
+
 	"github.com/figment-networks/polkadothub-indexer/model"
 	"github.com/figment-networks/polkadothub-indexer/types"
 	"github.com/golang/mock/gomock"
@@ -35,7 +36,7 @@ func TestSyncerPersistor_Run(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			ctx := context.Background()
 
-			dbMock := mock.NewMockSyncerPersistorTaskStore(ctrl)
+			dbMock := mock.NewMockSyncables(ctrl)
 
 			task := NewSyncerPersistorTask(dbMock)
 
@@ -78,7 +79,7 @@ func TestBlockSeqPersistor_Run(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			ctx := context.Background()
 
-			dbMock := mock.NewMockBlockSeqPersistorTaskStore(ctrl)
+			dbMock := mock.NewMockBlockSeq(ctrl)
 
 			task := NewBlockSeqPersistorTask(dbMock)
 
@@ -100,7 +101,7 @@ func TestBlockSeqPersistor_Run(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			ctx := context.Background()
 
-			dbMock := mock.NewMockBlockSeqPersistorTaskStore(ctrl)
+			dbMock := mock.NewMockBlockSeq(ctrl)
 
 			task := NewBlockSeqPersistorTask(dbMock)
 
@@ -143,7 +144,7 @@ func TestValidatorSessionSeqPersistor_Run(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			ctx := context.Background()
 
-			dbMock := mock.NewMockValidatorSessionSeqPersistorTaskStore(ctrl)
+			dbMock := mock.NewMockValidatorSessionSeq(ctrl)
 
 			task := NewValidatorSessionSeqPersistorTask(dbMock)
 
@@ -174,7 +175,7 @@ func TestValidatorSessionSeqPersistor_Run(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			ctx := context.Background()
 
-			dbMock := mock.NewMockValidatorSessionSeqPersistorTaskStore(ctrl)
+			dbMock := mock.NewMockValidatorSessionSeq(ctrl)
 
 			task := NewValidatorSessionSeqPersistorTask(dbMock)
 
@@ -226,7 +227,7 @@ func TestValidatorEraSeqPersistor_Run(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			ctx := context.Background()
 
-			dbMock := mock.NewMockValidatorEraSeqPersistorTaskStore(ctrl)
+			dbMock := mock.NewMockValidatorEraSeq(ctrl)
 
 			task := NewValidatorEraSeqPersistorTask(dbMock)
 
@@ -257,7 +258,7 @@ func TestValidatorEraSeqPersistor_Run(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			ctx := context.Background()
 
-			dbMock := mock.NewMockValidatorEraSeqPersistorTaskStore(ctrl)
+			dbMock := mock.NewMockValidatorEraSeq(ctrl)
 
 			task := NewValidatorEraSeqPersistorTask(dbMock)
 
@@ -307,7 +308,7 @@ func TestValidatorAggPersistor_Run(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			ctx := context.Background()
 
-			dbMock := mock.NewMockValidatorAggPersistorTaskStore(ctrl)
+			dbMock := mock.NewMockValidatorAgg(ctrl)
 
 			task := NewValidatorAggPersistorTask(dbMock)
 
@@ -335,7 +336,7 @@ func TestValidatorAggPersistor_Run(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			ctx := context.Background()
 
-			dbMock := mock.NewMockValidatorAggPersistorTaskStore(ctrl)
+			dbMock := mock.NewMockValidatorAgg(ctrl)
 
 			task := NewValidatorAggPersistorTask(dbMock)
 
@@ -382,7 +383,7 @@ func TestEventSequencePersistor_Run(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			ctx := context.Background()
 
-			dbMock := mock.NewMockEventSeqPersistorTaskStore(ctrl)
+			dbMock := mock.NewMockEventSeq(ctrl)
 
 			task := NewEventSeqPersistorTask(dbMock)
 
@@ -410,7 +411,7 @@ func TestEventSequencePersistor_Run(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			ctx := context.Background()
 
-			dbMock := mock.NewMockEventSeqPersistorTaskStore(ctrl)
+			dbMock := mock.NewMockEventSeq(ctrl)
 
 			task := NewEventSeqPersistorTask(dbMock)
 
@@ -458,7 +459,7 @@ func TestAccountEraSequencePersistor_Run(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			ctx := context.Background()
 
-			dbMock := mock.NewMockAccountEraPersistorTaskStore(ctrl)
+			dbMock := mock.NewMockAccountEraSeq(ctrl)
 
 			task := NewAccountEraSeqPersistorTask(dbMock)
 
@@ -488,7 +489,7 @@ func TestAccountEraSequencePersistor_Run(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			ctx := context.Background()
 
-			dbMock := mock.NewMockAccountEraPersistorTaskStore(ctrl)
+			dbMock := mock.NewMockAccountEraSeq(ctrl)
 
 			task := NewAccountEraSeqPersistorTask(dbMock)
 

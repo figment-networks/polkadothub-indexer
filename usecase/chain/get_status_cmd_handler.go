@@ -9,13 +9,13 @@ import (
 )
 
 type GetStatusCmdHandler struct {
-	db     *store.Store
+	db     store.Store
 	client *client.Client
 
 	useCase *getStatusUseCase
 }
 
-func NewGetStatusCmdHandler(db *store.Store, c *client.Client) *GetStatusCmdHandler {
+func NewGetStatusCmdHandler(db store.Store, c *client.Client) *GetStatusCmdHandler {
 	return &GetStatusCmdHandler{
 		db:     db,
 		client: c,

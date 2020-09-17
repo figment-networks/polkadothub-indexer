@@ -6,11 +6,11 @@ import (
 )
 
 type getDetailsUseCase struct {
-	db     *store.Store
+	db     store.Store
 	client *client.Client
 }
 
-func NewGetDetailsUseCase(db *store.Store, c *client.Client) *getDetailsUseCase {
+func NewGetDetailsUseCase(db store.Store, c *client.Client) *getDetailsUseCase {
 	return &getDetailsUseCase{
 		db:     db,
 		client: c,
@@ -24,32 +24,32 @@ func (uc *getDetailsUseCase) Execute(address string) (*DetailsView, error) {
 	}
 
 	eraLimit := int64(1)
-	accountEraSeqs, err := uc.db.AccountEraSeq.FindLastByStashAccount(address, eraLimit)
+	accountEraSeqs, err := uc.db.GetAccountEraSeq().FindLastByStashAccount(address, eraLimit)
 	if err != nil {
 		return nil, err
 	}
 
-	balanceTransfers, err := uc.db.EventSeq.FindBalanceTransfers(address)
+	balanceTransfers, err := uc.db.GetEventSeq().FindBalanceTransfers(address)
 	if err != nil {
 		return nil, err
 	}
 
-	balanceDeposits, err := uc.db.EventSeq.FindBalanceDeposits(address)
+	balanceDeposits, err := uc.db.GetEventSeq().FindBalanceDeposits(address)
 	if err != nil {
 		return nil, err
 	}
 
-	bonded, err := uc.db.EventSeq.FindBonded(address)
+	bonded, err := uc.db.GetEventSeq().FindBonded(address)
 	if err != nil {
 		return nil, err
 	}
 
-	unbonded, err := uc.db.EventSeq.FindUnbonded(address)
+	unbonded, err := uc.db.GetEventSeq().FindUnbonded(address)
 	if err != nil {
 		return nil, err
 	}
 
-	withdrawn, err := uc.db.EventSeq.FindWithdrawn(address)
+	withdrawn, err := uc.db.GetEventSeq().FindWithdrawn(address)
 	if err != nil {
 		return nil, err
 	}

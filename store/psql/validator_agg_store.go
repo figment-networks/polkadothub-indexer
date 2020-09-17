@@ -2,6 +2,7 @@ package psql
 
 import (
 	"github.com/figment-networks/polkadothub-indexer/model"
+	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/jinzhu/gorm"
 )
 
@@ -18,7 +19,7 @@ type ValidatorAggStore struct {
 func (s ValidatorAggStore) CreateOrUpdate(val *model.ValidatorAgg) error {
 	existing, err := s.FindByStashAccount(val.StashAccount)
 	if err != nil {
-		if err == ErrNotFound {
+		if err == store.ErrNotFound {
 			return s.Create(val)
 		}
 		return err

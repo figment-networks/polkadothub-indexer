@@ -17,11 +17,11 @@ var (
 
 type startUseCase struct {
 	cfg    *config.Config
-	db     *store.Store
+	db     store.Store
 	client *client.Client
 }
 
-func NewStartUseCase(cfg *config.Config, db *store.Store, c *client.Client) *startUseCase {
+func NewStartUseCase(cfg *config.Config, db store.Store, c *client.Client) *startUseCase {
 	return &startUseCase{
 		cfg:    cfg,
 		db:     db,
@@ -47,7 +47,7 @@ func (uc *startUseCase) Execute(ctx context.Context, batchSize int64) error {
 // canExecute checks if sequential reindex is already running
 // if is it running we skip indexing
 func (uc *startUseCase) canExecute() error {
-	if _, err := uc.db.Reports.FindNotCompletedByKind(model.ReportKindSequentialReindex); err != nil {
+	if _, err := uc.db.GetReports().FindNotCompletedByKind(model.ReportKindSequentialReindex); err != nil {
 		if err == store.ErrNotFound {
 			return nil
 		}

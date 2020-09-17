@@ -7,11 +7,11 @@ import (
 )
 
 type getByHeightUseCase struct {
-	db     *store.Store
+	db     store.Store
 	client *client.Client
 }
 
-func NewGetByHeightUseCase(db *store.Store, c *client.Client) *getByHeightUseCase {
+func NewGetByHeightUseCase(db store.Store, c *client.Client) *getByHeightUseCase {
 	return &getByHeightUseCase{
 		db:     db,
 		client: c,
@@ -20,7 +20,7 @@ func NewGetByHeightUseCase(db *store.Store, c *client.Client) *getByHeightUseCas
 
 func (uc *getByHeightUseCase) Execute(height *int64) (*DetailsView, error) {
 	// Get last indexed height
-	mostRecentSynced, err := uc.db.Syncables.FindMostRecent()
+	mostRecentSynced, err := uc.db.GetSyncables().FindMostRecent()
 	if err != nil {
 		return nil, err
 	}

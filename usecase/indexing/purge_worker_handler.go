@@ -15,13 +15,13 @@ var (
 
 type purgeWorkerHandler struct {
 	cfg    *config.Config
-	db     *store.Store
+	db     store.Store
 	client *client.Client
 
 	useCase *purgeUseCase
 }
 
-func NewPurgeWorkerHandler(cfg *config.Config, db *store.Store, c *client.Client) *purgeWorkerHandler {
+func NewPurgeWorkerHandler(cfg *config.Config, db store.Store, c *client.Client) *purgeWorkerHandler {
 	return &purgeWorkerHandler{
 		cfg:    cfg,
 		db:     db,

@@ -7,7 +7,7 @@ import (
 
 	"github.com/figment-networks/indexing-engine/pipeline"
 	"github.com/figment-networks/polkadothub-indexer/metric"
-	"github.com/figment-networks/polkadothub-indexer/model"
+	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/utils/logger"
 )
 
@@ -22,18 +22,14 @@ const (
 )
 
 // NewSyncerPersistorTask is responsible for storing syncable to persistence layer
-func NewSyncerPersistorTask(db SyncerPersistorTaskStore) pipeline.Task {
+func NewSyncerPersistorTask(db store.Syncables) pipeline.Task {
 	return &syncerPersistorTask{
 		db: db,
 	}
 }
 
 type syncerPersistorTask struct {
-	db SyncerPersistorTaskStore
-}
-
-type SyncerPersistorTaskStore interface {
-	CreateOrUpdate(val *model.Syncable) error
+	db store.Syncables
 }
 
 func (t *syncerPersistorTask) GetName() string {
@@ -51,19 +47,14 @@ func (t *syncerPersistorTask) Run(ctx context.Context, p pipeline.Payload) error
 }
 
 // NewBlockSeqPersistorTask is responsible for storing block to persistence layer
-func NewBlockSeqPersistorTask(db BlockSeqPersistorTaskStore) pipeline.Task {
+func NewBlockSeqPersistorTask(db store.BlockSeq) pipeline.Task {
 	return &blockSeqPersistorTask{
 		db: db,
 	}
 }
 
 type blockSeqPersistorTask struct {
-	db BlockSeqPersistorTaskStore
-}
-
-type BlockSeqPersistorTaskStore interface {
-	Create(record interface{}) error
-	Save(record interface{}) error
+	db store.BlockSeq
 }
 
 func (t *blockSeqPersistorTask) GetName() string {
@@ -89,19 +80,14 @@ func (t *blockSeqPersistorTask) Run(ctx context.Context, p pipeline.Payload) err
 }
 
 // NewValidatorSessionSeqPersistorTask is responsible for storing validator session info to persistence layer
-func NewValidatorSessionSeqPersistorTask(db ValidatorSessionSeqPersistorTaskStore) pipeline.Task {
+func NewValidatorSessionSeqPersistorTask(db store.ValidatorSessionSeq) pipeline.Task {
 	return &validatorSessionSeqPersistorTask{
 		db: db,
 	}
 }
 
 type validatorSessionSeqPersistorTask struct {
-	db ValidatorSessionSeqPersistorTaskStore
-}
-
-type ValidatorSessionSeqPersistorTaskStore interface {
-	Create(record interface{}) error
-	Save(record interface{}) error
+	db store.ValidatorSessionSeq
 }
 
 func (t *validatorSessionSeqPersistorTask) GetName() string {
@@ -136,19 +122,14 @@ func (t *validatorSessionSeqPersistorTask) Run(ctx context.Context, p pipeline.P
 }
 
 // NewValidatorEraSeqPersistorTask is responsible for storing validator era info to persistence layer
-func NewValidatorEraSeqPersistorTask(db ValidatorEraSeqPersistorTaskStore) pipeline.Task {
+func NewValidatorEraSeqPersistorTask(db store.ValidatorEraSeq) pipeline.Task {
 	return &validatorEraSeqPersistorTask{
 		db: db,
 	}
 }
 
 type validatorEraSeqPersistorTask struct {
-	db ValidatorEraSeqPersistorTaskStore
-}
-
-type ValidatorEraSeqPersistorTaskStore interface {
-	Create(record interface{}) error
-	Save(record interface{}) error
+	db store.ValidatorEraSeq
 }
 
 func (t *validatorEraSeqPersistorTask) GetName() string {
@@ -182,19 +163,14 @@ func (t *validatorEraSeqPersistorTask) Run(ctx context.Context, p pipeline.Paylo
 	return nil
 }
 
-func NewValidatorAggPersistorTask(db ValidatorAggPersistorTaskStore) pipeline.Task {
+func NewValidatorAggPersistorTask(db store.ValidatorAgg) pipeline.Task {
 	return &validatorAggPersistorTask{
 		db: db,
 	}
 }
 
 type validatorAggPersistorTask struct {
-	db ValidatorAggPersistorTaskStore
-}
-
-type ValidatorAggPersistorTaskStore interface {
-	Create(record interface{}) error
-	Save(record interface{}) error
+	db store.ValidatorAgg
 }
 
 func (t *validatorAggPersistorTask) GetName() string {
@@ -224,18 +200,14 @@ func (t *validatorAggPersistorTask) Run(ctx context.Context, p pipeline.Payload)
 }
 
 // NewEventSeqPersistorTask is responsible for storing events info to persistence layer
-func NewEventSeqPersistorTask(db EventSeqPersistorTaskStore) pipeline.Task {
+func NewEventSeqPersistorTask(db store.EventSeq) pipeline.Task {
 	return &eventSeqPersistorTask{
 		db: db,
 	}
 }
 
 type eventSeqPersistorTask struct {
-	db EventSeqPersistorTaskStore
-}
-type EventSeqPersistorTaskStore interface {
-	Create(record interface{}) error
-	Save(record interface{}) error
+	db store.EventSeq
 }
 
 func (t *eventSeqPersistorTask) GetName() string {
@@ -265,19 +237,14 @@ func (t *eventSeqPersistorTask) Run(ctx context.Context, p pipeline.Payload) err
 }
 
 // NewAccountEraSeqPersistorTask is responsible for storing account era info to persistence layer
-func NewAccountEraSeqPersistorTask(db AccountEraPersistorTaskStore) pipeline.Task {
+func NewAccountEraSeqPersistorTask(db store.AccountEraSeq) pipeline.Task {
 	return &accountEraSeqPersistorTask{
 		db: db,
 	}
 }
 
 type accountEraSeqPersistorTask struct {
-	db AccountEraPersistorTaskStore
-}
-
-type AccountEraPersistorTaskStore interface {
-	Create(record interface{}) error
-	Save(record interface{}) error
+	db store.AccountEraSeq
 }
 
 func (t *accountEraSeqPersistorTask) GetName() string {

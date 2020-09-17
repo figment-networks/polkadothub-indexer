@@ -20,18 +20,14 @@ var (
 	_ pipeline.Task = (*validatorAggCreatorTask)(nil)
 )
 
-func NewValidatorAggCreatorTask(db ValidatorAggCreatorTaskStore) *validatorAggCreatorTask {
+func NewValidatorAggCreatorTask(db store.ValidatorAgg) *validatorAggCreatorTask {
 	return &validatorAggCreatorTask{
 		db: db,
 	}
 }
 
-type ValidatorAggCreatorTaskStore interface {
-	FindByStashAccount(key string) (*model.ValidatorAgg, error)
-}
-
 type validatorAggCreatorTask struct {
-	db ValidatorAggCreatorTaskStore
+	db store.ValidatorAgg
 }
 
 func (t *validatorAggCreatorTask) GetName() string {

@@ -2,10 +2,12 @@ package psql
 
 import (
 	"fmt"
+	"time"
+
+	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/types"
 	"github.com/figment-networks/polkadothub-indexer/utils/logger"
 	"github.com/jinzhu/gorm"
-	"time"
 
 	"github.com/figment-networks/polkadothub-indexer/model"
 )
@@ -45,22 +47,11 @@ func (s BlockSeqStore) FindByHeight(height int64) (*model.BlockSeq, error) {
 	return s.FindBy("height", height)
 }
 
-// GetAvgRecentTimesResult Contains results for GetAvgRecentTimes query
-type GetAvgRecentTimesResult struct {
-	StartHeight int64   `json:"start_height"`
-	EndHeight   int64   `json:"end_height"`
-	StartTime   string  `json:"start_time"`
-	EndTime     string  `json:"end_time"`
-	Count       int64   `json:"count"`
-	Diff        float64 `json:"diff"`
-	Avg         float64 `json:"avg"`
-}
-
 // GetAvgRecentTimes Gets average block times for recent blocks by limit
-func (s *BlockSeqStore) GetAvgRecentTimes(limit int64) GetAvgRecentTimesResult {
+func (s *BlockSeqStore) GetAvgRecentTimes(limit int64) store.GetAvgRecentTimesResult {
 	defer logQueryDuration(time.Now(), "BlockSeqStore_GetAvgRecentTimes")
 
-	var res GetAvgRecentTimesResult
+	var res store.GetAvgRecentTimesResult
 	s.db.Raw(blockTimesForRecentBlocksQuery, limit).Scan(&res)
 
 	return res
@@ -83,7 +74,7 @@ func (s *BlockSeqStore) FindMostRecent() (*model.BlockSeq, error) {
 }
 
 // DeleteOlderThan deletes block sequence older than given threshold
-func (s *BlockSeqStore) DeleteOlderThan(purgeThreshold time.Time, activityPeriods []ActivityPeriodRow) (*int64, error) {
+func (s *BlockSeqStore) DeleteOlderThan(purgeThreshold time.Time, activityPeriods []store.ActivityPeriodRow) (*int64, error) {
 	tx := s.db.
 		Unscoped()
 
@@ -111,14 +102,8 @@ func (s *BlockSeqStore) DeleteOlderThan(purgeThreshold time.Time, activityPeriod
 	return &tx.RowsAffected, nil
 }
 
-type BlockSeqSummary struct {
-	TimeBucket                 types.Time `json:"time_bucket"`
-	Count                      int64      `json:"count"`
-	BlockTimeAvg               float64    `json:"block_time_avg"`
-}
-
 // Summarize gets the summarized version of block sequences
-func (s *BlockSeqStore) Summarize(interval types.SummaryInterval, activityPeriods []ActivityPeriodRow) ([]BlockSeqSummary, error) {
+func (s *BlockSeqStore) Summarize(interval types.SummaryInterval, activityPeriods []store.ActivityPeriodRow) ([]store.BlockSeqSummary, error) {
 	defer logQueryDuration(time.Now(), "BlockSummaryStore_Summarize")
 
 	tx := s.db.
@@ -154,9 +139,9 @@ func (s *BlockSeqStore) Summarize(interval types.SummaryInterval, activityPeriod
 	}
 	defer rows.Close()
 
-	var models []BlockSeqSummary
+	var models []store.BlockSeqSummary
 	for rows.Next() {
-		var summary BlockSeqSummary
+		var summary store.BlockSeqSummary
 		if err := s.db.ScanRows(rows, &summary); err != nil {
 			return nil, err
 		}

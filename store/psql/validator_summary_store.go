@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/figment-networks/polkadothub-indexer/model"
+	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/types"
 	"github.com/jinzhu/gorm"
 )
@@ -31,7 +32,7 @@ func (s ValidatorSummaryStore) Find(query *model.ValidatorSummary) (*model.Valid
 }
 
 // FindActivityPeriods Finds activity periods
-func (s *ValidatorSummaryStore) FindActivityPeriods(interval types.SummaryInterval, indexVersion int64) ([]ActivityPeriodRow, error) {
+func (s *ValidatorSummaryStore) FindActivityPeriods(interval types.SummaryInterval, indexVersion int64) ([]store.ActivityPeriodRow, error) {
 	defer logQueryDuration(time.Now(), "ValidatorSummaryStore_FindActivityPeriods")
 
 	rows, err := s.db.
@@ -43,9 +44,9 @@ func (s *ValidatorSummaryStore) FindActivityPeriods(interval types.SummaryInterv
 	}
 	defer rows.Close()
 
-	var res []ActivityPeriodRow
+	var res []store.ActivityPeriodRow
 	for rows.Next() {
-		var row ActivityPeriodRow
+		var row store.ActivityPeriodRow
 		if err := s.db.ScanRows(rows, &row); err != nil {
 			return nil, err
 		}
@@ -54,31 +55,8 @@ func (s *ValidatorSummaryStore) FindActivityPeriods(interval types.SummaryInterv
 	return res, nil
 }
 
-type ValidatorSummaryRow struct {
-	TimeBucket      string         `json:"time_bucket"`
-	TimeInterval    string         `json:"time_interval"`
-	TotalStakeAvg   types.Quantity `json:"total_stake_avg"`
-	TotalStakeMin   types.Quantity `json:"total_stake_min"`
-	TotalStakeMax   types.Quantity `json:"total_stake_max"`
-	OwnStakeAvg     types.Quantity `json:"own_stake_avg"`
-	OwnStakeMin     types.Quantity `json:"own_stake_min"`
-	OwnStakeMax     types.Quantity `json:"own_stake_max"`
-	StakersStakeAvg types.Quantity `json:"stakers_stake_avg"`
-	StakersStakeMin types.Quantity `json:"stakers_stake_min"`
-	StakersStakeMax types.Quantity `json:"stakers_stake_max"`
-	RewardPointsAvg float64        `json:"reward_points_avg"`
-	RewardPointsMin int64          `json:"reward_points_min"`
-	RewardPointsMax int64          `json:"reward_points_max"`
-	CommissionAvg   float64        `json:"commission_avg"`
-	CommissionMin   int64          `json:"commission_min"`
-	CommissionMax   int64          `json:"commission_max"`
-	StakersCountAvg float64        `json:"stakers_count_avg"`
-	StakersCountMin int64          `json:"stakers_count_min"`
-	StakersCountMax int64          `json:"stakers_count_max"`
-}
-
 // FindSummary gets summary for validator summary
-func (s *ValidatorSummaryStore) FindSummary(interval types.SummaryInterval, period string) ([]ValidatorSummaryRow, error) {
+func (s *ValidatorSummaryStore) FindSummary(interval types.SummaryInterval, period string) ([]store.ValidatorSummaryRow, error) {
 	defer logQueryDuration(time.Now(), "ValidatorSummaryStore_FindSummary")
 
 	rows, err := s.db.
@@ -90,9 +68,9 @@ func (s *ValidatorSummaryStore) FindSummary(interval types.SummaryInterval, peri
 	}
 	defer rows.Close()
 
-	var res []ValidatorSummaryRow
+	var res []store.ValidatorSummaryRow
 	for rows.Next() {
-		var row ValidatorSummaryRow
+		var row store.ValidatorSummaryRow
 		if err := s.db.ScanRows(rows, &row); err != nil {
 			return nil, err
 		}
