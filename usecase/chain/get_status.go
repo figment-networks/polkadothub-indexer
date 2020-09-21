@@ -2,6 +2,7 @@ package chain
 
 import (
 	"context"
+
 	"github.com/figment-networks/polkadothub-indexer/client"
 	"github.com/figment-networks/polkadothub-indexer/store"
 )
@@ -18,13 +19,29 @@ func NewGetStatusUseCase(db *store.Store, c *client.Client) *getStatusUseCase {
 	}
 }
 
-func (uc *getStatusUseCase) Execute(ctx  context.Context) (*DetailsView, error) {
+func (uc *getStatusUseCase) Execute(ctx context.Context) (*DetailsView, error) {
+	var lastEraHeight, lastSessionHeight int64
+
 	mostRecentSyncable, err := uc.db.Syncables.FindMostRecent()
-	if err != nil {
-		if err != store.ErrNotFound {
+	if err != nil && err != store.ErrNotFound {
+		return nil, err
+	}
+
+	if mostRecentSyncable != nil {
+		lastSessionSyncable, err := uc.db.Syncables.FindLastInSession(mostRecentSyncable.Session)
+		if err != nil && err != store.ErrNotFound {
 			return nil, err
-		} else {
-			mostRecentSyncable = nil
+		}
+		if lastSessionSyncable != nil {
+			lastSessionHeight = lastSessionSyncable.Height
+		}
+
+		lastEraSyncable, err := uc.db.Syncables.FindLastInSession(mostRecentSyncable.Era)
+		if err != nil && err != store.ErrNotFound {
+			return nil, err
+		}
+		if lastEraSyncable != nil {
+			lastSessionHeight = lastEraSyncable.Height
 		}
 	}
 
@@ -38,5 +55,5 @@ func (uc *getStatusUseCase) Execute(ctx  context.Context) (*DetailsView, error) 
 		return nil, err
 	}
 
-	return ToDetailsView(mostRecentSyncable, getHeadRes, getStatusRes), nil
+	return ToDetailsView(mostRecentSyncable, getHeadRes, getStatusRes, lastSessionHeight, lastEraHeight), nil
 }
