@@ -46,15 +46,14 @@ func ToAggDetailsView(m *model.ValidatorAgg, sessionSequences []model.ValidatorS
 }
 
 type SessionSeqListItem struct {
-	*model.Model
 	*model.SessionSequence
 
+	DisplayName  string `json:"display_name"`
 	StashAccount string `json:"stash_account"`
 	Online       bool   `json:"online"`
 }
 
 type EraSeqListItem struct {
-	*model.Model
 	*model.EraSequence
 
 	StashAccount      string         `json:"stash_account"`
@@ -74,12 +73,17 @@ type SeqListView struct {
 	EraItems     []EraSeqListItem     `json:"era_items"`
 }
 
-func ToSeqListView(validatorSessionSeqs []model.ValidatorSessionSeq, validatorEraSeqs []model.ValidatorEraSeq) *SeqListView {
+type displayNameMap map[string]string // map[stash_account]display_name
+
+func ToSeqListView(validatorSessionSeqs []model.ValidatorSessionSeq, validatorEraSeqs []model.ValidatorEraSeq, sessionSeqNameMap displayNameMap) SeqListView {
 	var sessionItems []SessionSeqListItem
 	for _, m := range validatorSessionSeqs {
+		displayName, _ := sessionSeqNameMap[m.StashAccount]
+
 		item := SessionSeqListItem{
 			SessionSequence: m.SessionSequence,
 
+			DisplayName:  displayName,
 			StashAccount: m.StashAccount,
 			Online:       m.Online,
 		}
@@ -107,7 +111,7 @@ func ToSeqListView(validatorSessionSeqs []model.ValidatorSessionSeq, validatorEr
 		eraItems = append(eraItems, item)
 	}
 
-	return &SeqListView{
+	return SeqListView{
 		SessionItems: sessionItems,
 		EraItems:     eraItems,
 	}
