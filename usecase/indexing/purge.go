@@ -65,13 +65,11 @@ func (uc *purgeUseCase) purgeValidators(currentIndexVersion int64) error {
 		return err
 	}
 
-	if err := uc.purgeValidatorEraSequences(currentIndexVersion); uc.checkErr(err) {
-		return err
-	}
-
 	if err := uc.purgeValidatorSummaries(types.IntervalHourly, uc.cfg.PurgeHourlySummariesInterval); uc.checkErr(err) {
 		return err
 	}
+
+	// never purge validator era sequences because refetching data is very expensive
 	return nil
 }
 
@@ -176,48 +174,6 @@ func (uc *purgeUseCase) purgeValidatorSessionSequences(currentIndexVersion int64
 	}
 
 	logger.Info(fmt.Sprintf("%d validator session sequences purged", *deletedCount))
-
-	return nil
-}
-
-func (uc *purgeUseCase) purgeValidatorEraSequences(currentIndexVersion int64) error {
-	validatorSeq, err := uc.db.ValidatorEraSeq.FindMostRecent()
-	if err != nil {
-		return err
-	}
-	lastSeqTime := validatorSeq.Time.Time
-
-	validatorSummary, err := uc.db.ValidatorSummary.FindMostRecent()
-	if err != nil {
-		return err
-	}
-	lastSummaryTimeBucket := validatorSummary.TimeBucket.Time
-
-	duration, err := uc.parseDuration(uc.cfg.PurgeSequencesInterval)
-	if err != nil {
-		if err == ErrPurgingDisabled {
-			logger.Info("purging validator sequences disabled. Purge interval set to 0.")
-		}
-		return err
-	}
-
-	purgeThresholdFromConfig := lastSeqTime.Add(-*duration)
-
-	var purgeThreshold time.Time
-	if purgeThresholdFromConfig.Before(lastSummaryTimeBucket) {
-		purgeThreshold = purgeThresholdFromConfig
-	} else {
-		purgeThreshold = lastSummaryTimeBucket
-	}
-
-	logger.Info(fmt.Sprintf("purging validator era sequences... [older than=%s]", purgeThreshold))
-
-	deletedCount, err := uc.db.ValidatorEraSeq.DeleteOlderThan(purgeThreshold)
-	if err != nil {
-		return err
-	}
-
-	logger.Info(fmt.Sprintf("%d validator era sequences purged", *deletedCount))
 
 	return nil
 }

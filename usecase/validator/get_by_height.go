@@ -67,33 +67,9 @@ func (uc *getByHeightUseCase) Execute(height *int64) (SeqListView, error) {
 	}
 
 	eraSeqs, err := uc.db.ValidatorEraSeq.FindByHeight(*height)
-	if len(eraSeqs) == 0 || err != nil {
-		syncable, err := uc.db.Syncables.FindLastInEraForHeight(*height)
-		if err == store.ErrNotFound {
-			goto eraNotIndexedYet
-		} else if err != nil {
-			return SeqListView{}, err
-		}
-
-		indexingPipeline, err := indexer.NewPipeline(uc.cfg, uc.db, uc.client)
-		if err != nil {
-			return SeqListView{}, err
-		}
-
-		ctx := context.Background()
-		payload, err := indexingPipeline.Run(ctx, indexer.RunConfig{
-			Height:           syncable.Height,
-			DesiredTargetIDs: []int64{indexer.TargetIndexValidatorEraSequences},
-			Dry:              true,
-		})
-		if err != nil {
-			return SeqListView{}, err
-		}
-		eraSeqs = payload.NewValidatorEraSequences
+	if err != nil && err != store.ErrNotFound {
+		return SeqListView{}, err
 	}
 
 	return ToSeqListView(sessionSeqs, eraSeqs), nil
-
-eraNotIndexedYet:
-	return ToSeqListView(sessionSeqs, nil), nil
 }
