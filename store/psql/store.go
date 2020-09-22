@@ -19,20 +19,17 @@ var (
 type Store struct {
 	db *gorm.DB
 
-	Database  store.Database
-	Syncables store.Syncables
-	Reports   store.Reports
-
-	BlockSeq            store.BlockSeq
-	ValidatorSessionSeq store.ValidatorSessionSeq
-	ValidatorEraSeq     store.ValidatorEraSeq
-	EventSeq            store.EventSeq
 	AccountEraSeq       store.AccountEraSeq
-
-	ValidatorAgg store.ValidatorAgg
-
-	BlockSummary     *BlockSummaryStore
-	ValidatorSummary *ValidatorSummaryStore
+	BlockSeq            store.BlockSeq
+	BlockSummary        store.BlockSummary
+	Database            store.Database
+	EventSeq            store.EventSeq
+	Reports             store.Reports
+	Syncables           store.Syncables
+	ValidatorAgg        store.ValidatorAgg
+	ValidatorEraSeq     store.ValidatorEraSeq
+	ValidatorSessionSeq store.ValidatorSessionSeq
+	ValidatorSummary    store.ValidatorSummary
 }
 
 // New returns a new postgres store from the connection string

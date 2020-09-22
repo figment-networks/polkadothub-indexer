@@ -9,18 +9,12 @@ type Store interface {
 
 type Getters interface {
 	GetAccountEraSeq() AccountEraSeq
-
 	GetBlockSeq() BlockSeq
 	GetBlockSummary() BlockSummary
-
 	GetDatabase() Database
-
 	GetEventSeq() EventSeq
-
 	GetReports() Reports
-
 	GetSyncables() Syncables
-
 	GetValidatorAgg() ValidatorAgg
 	GetValidatorEraSeq() ValidatorEraSeq
 	GetValidatorSessionSeq() ValidatorSessionSeq

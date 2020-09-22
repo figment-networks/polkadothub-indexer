@@ -9,13 +9,11 @@ import (
 
 type BlockSeq interface {
 	BaseStore
-	// CreateIfNotExists(block *model.BlockSeq) error
-	// FindBy(key string, value interface{}) (*model.BlockSeq, error)
-	FindByID(id int64) (*model.BlockSeq, error)
-	FindByHeight(height int64) (*model.BlockSeq, error)
-	GetAvgRecentTimes(limit int64) GetAvgRecentTimesResult
-	FindMostRecent() (*model.BlockSeq, error)
 	DeleteOlderThan(purgeThreshold time.Time, activityPeriods []ActivityPeriodRow) (*int64, error)
+	FindByHeight(height int64) (*model.BlockSeq, error)
+	FindByID(id int64) (*model.BlockSeq, error)
+	FindMostRecent() (*model.BlockSeq, error)
+	GetAvgRecentTimes(limit int64) GetAvgRecentTimesResult
 	Summarize(interval types.SummaryInterval, activityPeriods []ActivityPeriodRow) ([]BlockSeqSummary, error)
 }
 

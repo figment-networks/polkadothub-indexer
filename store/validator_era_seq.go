@@ -9,7 +9,6 @@ import (
 
 type ValidatorEraSeq interface {
 	BaseStore
-
 	CreateIfNotExists(validator *model.ValidatorEraSeq) error
 	FindByHeightAndStashAccount(height int64, stash string) (*model.ValidatorEraSeq, error)
 	FindByEraAndStashAccount(era int64, stash string) (*model.ValidatorEraSeq, error)

@@ -9,15 +9,11 @@ import (
 
 type ValidatorSessionSeq interface {
 	BaseStore
-
-	// CreateIfNotExists(validator *model.ValidatorSessionSeq) error
-	// FindByHeightAndStashAccount(height int64, stash string) (*model.ValidatorSessionSeq, error)
-	FindBySessionAndStashAccount(session int64, stash string) (*model.ValidatorSessionSeq, error)
+	DeleteOlderThan(purgeThreshold time.Time) (*int64, error)
 	FindByHeight(h int64) ([]model.ValidatorSessionSeq, error)
-	// FindBySession(session int64) ([]model.ValidatorSessionSeq, error)
+	FindBySessionAndStashAccount(session int64, stash string) (*model.ValidatorSessionSeq, error)
 	FindLastByStashAccount(stashAccount string, limit int64) ([]model.ValidatorSessionSeq, error)
 	FindMostRecent() (*model.ValidatorSessionSeq, error)
-	DeleteOlderThan(purgeThreshold time.Time) (*int64, error)
 	Summarize(interval types.SummaryInterval, activityPeriods []ActivityPeriodRow) ([]ValidatorSessionSeqSummary, error)
 }
 

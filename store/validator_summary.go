@@ -9,14 +9,13 @@ import (
 
 type ValidatorSummary interface {
 	BaseStore
-
+	DeleteOlderThan(interval types.SummaryInterval, purgeThreshold time.Time) (*int64, error)
 	Find(query *model.ValidatorSummary) (*model.ValidatorSummary, error)
 	FindActivityPeriods(interval types.SummaryInterval, indexVersion int64) ([]ActivityPeriodRow, error)
-	FindSummary(interval types.SummaryInterval, period string) ([]ValidatorSummaryRow, error)
-	FindSummaryByStashAccount(stashAccount string, interval types.SummaryInterval, period string) ([]model.ValidatorSummary, error)
 	FindMostRecent() (*model.ValidatorSummary, error)
 	FindMostRecentByInterval(interval types.SummaryInterval) (*model.ValidatorSummary, error)
-	DeleteOlderThan(interval types.SummaryInterval, purgeThreshold time.Time) (*int64, error)
+	FindSummary(interval types.SummaryInterval, period string) ([]ValidatorSummaryRow, error)
+	FindSummaryByStashAccount(stashAccount string, interval types.SummaryInterval, period string) ([]model.ValidatorSummary, error)
 }
 
 type ValidatorSummaryRow struct {
