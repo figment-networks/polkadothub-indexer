@@ -1,8 +1,11 @@
 package validator
 
 import (
+	"context"
+
 	"github.com/figment-networks/polkadothub-indexer/client"
 	"github.com/figment-networks/polkadothub-indexer/config"
+	"github.com/figment-networks/polkadothub-indexer/indexer"
 	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/pkg/errors"
 )
@@ -21,11 +24,11 @@ func NewGetByHeightUseCase(cfg *config.Config, db *store.Store, client *client.C
 	}
 }
 
-func (uc *getByHeightUseCase) Execute(height *int64) (*SeqListView, error) {
+func (uc *getByHeightUseCase) Execute(height *int64) (SeqListView, error) {
 	// Get last indexed height
 	mostRecentSynced, err := uc.db.Syncables.FindMostRecent()
 	if err != nil {
-		return nil, err
+		return SeqListView{}, err
 	}
 	lastH := mostRecentSynced.Height
 
@@ -35,18 +38,38 @@ func (uc *getByHeightUseCase) Execute(height *int64) (*SeqListView, error) {
 	}
 
 	if *height > lastH {
-		return nil, errors.New("height is not indexed yet")
+		return SeqListView{}, errors.New("height is not indexed yet")
 	}
 
-	validatorSessionSequences, err := uc.db.ValidatorSessionSeq.FindByHeight(*height)
+	sessionSeqs, err := uc.db.ValidatorSessionSeq.FindByHeight(*height)
+	if len(sessionSeqs) == 0 || err != nil {
+		syncable, err := uc.db.Syncables.FindLastInSessionForHeight(*height)
+		if err != nil {
+			return SeqListView{}, err
+		}
+
+		indexingPipeline, err := indexer.NewPipeline(uc.cfg, uc.db, uc.client)
+		if err != nil {
+			return SeqListView{}, err
+		}
+
+		ctx := context.Background()
+		payload, err := indexingPipeline.Run(ctx, indexer.RunConfig{
+			Height:           syncable.Height,
+			DesiredTargetIDs: []int64{indexer.TargetIndexValidatorSessionSequences},
+			Dry:              true,
+		})
+		if err != nil {
+			return SeqListView{}, err
+		}
+
+		sessionSeqs = payload.NewValidatorSessionSequences
+	}
+
+	eraSeqs, err := uc.db.ValidatorEraSeq.FindByHeight(*height)
 	if err != nil && err != store.ErrNotFound {
-		return nil, err
+		return SeqListView{}, err
 	}
 
-	validatorEraSequences, err := uc.db.ValidatorEraSeq.FindByHeight(*height)
-	if err != nil && err != store.ErrNotFound {
-		return nil, err
-	}
-
-	return ToSeqListView(validatorSessionSequences, validatorEraSequences), nil
+	return ToSeqListView(sessionSeqs, eraSeqs), nil
 }

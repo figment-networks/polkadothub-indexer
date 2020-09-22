@@ -74,7 +74,7 @@ type SeqListView struct {
 	EraItems     []EraSeqListItem     `json:"era_items"`
 }
 
-func ToSeqListView(validatorSessionSeqs []model.ValidatorSessionSeq, validatorEraSeqs []model.ValidatorEraSeq) *SeqListView {
+func ToSeqListView(validatorSessionSeqs []model.ValidatorSessionSeq, validatorEraSeqs []model.ValidatorEraSeq) SeqListView {
 	var sessionItems []SessionSeqListItem
 	for _, m := range validatorSessionSeqs {
 		item := SessionSeqListItem{
@@ -107,7 +107,7 @@ func ToSeqListView(validatorSessionSeqs []model.ValidatorSessionSeq, validatorEr
 		eraItems = append(eraItems, item)
 	}
 
-	return &SeqListView{
+	return SeqListView{
 		SessionItems: sessionItems,
 		EraItems:     eraItems,
 	}
