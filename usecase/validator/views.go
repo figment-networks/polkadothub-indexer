@@ -23,6 +23,7 @@ type AggDetailsView struct {
 
 	StashAccount            string  `json:"stash_account"`
 	RecentAsValidatorHeight int64   `json:"recent_as_validator_height"`
+	DisplayName             string  `json:"display_name"`
 	Uptime                  float64 `json:"uptime"`
 
 	LastSessionSequences []model.ValidatorSessionSeq `json:"last_session_sequences"`
@@ -37,6 +38,7 @@ func ToAggDetailsView(m *model.ValidatorAgg, sessionSequences []model.ValidatorS
 
 		StashAccount:            m.StashAccount,
 		RecentAsValidatorHeight: m.RecentAsValidatorHeight,
+		DisplayName:             m.DisplayName,
 		Uptime:                  float64(m.AccumulatedUptime) / float64(m.AccumulatedUptimeCount),
 
 		LastSessionSequences: sessionSequences,
@@ -73,17 +75,12 @@ type SeqListView struct {
 	EraItems     []EraSeqListItem     `json:"era_items"`
 }
 
-type displayNameMap map[string]string // map[stash_account]display_name
-
-func ToSeqListView(validatorSessionSeqs []model.ValidatorSessionSeq, validatorEraSeqs []model.ValidatorEraSeq, sessionSeqNameMap displayNameMap) SeqListView {
+func ToSeqListView(validatorSessionSeqs []model.ValidatorSessionSeq, validatorEraSeqs []model.ValidatorEraSeq) SeqListView {
 	var sessionItems []SessionSeqListItem
 	for _, m := range validatorSessionSeqs {
-		displayName, _ := sessionSeqNameMap[m.StashAccount]
-
 		item := SessionSeqListItem{
 			SessionSequence: m.SessionSequence,
 
-			DisplayName:  displayName,
 			StashAccount: m.StashAccount,
 			Online:       m.Online,
 		}

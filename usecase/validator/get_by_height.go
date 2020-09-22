@@ -3,9 +3,7 @@ package validator
 import (
 	"github.com/figment-networks/polkadothub-indexer/client"
 	"github.com/figment-networks/polkadothub-indexer/config"
-	"github.com/figment-networks/polkadothub-indexer/model"
 	"github.com/figment-networks/polkadothub-indexer/store"
-	"github.com/figment-networks/polkadothub-proxy/grpc/account/accountpb"
 	"github.com/pkg/errors"
 )
 
@@ -50,44 +48,5 @@ func (uc *getByHeightUseCase) Execute(height *int64) (SeqListView, error) {
 		return SeqListView{}, err
 	}
 
-	displayNameMap, err := uc.getDisplayNameMap(validatorSessionSequences)
-	if err != nil {
-		return SeqListView{}, err
-	}
-
-	return ToSeqListView(validatorSessionSequences, validatorEraSequences, displayNameMap), nil
-}
-
-func (uc *getByHeightUseCase) getDisplayNameMap(seqs []model.ValidatorSessionSeq) (displayNameMap, error) {
-	type result struct {
-		addr string
-		resp *accountpb.GetIdentityResponse
-		err  error
-	}
-
-	ch := make(chan result, len(seqs))
-	defer close(ch)
-
-	for _, seq := range seqs {
-		go func(addr string) {
-			resp, err := uc.client.Account.GetIdentity(addr)
-			ch <- result{addr, resp, err}
-		}(seq.StashAccount)
-	}
-
-	displayNameMap := make(displayNameMap)
-
-	for result := range ch {
-		if result.err != nil {
-			return displayNameMap, nil
-		}
-
-		displayNameMap[result.addr] = result.resp.GetIdentity().GetDisplayName()
-
-		if len(displayNameMap) == len(seqs) {
-			break
-		}
-	}
-	return displayNameMap, nil
-
+	return ToSeqListView(validatorSessionSequences, validatorEraSequences), nil
 }

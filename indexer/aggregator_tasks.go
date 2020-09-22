@@ -3,12 +3,14 @@ package indexer
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/figment-networks/indexing-engine/pipeline"
+	"github.com/figment-networks/polkadothub-indexer/client"
 	"github.com/figment-networks/polkadothub-indexer/metric"
 	"github.com/figment-networks/polkadothub-indexer/model"
 	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/utils/logger"
-	"time"
 )
 
 const (
@@ -19,14 +21,16 @@ var (
 	_ pipeline.Task = (*validatorAggCreatorTask)(nil)
 )
 
-func NewValidatorAggCreatorTask(db *store.Store) *validatorAggCreatorTask {
+func NewValidatorAggCreatorTask(db *store.Store, accountClient client.AccountClient) *validatorAggCreatorTask {
 	return &validatorAggCreatorTask{
-		db: db,
+		db:            db,
+		accountClient: accountClient,
 	}
 }
 
 type validatorAggCreatorTask struct {
-	db *store.Store
+	db            *store.Store
+	accountClient client.AccountClient
 }
 
 func (t *validatorAggCreatorTask) GetName() string {
@@ -49,6 +53,12 @@ func (t *validatorAggCreatorTask) Run(ctx context.Context, p pipeline.Payload) e
 		if err != nil {
 			if err == store.ErrNotFound {
 				// Create new
+
+				identity, err := t.accountClient.GetIdentity(stashAccount)
+				if err != nil {
+					return err
+				}
+
 				validator := model.ValidatorAgg{
 					Aggregate: &model.Aggregate{
 						StartedAtHeight: payload.Syncable.Height,
@@ -58,6 +68,7 @@ func (t *validatorAggCreatorTask) Run(ctx context.Context, p pipeline.Payload) e
 					},
 
 					StashAccount:            stashAccount,
+					DisplayName:             identity.GetIdentity().GetDisplayName(),
 					RecentAsValidatorHeight: payload.Syncable.Height,
 				}
 
@@ -92,6 +103,12 @@ func (t *validatorAggCreatorTask) Run(ctx context.Context, p pipeline.Payload) e
 					validator.AccumulatedUptime = existing.AccumulatedUptime
 				}
 				validator.AccumulatedUptimeCount = existing.AccumulatedUptimeCount + 1
+
+				identity, err := t.accountClient.GetIdentity(stashAccount)
+				if err != nil {
+					return err
+				}
+				validator.DisplayName = identity.GetIdentity().GetDisplayName()
 			}
 
 			existing.Update(validator)

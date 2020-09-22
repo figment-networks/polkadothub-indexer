@@ -5,6 +5,7 @@ type ValidatorAgg struct {
 	*Aggregate
 
 	StashAccount            string `json:"stash_account"`
+	DisplayName             string `json:"display_name"`
 	RecentAsValidatorHeight int64  `json:"recent_as_validator_height"`
 	AccumulatedUptime       int64  `json:"accumulated_uptime"`
 	AccumulatedUptimeCount  int64  `json:"accumulated_uptime_count"`
@@ -27,4 +28,9 @@ func (s *ValidatorAgg) Equal(m ValidatorAgg) bool {
 func (s *ValidatorAgg) Update(u *ValidatorAgg) {
 	s.Aggregate.RecentAtHeight = u.Aggregate.RecentAtHeight
 	s.Aggregate.RecentAt = u.Aggregate.RecentAt
+
+	// only update if there's a value (since we don't fetch at every height)
+	if u.DisplayName != "" {
+		s.DisplayName = u.DisplayName
+	}
 }
