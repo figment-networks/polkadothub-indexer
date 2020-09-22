@@ -26,18 +26,21 @@ type DetailsView struct {
 
 	GenesisHash string `json:"genesis_hash"`
 
-	IndexingStarted    bool       `json:"indexing_started"`
-	LastIndexVersion   int64      `json:"last_index_version"`
-	LastIndexedHeight  int64      `json:"last_indexed_height"`
-	LastIndexedSession int64      `json:"last_indexed_session"`
-	LastIndexedEra     int64      `json:"last_indexed_era"`
-	LastSpecVersion    string     `json:"chain_spec_version"`
-	LastIndexedTime    types.Time `json:"last_indexed_time"`
-	LastIndexedAt      types.Time `json:"last_indexed_at"`
-	Lag                int64      `json:"indexing_lag"`
+	IndexingStarted          bool       `json:"indexing_started"`
+	LastIndexVersion         int64      `json:"last_index_version"`
+	LastIndexedHeight        int64      `json:"last_indexed_height"`
+	LastIndexedSession       int64      `json:"last_indexed_session"`
+	LastIndexedSessionHeight int64      `json:"last_indexed_session_height"`
+	LastIndexedEra           int64      `json:"last_indexed_era"`
+	LastIndexedEraHeight     int64      `json:"last_indexed_era_height"`
+	LastSpecVersion          string     `json:"chain_spec_version"`
+	LastIndexedTime          types.Time `json:"last_indexed_time"`
+	LastIndexedAt            types.Time `json:"last_indexed_at"`
+	Lag                      int64      `json:"indexing_lag"`
 }
 
-func ToDetailsView(recentSyncable *model.Syncable, headResponse *chainpb.GetHeadResponse, statusResponse *chainpb.GetStatusResponse) *DetailsView {
+func ToDetailsView(recentSyncable *model.Syncable, headResponse *chainpb.GetHeadResponse, statusResponse *chainpb.GetStatusResponse,
+	lastSessionHeight int64, lastEraHeight int64) *DetailsView {
 	view := &DetailsView{
 		AppName:    config.AppName,
 		AppVersion: config.AppVersion,
@@ -64,7 +67,9 @@ func ToDetailsView(recentSyncable *model.Syncable, headResponse *chainpb.GetHead
 		view.LastIndexVersion = recentSyncable.IndexVersion
 		view.LastIndexedHeight = recentSyncable.Height
 		view.LastIndexedSession = recentSyncable.Session
+		view.LastIndexedSessionHeight = lastSessionHeight
 		view.LastIndexedEra = recentSyncable.Era
+		view.LastIndexedEraHeight = lastEraHeight
 		view.LastIndexedTime = recentSyncable.Time
 		view.LastIndexedAt = recentSyncable.CreatedAt
 		view.Lag = headResponse.Height - recentSyncable.Height
