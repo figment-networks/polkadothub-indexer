@@ -3,6 +3,7 @@ package indexer
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/figment-networks/indexing-engine/pipeline"
@@ -68,7 +69,7 @@ func (t *validatorAggCreatorTask) Run(ctx context.Context, p pipeline.Payload) e
 					},
 
 					StashAccount:            stashAccount,
-					DisplayName:             identity.GetIdentity().GetDisplayName(),
+					DisplayName:             strings.TrimSpace(identity.GetIdentity().GetDisplayName()),
 					RecentAsValidatorHeight: payload.Syncable.Height,
 				}
 
@@ -108,7 +109,7 @@ func (t *validatorAggCreatorTask) Run(ctx context.Context, p pipeline.Payload) e
 				if err != nil {
 					return err
 				}
-				validator.DisplayName = identity.GetIdentity().GetDisplayName()
+				validator.DisplayName = strings.TrimSpace(identity.GetIdentity().GetDisplayName())
 			}
 
 			existing.Update(validator)
