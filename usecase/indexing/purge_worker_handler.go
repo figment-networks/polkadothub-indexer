@@ -2,7 +2,7 @@ package indexing
 
 import (
 	"context"
-	"github.com/figment-networks/polkadothub-indexer/client"
+
 	"github.com/figment-networks/polkadothub-indexer/config"
 	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/types"
@@ -14,18 +14,26 @@ var (
 )
 
 type purgeWorkerHandler struct {
-	cfg    *config.Config
-	db     store.Store
-	client *client.Client
+	cfg *config.Config
 
 	useCase *purgeUseCase
+
+	blockSeqDb            store.BlockSeq
+	blockSummaryDb        store.BlockSummary
+	validatorSessionSeqDb store.ValidatorSessionSeq
+	validatorSummaryDb    store.ValidatorSummary
 }
 
-func NewPurgeWorkerHandler(cfg *config.Config, db store.Store, c *client.Client) *purgeWorkerHandler {
+func NewPurgeWorkerHandler(cfg *config.Config, blockSeqDb store.BlockSeq, blockSummaryDb store.BlockSummary,
+	validatorSessionSeqDb store.ValidatorSessionSeq, validatorSummaryDb store.ValidatorSummary,
+) *purgeWorkerHandler {
 	return &purgeWorkerHandler{
-		cfg:    cfg,
-		db:     db,
-		client: c,
+		cfg: cfg,
+
+		blockSeqDb:            blockSeqDb,
+		blockSummaryDb:        blockSummaryDb,
+		validatorSessionSeqDb: validatorSessionSeqDb,
+		validatorSummaryDb:    validatorSummaryDb,
 	}
 }
 
@@ -43,10 +51,7 @@ func (h *purgeWorkerHandler) Handle() {
 
 func (h *purgeWorkerHandler) getUseCase() *purgeUseCase {
 	if h.useCase == nil {
-		return NewPurgeUseCase(h.cfg, h.db)
+		return NewPurgeUseCase(h.cfg, h.blockSeqDb, h.blockSummaryDb, h.validatorSessionSeqDb, h.validatorSummaryDb)
 	}
 	return h.useCase
 }
-
-
-

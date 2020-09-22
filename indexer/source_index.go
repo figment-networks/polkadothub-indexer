@@ -21,11 +21,11 @@ type IndexSourceConfig struct {
 	StartHeight int64
 }
 
-func NewIndexSource(cfg *config.Config, db store.Store, client *client.Client, sourceCfg *IndexSourceConfig) (*indexSource, error) {
+func NewIndexSource(cfg *config.Config, syncablesDb store.Syncables, client *client.Client, sourceCfg *IndexSourceConfig) (*indexSource, error) {
 	src := &indexSource{
-		cfg:    cfg,
-		db:     db,
-		client: client,
+		cfg:         cfg,
+		syncablesDb: syncablesDb,
+		client:      client,
 
 		sourceCfg: sourceCfg,
 	}
@@ -36,9 +36,9 @@ func NewIndexSource(cfg *config.Config, db store.Store, client *client.Client, s
 }
 
 type indexSource struct {
-	cfg    *config.Config
-	db     store.Store
-	client *client.Client
+	cfg         *config.Config
+	syncablesDb store.Syncables
+	client      *client.Client
 
 	sourceCfg *IndexSourceConfig
 
@@ -87,7 +87,7 @@ func (s *indexSource) setStartHeight() error {
 	if s.sourceCfg.StartHeight > 0 {
 		startH = s.sourceCfg.StartHeight
 	} else {
-		syncable, err := s.db.GetSyncables().FindMostRecent()
+		syncable, err := s.syncablesDb.FindMostRecent()
 		if err != nil {
 			if err != store.ErrNotFound {
 				return err

@@ -3,6 +3,7 @@ package indexing
 import (
 	"context"
 	"fmt"
+
 	"github.com/figment-networks/polkadothub-indexer/client"
 	"github.com/figment-networks/polkadothub-indexer/config"
 	"github.com/figment-networks/polkadothub-indexer/store"
@@ -16,17 +17,42 @@ var (
 
 type runWorkerHandler struct {
 	cfg    *config.Config
-	db     store.Store
 	client *client.Client
 
 	useCase *startUseCase
+
+	accountEraSeqDb       store.AccountEraSeq
+	blockSeqDb            store.BlockSeq
+	blockSummaryDb        store.BlockSummary
+	databaseDb            store.Database
+	eventSeqDb            store.EventSeq
+	reportsDb             store.Reports
+	syncablesDb           store.Syncables
+	validatorAggDb        store.ValidatorAgg
+	validatorEraSeqDb     store.ValidatorEraSeq
+	validatorSessionSeqDb store.ValidatorSessionSeq
+	validatorSummaryDb    store.ValidatorSummary
 }
 
-func NewRunWorkerHandler(cfg *config.Config, db store.Store, c *client.Client) *runWorkerHandler {
+func NewRunWorkerHandler(cfg *config.Config, c *client.Client, accountEraSeqDb store.AccountEraSeq, blockSeqDb store.BlockSeq, blockSummaryDb store.BlockSummary,
+	databaseDb store.Database, eventSeqDb store.EventSeq, reportsDb store.Reports, syncablesDb store.Syncables, validatorAggDb store.ValidatorAgg,
+	validatorEraSeqDb store.ValidatorEraSeq, validatorSessionSeqDb store.ValidatorSessionSeq, validatorSummaryDb store.ValidatorSummary,
+) *runWorkerHandler {
 	return &runWorkerHandler{
 		cfg:    cfg,
-		db:     db,
 		client: c,
+
+		accountEraSeqDb:       accountEraSeqDb,
+		blockSeqDb:            blockSeqDb,
+		blockSummaryDb:        blockSummaryDb,
+		databaseDb:            databaseDb,
+		eventSeqDb:            eventSeqDb,
+		reportsDb:             reportsDb,
+		syncablesDb:           syncablesDb,
+		validatorAggDb:        validatorAggDb,
+		validatorEraSeqDb:     validatorEraSeqDb,
+		validatorSessionSeqDb: validatorSessionSeqDb,
+		validatorSummaryDb:    validatorSummaryDb,
 	}
 }
 
@@ -45,9 +71,9 @@ func (h *runWorkerHandler) Handle() {
 
 func (h *runWorkerHandler) getUseCase() *startUseCase {
 	if h.useCase == nil {
-		return NewStartUseCase(h.cfg, h.db, h.client)
+		return NewStartUseCase(h.cfg, h.client, h.accountEraSeqDb, h.blockSeqDb, h.blockSummaryDb, h.databaseDb, h.eventSeqDb, h.reportsDb,
+			h.syncablesDb, h.validatorAggDb, h.validatorEraSeqDb, h.validatorSessionSeqDb, h.validatorSummaryDb,
+		)
 	}
 	return h.useCase
 }
-
-

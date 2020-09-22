@@ -6,18 +6,20 @@ import (
 )
 
 type getForMinHeightUseCase struct {
-	db store.Store
+	syncablesDb    store.Syncables
+	validatorAggDb store.ValidatorAgg
 }
 
-func NewGetForMinHeightUseCase(db store.Store) *getForMinHeightUseCase {
+func NewGetForMinHeightUseCase(syncablesDb store.Syncables, validatorAggDb store.ValidatorAgg) *getForMinHeightUseCase {
 	return &getForMinHeightUseCase{
-		db: db,
+		syncablesDb:    syncablesDb,
+		validatorAggDb: validatorAggDb,
 	}
 }
 
 func (uc *getForMinHeightUseCase) Execute(height *int64) (*AggListView, error) {
 	// Get last indexed height
-	mostRecentSynced, err := uc.db.GetSyncables().FindMostRecent()
+	mostRecentSynced, err := uc.syncablesDb.FindMostRecent()
 	if err != nil {
 		return nil, err
 	}
@@ -32,12 +34,10 @@ func (uc *getForMinHeightUseCase) Execute(height *int64) (*AggListView, error) {
 		return nil, errors.New("height is not indexed yet")
 	}
 
-	validatorAggs, err := uc.db.GetValidatorAgg().GetAllForHeightGreaterThan(*height)
+	validatorAggs, err := uc.validatorAggDb.GetAllForHeightGreaterThan(*height)
 	if err != nil {
 		return nil, err
 	}
 
 	return ToAggListView(validatorAggs), nil
 }
-
-

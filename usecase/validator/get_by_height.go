@@ -1,29 +1,29 @@
 package validator
 
 import (
-	"github.com/figment-networks/polkadothub-indexer/client"
-	"github.com/figment-networks/polkadothub-indexer/config"
 	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/pkg/errors"
 )
 
 type getByHeightUseCase struct {
-	cfg    *config.Config
-	db     store.Store
-	client *client.Client
+	syncablesDb           store.Syncables
+	validatorEraSeqDb     store.ValidatorEraSeq
+	validatorSessionSeqDb store.ValidatorSessionSeq
 }
 
-func NewGetByHeightUseCase(cfg *config.Config, db store.Store, client *client.Client) *getByHeightUseCase {
+func NewGetByHeightUseCase(syncablesDb store.Syncables,
+	validatorEraSeqDb store.ValidatorEraSeq, validatorSessionSeqDb store.ValidatorSessionSeq,
+) *getByHeightUseCase {
 	return &getByHeightUseCase{
-		cfg:    cfg,
-		db:     db,
-		client: client,
+		syncablesDb:           syncablesDb,
+		validatorEraSeqDb:     validatorEraSeqDb,
+		validatorSessionSeqDb: validatorSessionSeqDb,
 	}
 }
 
 func (uc *getByHeightUseCase) Execute(height *int64) (*SeqListView, error) {
 	// Get last indexed height
-	mostRecentSynced, err := uc.db.GetSyncables().FindMostRecent()
+	mostRecentSynced, err := uc.syncablesDb.FindMostRecent()
 	if err != nil {
 		return nil, err
 	}
@@ -38,12 +38,12 @@ func (uc *getByHeightUseCase) Execute(height *int64) (*SeqListView, error) {
 		return nil, errors.New("height is not indexed yet")
 	}
 
-	validatorSessionSequences, err := uc.db.GetValidatorSessionSeq().FindByHeight(*height)
+	validatorSessionSequences, err := uc.validatorSessionSeqDb.FindByHeight(*height)
 	if err != nil && err != store.ErrNotFound {
 		return nil, err
 	}
 
-	validatorEraSequences, err := uc.db.GetValidatorEraSeq().FindByHeight(*height)
+	validatorEraSequences, err := uc.validatorEraSeqDb.FindByHeight(*height)
 	if err != nil && err != store.ErrNotFound {
 		return nil, err
 	}

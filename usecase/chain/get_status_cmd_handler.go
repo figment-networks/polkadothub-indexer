@@ -3,22 +3,23 @@ package chain
 import (
 	"context"
 	"fmt"
+
 	"github.com/figment-networks/polkadothub-indexer/client"
 	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/utils/logger"
 )
 
 type GetStatusCmdHandler struct {
-	db     store.Store
-	client *client.Client
-
-	useCase *getStatusUseCase
+	client      *client.Client
+	useCase     *getStatusUseCase
+	syncablesDb store.Syncables
 }
 
-func NewGetStatusCmdHandler(db store.Store, c *client.Client) *GetStatusCmdHandler {
+func NewGetStatusCmdHandler(c *client.Client, syncablesDb store.Syncables) *GetStatusCmdHandler {
 	return &GetStatusCmdHandler{
-		db:     db,
 		client: c,
+
+		syncablesDb: syncablesDb,
 	}
 }
 
@@ -78,8 +79,7 @@ func (h *GetStatusCmdHandler) Handle(ctx context.Context) {
 
 func (h *GetStatusCmdHandler) getUseCase() *getStatusUseCase {
 	if h.useCase == nil {
-		return NewGetStatusUseCase(h.db, h.client)
+		return NewGetStatusUseCase(h.client, h.syncablesDb)
 	}
 	return h.useCase
 }
-

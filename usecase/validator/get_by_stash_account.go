@@ -6,17 +6,24 @@ import (
 )
 
 type getByStashAccountUseCase struct {
-	db store.Store
+	accountEraSeqDb       store.AccountEraSeq
+	validatorAggDb        store.ValidatorAgg
+	validatorEraSeqDb     store.ValidatorEraSeq
+	validatorSessionSeqDb store.ValidatorSessionSeq
 }
 
-func NewGetByStashAccountUseCase(db store.Store) *getByStashAccountUseCase {
+func NewGetByStashAccountUseCase(accountEraSeqDb store.AccountEraSeq, validatorAggDb store.ValidatorAgg, validatorEraSeqDb store.ValidatorEraSeq,
+	validatorSessionSeqDb store.ValidatorSessionSeq) *getByStashAccountUseCase {
 	return &getByStashAccountUseCase{
-		db: db,
+		accountEraSeqDb:       accountEraSeqDb,
+		validatorAggDb:        validatorAggDb,
+		validatorEraSeqDb:     validatorEraSeqDb,
+		validatorSessionSeqDb: validatorSessionSeqDb,
 	}
 }
 
 func (uc *getByStashAccountUseCase) Execute(stashAccount string, sessionsLimit int64, erasLimit int64) (*AggDetailsView, error) {
-	validatorAggs, err := uc.db.GetValidatorAgg().FindByStashAccount(stashAccount)
+	validatorAggs, err := uc.validatorAggDb.FindByStashAccount(stashAccount)
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +39,7 @@ func (uc *getByStashAccountUseCase) Execute(stashAccount string, sessionsLimit i
 	}
 
 	eraLimit := int64(1)
-	accountEraSeqs, err := uc.db.GetAccountEraSeq().FindLastByValidatorStashAccount(stashAccount, eraLimit)
+	accountEraSeqs, err := uc.accountEraSeqDb.FindLastByValidatorStashAccount(stashAccount, eraLimit)
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +51,7 @@ func (uc *getByStashAccountUseCase) getSessionSequences(stashAccount string, seq
 	var sequences []model.ValidatorSessionSeq
 	var err error
 	if sequencesLimit > 0 {
-		sequences, err = uc.db.GetValidatorSessionSeq().FindLastByStashAccount(stashAccount, sequencesLimit)
+		sequences, err = uc.validatorSessionSeqDb.FindLastByStashAccount(stashAccount, sequencesLimit)
 		if err != nil {
 			return nil, err
 		}
@@ -56,11 +63,10 @@ func (uc *getByStashAccountUseCase) getEraSequences(stashAccount string, sequenc
 	var sequences []model.ValidatorEraSeq
 	var err error
 	if sequencesLimit > 0 {
-		sequences, err = uc.db.GetValidatorEraSeq().FindLastByStashAccount(stashAccount, sequencesLimit)
+		sequences, err = uc.validatorEraSeqDb.FindLastByStashAccount(stashAccount, sequencesLimit)
 		if err != nil {
 			return nil, err
 		}
 	}
 	return sequences, nil
 }
-

@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"github.com/figment-networks/polkadothub-indexer/client"
-	"github.com/figment-networks/polkadothub-indexer/config"
 	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/types"
 	"github.com/figment-networks/polkadothub-indexer/usecase/account"
@@ -13,20 +12,23 @@ import (
 	"github.com/figment-networks/polkadothub-indexer/usecase/validator"
 )
 
-func NewHttpHandlers(cfg *config.Config, db store.Store, c *client.Client) *HttpHandlers {
+func NewHttpHandlers(c *client.Client, accountEraSeqDb store.AccountEraSeq, blockSeqDb store.BlockSeq, blockSummaryDb store.BlockSummary,
+	eventSeqDb store.EventSeq, syncablesDb store.Syncables, validatorAggDb store.ValidatorAgg, validatorEraSeqDb store.ValidatorEraSeq,
+	validatorSessionSeqDb store.ValidatorSessionSeq, validatorSummaryDb store.ValidatorSummary,
+) *HttpHandlers {
 	return &HttpHandlers{
 		Health:                     health.NewHealthHttpHandler(),
-		GetStatus:                  chain.NewGetStatusHttpHandler(db, c),
-		GetBlockByHeight:           block.NewGetByHeightHttpHandler(db, c),
-		GetBlockTimes:              block.NewGetBlockTimesHttpHandler(db, c),
-		GetBlockSummary:            block.NewGetBlockSummaryHttpHandler(db, c),
-		GetTransactionsByHeight:    transaction.NewGetByHeightHttpHandler(db, c),
-		GetAccountByHeight:         account.NewGetByHeightHttpHandler(db, c),
-		GetAccountDetails:          account.NewGetDetailsHttpHandler(db, c),
-		GetValidatorsByHeight:      validator.NewGetByHeightHttpHandler(cfg, db, c),
-		GetValidatorByStashAccount: validator.NewGetByStashAccountHttpHandler(db, c),
-		GetValidatorSummary:        validator.NewGetSummaryHttpHandler(db, c),
-		GetValidatorsForMinHeight:  validator.NewGetForMinHeightHttpHandler(db, c),
+		GetStatus:                  chain.NewGetStatusHttpHandler(c, syncablesDb),
+		GetBlockByHeight:           block.NewGetByHeightHttpHandler(c, syncablesDb),
+		GetBlockTimes:              block.NewGetBlockTimesHttpHandler(blockSeqDb),
+		GetBlockSummary:            block.NewGetBlockSummaryHttpHandler(blockSummaryDb),
+		GetTransactionsByHeight:    transaction.NewGetByHeightHttpHandler(c, syncablesDb),
+		GetAccountByHeight:         account.NewGetByHeightHttpHandler(c, syncablesDb),
+		GetAccountDetails:          account.NewGetDetailsHttpHandler(c, accountEraSeqDb, eventSeqDb),
+		GetValidatorsByHeight:      validator.NewGetByHeightHttpHandler(syncablesDb, validatorEraSeqDb, validatorSessionSeqDb),
+		GetValidatorByStashAccount: validator.NewGetByStashAccountHttpHandler(accountEraSeqDb, validatorAggDb, validatorEraSeqDb, validatorSessionSeqDb),
+		GetValidatorSummary:        validator.NewGetSummaryHttpHandler(validatorSummaryDb),
+		GetValidatorsForMinHeight:  validator.NewGetForMinHeightHttpHandler(syncablesDb, validatorAggDb),
 	}
 }
 

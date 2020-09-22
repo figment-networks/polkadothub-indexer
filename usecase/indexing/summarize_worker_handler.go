@@ -2,7 +2,7 @@ package indexing
 
 import (
 	"context"
-	"github.com/figment-networks/polkadothub-indexer/client"
+
 	"github.com/figment-networks/polkadothub-indexer/config"
 	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/types"
@@ -14,18 +14,27 @@ var (
 )
 
 type summarizeWorkerHandler struct {
-	cfg    *config.Config
-	db     store.Store
-	client *client.Client
+	cfg *config.Config
 
 	useCase *summarizeUseCase
+
+	blockSeqDb            store.BlockSeq
+	blockSummaryDb        store.BlockSummary
+	validatorEraSeqDb     store.ValidatorEraSeq
+	validatorSessionSeqDb store.ValidatorSessionSeq
+	validatorSummaryDb    store.ValidatorSummary
 }
 
-func NewSummarizeWorkerHandler(cfg *config.Config, db store.Store, c *client.Client) *summarizeWorkerHandler {
+func NewSummarizeWorkerHandler(cfg *config.Config, blockSeqDb store.BlockSeq, blockSummaryDb store.BlockSummary, validatorEraSeqDb store.ValidatorEraSeq,
+	validatorSessionSeqDb store.ValidatorSessionSeq, validatorSummaryDb store.ValidatorSummary,
+) *summarizeWorkerHandler {
 	return &summarizeWorkerHandler{
-		cfg:    cfg,
-		db:     db,
-		client: c,
+		cfg:                   cfg,
+		blockSeqDb:            blockSeqDb,
+		blockSummaryDb:        blockSummaryDb,
+		validatorEraSeqDb:     validatorEraSeqDb,
+		validatorSessionSeqDb: validatorSessionSeqDb,
+		validatorSummaryDb:    validatorSummaryDb,
 	}
 }
 
@@ -43,7 +52,7 @@ func (h *summarizeWorkerHandler) Handle() {
 
 func (h *summarizeWorkerHandler) getUseCase() *summarizeUseCase {
 	if h.useCase == nil {
-		return NewSummarizeUseCase(h.cfg, h.db)
+		return NewSummarizeUseCase(h.cfg, h.blockSeqDb, h.blockSummaryDb, h.validatorEraSeqDb, h.validatorSessionSeqDb, h.validatorSummaryDb)
 	}
 	return h.useCase
 }

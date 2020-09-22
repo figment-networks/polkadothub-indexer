@@ -2,24 +2,26 @@ package chain
 
 import (
 	"context"
+
 	"github.com/figment-networks/polkadothub-indexer/client"
 	"github.com/figment-networks/polkadothub-indexer/store"
 )
 
 type getStatusUseCase struct {
-	db     store.Store
 	client *client.Client
+
+	syncablesDb store.Syncables
 }
 
-func NewGetStatusUseCase(db store.Store, c *client.Client) *getStatusUseCase {
+func NewGetStatusUseCase(c *client.Client, syncablesDb store.Syncables) *getStatusUseCase {
 	return &getStatusUseCase{
-		db:     db,
-		client: c,
+		syncablesDb: syncablesDb,
+		client:      c,
 	}
 }
 
-func (uc *getStatusUseCase) Execute(ctx  context.Context) (*DetailsView, error) {
-	mostRecentSyncable, err := uc.db.GetSyncables().FindMostRecent()
+func (uc *getStatusUseCase) Execute(ctx context.Context) (*DetailsView, error) {
+	mostRecentSyncable, err := uc.syncablesDb.FindMostRecent()
 	if err != nil {
 		if err != store.ErrNotFound {
 			return nil, err

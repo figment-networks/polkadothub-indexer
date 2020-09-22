@@ -6,19 +6,18 @@ import (
 )
 
 type getSummaryUseCase struct {
-	db store.Store
+	validatorSummaryDb store.ValidatorSummary
 }
 
-func NewGetSummaryUseCase(db store.Store) *getSummaryUseCase {
+func NewGetSummaryUseCase(validatorSummaryDb store.ValidatorSummary) *getSummaryUseCase {
 	return &getSummaryUseCase{
-		db: db,
+		validatorSummaryDb: validatorSummaryDb,
 	}
 }
 
 func (uc *getSummaryUseCase) Execute(interval types.SummaryInterval, period string, stashAccount string) (interface{}, error) {
 	if stashAccount == "" {
-		return uc.db.GetValidatorSummary().FindSummary(interval, period)
+		return uc.validatorSummaryDb.FindSummary(interval, period)
 	}
-	return uc.db.GetValidatorSummary().FindSummaryByStashAccount(stashAccount, interval, period)
+	return uc.validatorSummaryDb.FindSummaryByStashAccount(stashAccount, interval, period)
 }
-

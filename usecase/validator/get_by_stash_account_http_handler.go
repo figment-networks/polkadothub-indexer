@@ -1,13 +1,13 @@
 package validator
 
 import (
-	"github.com/figment-networks/polkadothub-indexer/client"
+	"net/http"
+
 	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/types"
 	"github.com/figment-networks/polkadothub-indexer/utils/logger"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
-	"net/http"
 )
 
 var (
@@ -15,16 +15,21 @@ var (
 )
 
 type getByStashAccountHttpHandler struct {
-	db     store.Store
-	client *client.Client
-
 	useCase *getByStashAccountUseCase
+
+	accountEraSeqDb       store.AccountEraSeq
+	validatorAggDb        store.ValidatorAgg
+	validatorEraSeqDb     store.ValidatorEraSeq
+	validatorSessionSeqDb store.ValidatorSessionSeq
 }
 
-func NewGetByStashAccountHttpHandler(db store.Store, c *client.Client) *getByStashAccountHttpHandler {
+func NewGetByStashAccountHttpHandler(accountEraSeqDb store.AccountEraSeq, validatorAggDb store.ValidatorAgg, validatorEraSeqDb store.ValidatorEraSeq,
+	validatorSessionSeqDb store.ValidatorSessionSeq) *getByStashAccountHttpHandler {
 	return &getByStashAccountHttpHandler{
-		db:     db,
-		client: c,
+		accountEraSeqDb:       accountEraSeqDb,
+		validatorAggDb:        validatorAggDb,
+		validatorEraSeqDb:     validatorEraSeqDb,
+		validatorSessionSeqDb: validatorSessionSeqDb,
 	}
 }
 
@@ -61,7 +66,8 @@ func (h *getByStashAccountHttpHandler) Handle(c *gin.Context) {
 
 func (h *getByStashAccountHttpHandler) getUseCase() *getByStashAccountUseCase {
 	if h.useCase == nil {
-		return NewGetByStashAccountUseCase(h.db)
+		return NewGetByStashAccountUseCase(h.accountEraSeqDb, h.validatorAggDb, h.validatorEraSeqDb, h.validatorSessionSeqDb)
+
 	}
 	return h.useCase
 }

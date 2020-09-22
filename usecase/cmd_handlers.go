@@ -8,13 +8,20 @@ import (
 	"github.com/figment-networks/polkadothub-indexer/usecase/indexing"
 )
 
-func NewCmdHandlers(cfg *config.Config, db store.Store, c *client.Client) *CmdHandlers {
+func NewCmdHandlers(cfg *config.Config, c *client.Client, accountEraSeqDb store.AccountEraSeq, blockSeqDb store.BlockSeq, blockSummaryDb store.BlockSummary,
+	databaseDb store.Database, eventSeqDb store.EventSeq, reportsDb store.Reports, syncablesDb store.Syncables, validatorAggDb store.ValidatorAgg,
+	validatorEraSeqDb store.ValidatorEraSeq, validatorSessionSeqDb store.ValidatorSessionSeq, validatorSummaryDb store.ValidatorSummary,
+) *CmdHandlers {
 	return &CmdHandlers{
-		GetStatus:        chain.NewGetStatusCmdHandler(db, c),
-		StartIndexer:     indexing.NewStartCmdHandler(cfg, db, c),
-		BackfillIndexer:  indexing.NewBackfillCmdHandler(cfg, db, c),
-		PurgeIndexer:     indexing.NewPurgeCmdHandler(cfg, db, c),
-		SummarizeIndexer: indexing.NewSummarizeCmdHandler(cfg, db, c),
+		GetStatus: chain.NewGetStatusCmdHandler(c, syncablesDb),
+		StartIndexer: indexing.NewStartCmdHandler(cfg, c, accountEraSeqDb, blockSeqDb, blockSummaryDb, databaseDb, eventSeqDb, reportsDb,
+			syncablesDb, validatorAggDb, validatorEraSeqDb, validatorSessionSeqDb, validatorSummaryDb,
+		),
+		BackfillIndexer: indexing.NewBackfillCmdHandler(cfg, c, accountEraSeqDb, blockSeqDb, blockSummaryDb, databaseDb, eventSeqDb, reportsDb,
+			syncablesDb, validatorAggDb, validatorEraSeqDb, validatorSessionSeqDb, validatorSummaryDb,
+		),
+		PurgeIndexer:     indexing.NewPurgeCmdHandler(cfg, blockSeqDb, blockSummaryDb, validatorSessionSeqDb, validatorSummaryDb),
+		SummarizeIndexer: indexing.NewSummarizeCmdHandler(cfg, blockSeqDb, blockSummaryDb, validatorEraSeqDb, validatorSessionSeqDb, validatorSummaryDb),
 	}
 }
 

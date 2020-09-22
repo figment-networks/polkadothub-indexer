@@ -20,13 +20,23 @@ var (
 
 type purgeUseCase struct {
 	cfg *config.Config
-	db  store.Store
+
+	blockSeqDb            store.BlockSeq
+	blockSummaryDb        store.BlockSummary
+	validatorSessionSeqDb store.ValidatorSessionSeq
+	validatorSummaryDb    store.ValidatorSummary
 }
 
-func NewPurgeUseCase(cfg *config.Config, db store.Store) *purgeUseCase {
+func NewPurgeUseCase(cfg *config.Config, blockSeqDb store.BlockSeq, blockSummaryDb store.BlockSummary,
+	validatorSessionSeqDb store.ValidatorSessionSeq, validatorSummaryDb store.ValidatorSummary,
+) *purgeUseCase {
 	return &purgeUseCase{
 		cfg: cfg,
-		db:  db,
+
+		blockSeqDb:            blockSeqDb,
+		blockSummaryDb:        blockSummaryDb,
+		validatorSessionSeqDb: validatorSessionSeqDb,
+		validatorSummaryDb:    validatorSummaryDb,
 	}
 }
 
@@ -71,7 +81,7 @@ func (uc *purgeUseCase) purgeValidators(currentIndexVersion int64) error {
 }
 
 func (uc *purgeUseCase) purgeBlockSequences(currentIndexVersion int64) error {
-	blockSeq, err := uc.db.GetBlockSeq().FindMostRecent()
+	blockSeq, err := uc.blockSeqDb.FindMostRecent()
 	if err != nil {
 		return err
 	}
@@ -87,14 +97,14 @@ func (uc *purgeUseCase) purgeBlockSequences(currentIndexVersion int64) error {
 
 	purgeThresholdFromLastSeq := lastSeqTime.Add(-*duration)
 
-	activityPeriods, err := uc.db.GetBlockSummary().FindActivityPeriods(types.IntervalDaily, currentIndexVersion)
+	activityPeriods, err := uc.blockSummaryDb.FindActivityPeriods(types.IntervalDaily, currentIndexVersion)
 	if err != nil {
 		return err
 	}
 
 	logger.Info(fmt.Sprintf("purging summarized block sequences... [older than=%s]", purgeThresholdFromLastSeq))
 
-	deletedCount, err := uc.db.GetBlockSeq().DeleteOlderThan(purgeThresholdFromLastSeq, activityPeriods)
+	deletedCount, err := uc.blockSeqDb.DeleteOlderThan(purgeThresholdFromLastSeq, activityPeriods)
 	if err != nil {
 		return err
 	}
@@ -105,7 +115,7 @@ func (uc *purgeUseCase) purgeBlockSequences(currentIndexVersion int64) error {
 }
 
 func (uc *purgeUseCase) purgeBlockSummaries(interval types.SummaryInterval, purgeInterval string) error {
-	blockSummary, err := uc.db.GetBlockSummary().FindMostRecentByInterval(interval)
+	blockSummary, err := uc.blockSummaryDb.FindMostRecentByInterval(interval)
 	if err != nil {
 		return err
 	}
@@ -123,7 +133,7 @@ func (uc *purgeUseCase) purgeBlockSummaries(interval types.SummaryInterval, purg
 
 	logger.Info(fmt.Sprintf("purging block summaries... [interval=%s] [older than=%s]", interval, purgeThreshold))
 
-	deletedCount, err := uc.db.GetBlockSummary().DeleteOlderThan(interval, purgeThreshold)
+	deletedCount, err := uc.blockSummaryDb.DeleteOlderThan(interval, purgeThreshold)
 	if err != nil {
 		return err
 	}
@@ -134,13 +144,13 @@ func (uc *purgeUseCase) purgeBlockSummaries(interval types.SummaryInterval, purg
 }
 
 func (uc *purgeUseCase) purgeValidatorSessionSequences(currentIndexVersion int64) error {
-	validatorSeq, err := uc.db.GetValidatorSessionSeq().FindMostRecent()
+	validatorSeq, err := uc.validatorSessionSeqDb.FindMostRecent()
 	if err != nil {
 		return err
 	}
 	lastSeqTime := validatorSeq.Time.Time
 
-	validatorSummary, err := uc.db.GetValidatorSummary().FindMostRecent()
+	validatorSummary, err := uc.validatorSummaryDb.FindMostRecent()
 	if err != nil {
 		return err
 	}
@@ -165,7 +175,7 @@ func (uc *purgeUseCase) purgeValidatorSessionSequences(currentIndexVersion int64
 
 	logger.Info(fmt.Sprintf("purging validator sequences... [older than=%s]", purgeThreshold))
 
-	deletedCount, err := uc.db.GetValidatorSessionSeq().DeleteOlderThan(purgeThreshold)
+	deletedCount, err := uc.validatorSessionSeqDb.DeleteOlderThan(purgeThreshold)
 	if err != nil {
 		return err
 	}
@@ -176,7 +186,7 @@ func (uc *purgeUseCase) purgeValidatorSessionSequences(currentIndexVersion int64
 }
 
 func (uc *purgeUseCase) purgeValidatorSummaries(interval types.SummaryInterval, purgeInterval string) error {
-	blockSummary, err := uc.db.GetValidatorSummary().FindMostRecentByInterval(interval)
+	blockSummary, err := uc.validatorSummaryDb.FindMostRecentByInterval(interval)
 	if err != nil {
 		return err
 	}
@@ -194,7 +204,7 @@ func (uc *purgeUseCase) purgeValidatorSummaries(interval types.SummaryInterval, 
 
 	logger.Info(fmt.Sprintf("purging validator summaries... [interval=%s] [older than=%s]", interval, purgeThreshold))
 
-	deletedCount, err := uc.db.GetValidatorSummary().DeleteOlderThan(interval, purgeThreshold)
+	deletedCount, err := uc.validatorSummaryDb.DeleteOlderThan(interval, purgeThreshold)
 	if err != nil {
 		return err
 	}

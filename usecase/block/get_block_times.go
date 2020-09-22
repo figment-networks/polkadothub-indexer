@@ -5,16 +5,15 @@ import (
 )
 
 type getBlockTimesUseCase struct {
-	db store.Store
+	blockSeqDb store.BlockSeq
 }
 
-func NewGetBlockTimesUseCase(db store.Store) *getBlockTimesUseCase {
+func NewGetBlockTimesUseCase(blockSeqDb store.BlockSeq) *getBlockTimesUseCase {
 	return &getBlockTimesUseCase{
-		db: db,
+		blockSeqDb: blockSeqDb,
 	}
 }
 
 func (uc *getBlockTimesUseCase) Execute(limit int64) store.GetAvgRecentTimesResult {
-	return uc.db.GetBlockSeq().GetAvgRecentTimes(limit)
+	return uc.blockSeqDb.GetAvgRecentTimes(limit)
 }
-

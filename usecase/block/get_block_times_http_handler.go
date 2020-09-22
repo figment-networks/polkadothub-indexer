@@ -1,12 +1,12 @@
 package block
 
 import (
-	"github.com/figment-networks/polkadothub-indexer/client"
+	"net/http"
+
 	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/types"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
-	"net/http"
 )
 
 var (
@@ -14,16 +14,14 @@ var (
 )
 
 type getBlockTimesHttpHandler struct {
-	db     store.Store
-	client *client.Client
-
 	useCase *getBlockTimesUseCase
+
+	blockSeqDb store.BlockSeq
 }
 
-func NewGetBlockTimesHttpHandler(db store.Store, client *client.Client) *getBlockTimesHttpHandler {
+func NewGetBlockTimesHttpHandler(blockSeqDb store.BlockSeq) *getBlockTimesHttpHandler {
 	return &getBlockTimesHttpHandler{
-		db:     db,
-		client: client,
+		blockSeqDb: blockSeqDb,
 	}
 }
 
@@ -34,7 +32,6 @@ type GetBlockTimesRequest struct {
 func (h *getBlockTimesHttpHandler) Handle(c *gin.Context) {
 	var req GetBlockTimesRequest
 	if err := c.ShouldBindUri(&req); err != nil {
-		//log.Error(err)
 		err := errors.New("invalid height")
 		c.JSON(http.StatusBadRequest, err)
 		return
@@ -47,7 +44,7 @@ func (h *getBlockTimesHttpHandler) Handle(c *gin.Context) {
 
 func (h *getBlockTimesHttpHandler) getUseCase() *getBlockTimesUseCase {
 	if h.useCase == nil {
-		return NewGetBlockTimesUseCase(h.db)
+		return NewGetBlockTimesUseCase(h.blockSeqDb)
 	}
 	return h.useCase
 }

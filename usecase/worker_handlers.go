@@ -8,11 +8,16 @@ import (
 	"github.com/figment-networks/polkadothub-indexer/usecase/indexing"
 )
 
-func NewWorkerHandlers(cfg *config.Config, db store.Store, c *client.Client) *WorkerHandlers {
+func NewWorkerHandlers(cfg *config.Config, c *client.Client, accountEraSeqDb store.AccountEraSeq, blockSeqDb store.BlockSeq, blockSummaryDb store.BlockSummary,
+	databaseDb store.Database, eventSeqDb store.EventSeq, reportsDb store.Reports, syncablesDb store.Syncables, validatorAggDb store.ValidatorAgg,
+	validatorEraSeqDb store.ValidatorEraSeq, validatorSessionSeqDb store.ValidatorSessionSeq, validatorSummaryDb store.ValidatorSummary,
+) *WorkerHandlers {
 	return &WorkerHandlers{
-		RunIndexer:       indexing.NewRunWorkerHandler(cfg, db, c),
-		SummarizeIndexer: indexing.NewSummarizeWorkerHandler(cfg, db, c),
-		PurgeIndexer:     indexing.NewPurgeWorkerHandler(cfg, db, c),
+		RunIndexer: indexing.NewRunWorkerHandler(cfg, c, accountEraSeqDb, blockSeqDb, blockSummaryDb, databaseDb, eventSeqDb, reportsDb,
+			syncablesDb, validatorAggDb, validatorEraSeqDb, validatorSessionSeqDb, validatorSummaryDb,
+		),
+		SummarizeIndexer: indexing.NewSummarizeWorkerHandler(cfg, blockSeqDb, blockSummaryDb, validatorEraSeqDb, validatorSessionSeqDb, validatorSummaryDb),
+		PurgeIndexer:     indexing.NewPurgeWorkerHandler(cfg, blockSeqDb, blockSummaryDb, validatorSessionSeqDb, validatorSummaryDb),
 	}
 }
 

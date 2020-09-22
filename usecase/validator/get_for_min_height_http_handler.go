@@ -1,13 +1,13 @@
 package validator
 
 import (
-	"github.com/figment-networks/polkadothub-indexer/client"
+	"net/http"
+
 	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/types"
 	"github.com/figment-networks/polkadothub-indexer/utils/logger"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
-	"net/http"
 )
 
 var (
@@ -15,16 +15,16 @@ var (
 )
 
 type getForMinHeightHttpHandler struct {
-	db     store.Store
-	client *client.Client
-
 	useCase *getForMinHeightUseCase
+
+	syncablesDb    store.Syncables
+	validatorAggDb store.ValidatorAgg
 }
 
-func NewGetForMinHeightHttpHandler(db store.Store, c *client.Client) *getForMinHeightHttpHandler {
+func NewGetForMinHeightHttpHandler(syncablesDb store.Syncables, validatorAggDb store.ValidatorAgg) *getForMinHeightHttpHandler {
 	return &getForMinHeightHttpHandler{
-		db:     db,
-		client: c,
+		syncablesDb:    syncablesDb,
+		validatorAggDb: validatorAggDb,
 	}
 }
 
@@ -53,9 +53,7 @@ func (h *getForMinHeightHttpHandler) Handle(c *gin.Context) {
 
 func (h *getForMinHeightHttpHandler) getUseCase() *getForMinHeightUseCase {
 	if h.useCase == nil {
-		return NewGetForMinHeightUseCase(h.db)
+		return NewGetForMinHeightUseCase(h.syncablesDb, h.validatorAggDb)
 	}
 	return h.useCase
 }
-
-

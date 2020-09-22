@@ -27,15 +27,21 @@ var (
 
 type indexingPipeline struct {
 	cfg    *config.Config
-	db     store.Store
 	client *client.Client
 
 	status       *pipelineStatus
 	configParser ConfigParser
 	pipeline     pipeline.CustomPipeline
+
+	databaseDb  store.Database
+	reportsDb   store.Reports
+	syncablesDb store.Syncables
 }
 
-func NewPipeline(cfg *config.Config, db store.Store, client *client.Client) (*indexingPipeline, error) {
+func NewPipeline(cfg *config.Config, client *client.Client, accountEraSeqDb store.AccountEraSeq, blockSeqDb store.BlockSeq, blockSummaryDb store.BlockSummary,
+	databaseDb store.Database, eventSeqDb store.EventSeq, reportsDb store.Reports, syncablesDb store.Syncables, validatorAggDb store.ValidatorAgg,
+	validatorEraSeqDb store.ValidatorEraSeq, validatorSessionSeqDb store.ValidatorSessionSeq, validatorSummaryDb store.ValidatorSummary,
+) (*indexingPipeline, error) {
 	p := pipeline.NewCustom(NewPayloadFactory())
 
 	// Setup logger
@@ -48,7 +54,7 @@ func NewPipeline(cfg *config.Config, db store.Store, client *client.Client) (*in
 
 	// Syncer stage
 	p.AddStage(
-		pipeline.NewStageWithTasks(pipeline.StageSyncer, pipeline.RetryingTask(NewMainSyncerTask(db.GetSyncables()), isTransient, maxRetries)),
+		pipeline.NewStageWithTasks(pipeline.StageSyncer, pipeline.RetryingTask(NewMainSyncerTask(syncablesDb), isTransient, maxRetries)),
 	)
 
 	// Set parser stage
@@ -63,11 +69,11 @@ func NewPipeline(cfg *config.Config, db store.Store, client *client.Client) (*in
 	p.AddStage(
 		pipeline.NewAsyncStageWithTasks(
 			pipeline.StageSequencer,
-			pipeline.RetryingTask(NewBlockSeqCreatorTask(db.GetBlockSeq()), isTransient, maxRetries),
-			pipeline.RetryingTask(NewValidatorSessionSeqCreatorTask(cfg, db), isTransient, maxRetries),
-			pipeline.RetryingTask(NewValidatorEraSeqCreatorTask(cfg, db), isTransient, maxRetries),
-			pipeline.RetryingTask(NewEventSeqCreatorTask(db), isTransient, maxRetries),
-			pipeline.RetryingTask(NewAccountEraSeqCreatorTask(cfg, db), isTransient, maxRetries),
+			pipeline.RetryingTask(NewBlockSeqCreatorTask(blockSeqDb), isTransient, maxRetries),
+			pipeline.RetryingTask(NewValidatorSessionSeqCreatorTask(cfg, syncablesDb, validatorSessionSeqDb), isTransient, maxRetries),
+			pipeline.RetryingTask(NewValidatorEraSeqCreatorTask(cfg, syncablesDb, validatorEraSeqDb), isTransient, maxRetries),
+			pipeline.RetryingTask(NewEventSeqCreatorTask(eventSeqDb), isTransient, maxRetries),
+			pipeline.RetryingTask(NewAccountEraSeqCreatorTask(cfg, accountEraSeqDb, syncablesDb), isTransient, maxRetries),
 		),
 	)
 
@@ -75,7 +81,7 @@ func NewPipeline(cfg *config.Config, db store.Store, client *client.Client) (*in
 	p.AddStage(
 		pipeline.NewStageWithTasks(
 			pipeline.StageAggregator,
-			pipeline.RetryingTask(NewValidatorAggCreatorTask(db.GetValidatorAgg()), isTransient, maxRetries),
+			pipeline.RetryingTask(NewValidatorAggCreatorTask(validatorAggDb), isTransient, maxRetries),
 		),
 	)
 
@@ -83,13 +89,13 @@ func NewPipeline(cfg *config.Config, db store.Store, client *client.Client) (*in
 	p.AddStage(
 		pipeline.NewAsyncStageWithTasks(
 			pipeline.StagePersistor,
-			pipeline.RetryingTask(NewSyncerPersistorTask(db.GetSyncables()), isTransient, maxRetries),
-			pipeline.RetryingTask(NewBlockSeqPersistorTask(db.GetBlockSeq()), isTransient, maxRetries),
-			pipeline.RetryingTask(NewValidatorSessionSeqPersistorTask(db.GetValidatorSessionSeq()), isTransient, maxRetries),
-			pipeline.RetryingTask(NewValidatorEraSeqPersistorTask(db.GetValidatorEraSeq()), isTransient, maxRetries),
-			pipeline.RetryingTask(NewValidatorAggPersistorTask(db.GetValidatorAgg()), isTransient, maxRetries),
-			pipeline.RetryingTask(NewEventSeqPersistorTask(db.GetEventSeq()), isTransient, maxRetries),
-			pipeline.RetryingTask(NewAccountEraSeqPersistorTask(db.GetAccountEraSeq()), isTransient, maxRetries),
+			pipeline.RetryingTask(NewSyncerPersistorTask(syncablesDb), isTransient, maxRetries),
+			pipeline.RetryingTask(NewBlockSeqPersistorTask(blockSeqDb), isTransient, maxRetries),
+			pipeline.RetryingTask(NewValidatorSessionSeqPersistorTask(validatorSessionSeqDb), isTransient, maxRetries),
+			pipeline.RetryingTask(NewValidatorEraSeqPersistorTask(validatorEraSeqDb), isTransient, maxRetries),
+			pipeline.RetryingTask(NewValidatorAggPersistorTask(validatorAggDb), isTransient, maxRetries),
+			pipeline.RetryingTask(NewEventSeqPersistorTask(eventSeqDb), isTransient, maxRetries),
+			pipeline.RetryingTask(NewAccountEraSeqPersistorTask(accountEraSeqDb), isTransient, maxRetries),
 		),
 	)
 
@@ -99,7 +105,7 @@ func NewPipeline(cfg *config.Config, db store.Store, client *client.Client) (*in
 		return nil, err
 	}
 
-	statusChecker := pipelineStatusChecker{db.GetSyncables(), configParser.GetCurrentVersionId()}
+	statusChecker := pipelineStatusChecker{syncablesDb, configParser.GetCurrentVersionId()}
 	pipelineStatus, err := statusChecker.getStatus()
 	if err != nil {
 		return nil, err
@@ -107,12 +113,15 @@ func NewPipeline(cfg *config.Config, db store.Store, client *client.Client) (*in
 
 	return &indexingPipeline{
 		cfg:    cfg,
-		db:     db,
 		client: client,
 
 		pipeline:     p,
 		status:       pipelineStatus,
 		configParser: configParser,
+
+		databaseDb:  databaseDb,
+		reportsDb:   reportsDb,
+		syncablesDb: syncablesDb,
 	}, nil
 }
 
@@ -129,7 +138,7 @@ func (p *indexingPipeline) Start(ctx context.Context, indexCfg IndexConfig) erro
 
 	indexVersion := p.configParser.GetCurrentVersionId()
 
-	source, err := NewIndexSource(p.cfg, p.db, p.client, &IndexSourceConfig{
+	source, err := NewIndexSource(p.cfg, p.syncablesDb, p.client, &IndexSourceConfig{
 		BatchSize:   indexCfg.BatchSize,
 		StartHeight: indexCfg.StartHeight,
 	})
@@ -137,14 +146,14 @@ func (p *indexingPipeline) Start(ctx context.Context, indexCfg IndexConfig) erro
 		return err
 	}
 
-	sink := NewSink(p.db, indexVersion)
+	sink := NewSink(p.databaseDb, p.syncablesDb, indexVersion)
 
 	reportCreator := &reportCreator{
 		kind:         model.ReportKindIndex,
 		indexVersion: indexVersion,
 		startHeight:  source.startHeight,
 		endHeight:    source.endHeight,
-		store:        p.db.GetReports(),
+		store:        p.reportsDb,
 	}
 
 	if err := reportCreator.create(); err != nil {
@@ -197,12 +206,12 @@ func (p *indexingPipeline) Backfill(ctx context.Context, backfillCfg BackfillCon
 
 	indexVersion := p.configParser.GetCurrentVersionId()
 
-	source, err := NewBackfillSource(p.cfg, p.db, p.client, indexVersion)
+	source, err := NewBackfillSource(p.cfg, p.syncablesDb, p.client, indexVersion)
 	if err != nil {
 		return err
 	}
 
-	sink := NewSink(p.db, indexVersion)
+	sink := NewSink(p.databaseDb, p.syncablesDb, indexVersion)
 
 	kind := model.ReportKindSequentialReindex
 	if backfillCfg.Parallel {
@@ -210,7 +219,7 @@ func (p *indexingPipeline) Backfill(ctx context.Context, backfillCfg BackfillCon
 	}
 
 	if backfillCfg.Force {
-		if err := p.db.GetReports().DeleteByKinds([]model.ReportKind{model.ReportKindParallelReindex, model.ReportKindSequentialReindex}); err != nil {
+		if err := p.reportsDb.DeleteByKinds([]model.ReportKind{model.ReportKindParallelReindex, model.ReportKindSequentialReindex}); err != nil {
 			return err
 		}
 	}
@@ -220,7 +229,7 @@ func (p *indexingPipeline) Backfill(ctx context.Context, backfillCfg BackfillCon
 		indexVersion: indexVersion,
 		startHeight:  source.startHeight,
 		endHeight:    source.endHeight,
-		store:        p.db.GetReports(),
+		store:        p.reportsDb,
 	}
 
 	versionIds := p.status.missingVersionIds
@@ -233,7 +242,7 @@ func (p *indexingPipeline) Backfill(ctx context.Context, backfillCfg BackfillCon
 		return err
 	}
 
-	if err := p.db.GetSyncables().SetProcessedAtForRange(reportCreator.report.ID, source.startHeight, source.endHeight); err != nil {
+	if err := p.syncablesDb.SetProcessedAtForRange(reportCreator.report.ID, source.startHeight, source.endHeight); err != nil {
 		return err
 	}
 

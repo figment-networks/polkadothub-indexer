@@ -18,7 +18,9 @@ func startWorker(cfg *config.Config) error {
 	}
 	defer client.Close()
 
-	workerHandlers := usecase.NewWorkerHandlers(cfg, db, client)
+	workerHandlers := usecase.NewWorkerHandlers(cfg, client, db.GetAccountEraSeq(), db.GetBlockSeq(), db.GetBlockSummary(), db.GetDatabase(), db.GetEventSeq(),
+		db.GetReports(), db.GetSyncables(), db.GetValidatorAgg(), db.GetValidatorEraSeq(), db.GetValidatorSessionSeq(), db.GetValidatorSummary(),
+	)
 
 	w, err := worker.New(cfg, workerHandlers)
 	if err != nil {

@@ -1,14 +1,13 @@
 package validator
 
 import (
-	"github.com/figment-networks/polkadothub-indexer/client"
-	"github.com/figment-networks/polkadothub-indexer/config"
+	"net/http"
+
 	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/types"
 	"github.com/figment-networks/polkadothub-indexer/utils/logger"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
-	"net/http"
 )
 
 var (
@@ -16,18 +15,20 @@ var (
 )
 
 type getByHeightHttpHandler struct {
-	cfg    *config.Config
-	db     store.Store
-	client *client.Client
-
 	useCase *getByHeightUseCase
+
+	syncablesDb           store.Syncables
+	validatorEraSeqDb     store.ValidatorEraSeq
+	validatorSessionSeqDb store.ValidatorSessionSeq
 }
 
-func NewGetByHeightHttpHandler(cfg *config.Config, db store.Store, c *client.Client) *getByHeightHttpHandler {
+func NewGetByHeightHttpHandler(syncablesDb store.Syncables,
+	validatorEraSeqDb store.ValidatorEraSeq, validatorSessionSeqDb store.ValidatorSessionSeq,
+) *getByHeightHttpHandler {
 	return &getByHeightHttpHandler{
-		cfg:    cfg,
-		db:     db,
-		client: c,
+		syncablesDb:           syncablesDb,
+		validatorEraSeqDb:     validatorEraSeqDb,
+		validatorSessionSeqDb: validatorSessionSeqDb,
 	}
 }
 
@@ -56,7 +57,7 @@ func (h *getByHeightHttpHandler) Handle(c *gin.Context) {
 
 func (h *getByHeightHttpHandler) getUseCase() *getByHeightUseCase {
 	if h.useCase == nil {
-		return NewGetByHeightUseCase(h.cfg, h.db, h.client)
+		return NewGetByHeightUseCase(h.syncablesDb, h.validatorEraSeqDb, h.validatorSessionSeqDb)
 	}
 	return h.useCase
 }

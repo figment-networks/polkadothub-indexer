@@ -1,12 +1,13 @@
 package chain
 
 import (
+	"net/http"
+
 	"github.com/figment-networks/polkadothub-indexer/client"
 	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/types"
 	"github.com/figment-networks/polkadothub-indexer/utils/logger"
 	"github.com/gin-gonic/gin"
-	"net/http"
 )
 
 var (
@@ -14,16 +15,17 @@ var (
 )
 
 type getStatusHttpHandler struct {
-	db     store.Store
 	client *client.Client
 
 	useCase *getStatusUseCase
+
+	syncablesDb store.Syncables
 }
 
-func NewGetStatusHttpHandler(db store.Store, client *client.Client) *getStatusHttpHandler {
+func NewGetStatusHttpHandler(client *client.Client, syncablesDb store.Syncables) *getStatusHttpHandler {
 	return &getStatusHttpHandler{
-		db:     db,
-		client: client,
+		client:      client,
+		syncablesDb: syncablesDb,
 	}
 }
 
@@ -40,7 +42,7 @@ func (h *getStatusHttpHandler) Handle(c *gin.Context) {
 
 func (h *getStatusHttpHandler) getUseCase() *getStatusUseCase {
 	if h.useCase == nil {
-		return NewGetStatusUseCase(h.db, h.client)
+		return NewGetStatusUseCase(h.client, h.syncablesDb)
 	}
 	return h.useCase
 }
