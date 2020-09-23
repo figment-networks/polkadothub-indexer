@@ -65,7 +65,9 @@ func (t *blockParserTask) Run(ctx context.Context, p pipeline.Payload) error {
 }
 
 func NewValidatorsParserTask(accountClient client.AccountClient) *validatorsParserTask {
-	return &validatorsParserTask{}
+	return &validatorsParserTask{
+		accountClient: accountClient,
+	}
 }
 
 type validatorsParserTask struct {
