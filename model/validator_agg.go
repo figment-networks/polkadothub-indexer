@@ -28,9 +28,5 @@ func (s *ValidatorAgg) Equal(m ValidatorAgg) bool {
 func (s *ValidatorAgg) Update(u *ValidatorAgg) {
 	s.Aggregate.RecentAtHeight = u.Aggregate.RecentAtHeight
 	s.Aggregate.RecentAt = u.Aggregate.RecentAt
-
-	// only update if there's a value (since we don't fetch at every height)
-	if u.DisplayName != "" {
-		s.DisplayName = u.DisplayName
-	}
+	s.DisplayName = u.DisplayName
 }

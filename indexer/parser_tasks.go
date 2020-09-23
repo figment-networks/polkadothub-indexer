@@ -3,12 +3,15 @@ package indexer
 import (
 	"context"
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/figment-networks/indexing-engine/pipeline"
+	"github.com/figment-networks/polkadothub-indexer/client"
 	"github.com/figment-networks/polkadothub-indexer/metric"
 	"github.com/figment-networks/polkadothub-indexer/utils/logger"
 	"github.com/figment-networks/polkadothub-proxy/grpc/staking/stakingpb"
 	"github.com/figment-networks/polkadothub-proxy/grpc/validatorperformance/validatorperformancepb"
-	"time"
 )
 
 const (
@@ -61,18 +64,21 @@ func (t *blockParserTask) Run(ctx context.Context, p pipeline.Payload) error {
 	return nil
 }
 
-func NewValidatorsParserTask() *validatorsParserTask {
+func NewValidatorsParserTask(accountClient client.AccountClient) *validatorsParserTask {
 	return &validatorsParserTask{}
 }
 
-type validatorsParserTask struct{}
+type validatorsParserTask struct {
+	accountClient client.AccountClient
+}
 
 // ParsedValidatorsData normalized validator data
 type ParsedValidatorsData map[string]parsedValidator
 
 type parsedValidator struct {
-	Staking        *stakingpb.Validator
-	Performance    *validatorperformancepb.Validator
+	Staking     *stakingpb.Validator
+	Performance *validatorperformancepb.Validator
+	DisplayName string
 }
 
 func (t *validatorsParserTask) GetName() string {
@@ -95,11 +101,17 @@ func (t *validatorsParserTask) Run(ctx context.Context, p pipeline.Payload) erro
 	for _, rawValidatorStakingInfo := range rawStakingState.GetValidators() {
 		stashAccount := rawValidatorStakingInfo.GetStashAccount()
 
+		identity, err := t.accountClient.GetIdentity(stashAccount)
+		if err != nil {
+			return err
+		}
+
 		parsedData, ok := parsedValidatorsData[stashAccount]
 		if !ok {
 			parsedData = parsedValidator{}
 		}
 		parsedData.Staking = rawValidatorStakingInfo
+		parsedData.DisplayName = strings.TrimSpace(identity.GetIdentity().GetDisplayName())
 		parsedValidatorsData[stashAccount] = parsedData
 	}
 

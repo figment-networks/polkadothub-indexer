@@ -3,11 +3,9 @@ package indexer
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/figment-networks/indexing-engine/pipeline"
-	"github.com/figment-networks/polkadothub-indexer/client"
 	"github.com/figment-networks/polkadothub-indexer/metric"
 	"github.com/figment-networks/polkadothub-indexer/model"
 	"github.com/figment-networks/polkadothub-indexer/store"
@@ -22,16 +20,14 @@ var (
 	_ pipeline.Task = (*validatorAggCreatorTask)(nil)
 )
 
-func NewValidatorAggCreatorTask(db *store.Store, accountClient client.AccountClient) *validatorAggCreatorTask {
+func NewValidatorAggCreatorTask(db *store.Store) *validatorAggCreatorTask {
 	return &validatorAggCreatorTask{
-		db:            db,
-		accountClient: accountClient,
+		db: db,
 	}
 }
 
 type validatorAggCreatorTask struct {
-	db            *store.Store
-	accountClient client.AccountClient
+	db *store.Store
 }
 
 func (t *validatorAggCreatorTask) GetName() string {
@@ -55,11 +51,6 @@ func (t *validatorAggCreatorTask) Run(ctx context.Context, p pipeline.Payload) e
 			if err == store.ErrNotFound {
 				// Create new
 
-				identity, err := t.accountClient.GetIdentity(stashAccount)
-				if err != nil {
-					return err
-				}
-
 				validator := model.ValidatorAgg{
 					Aggregate: &model.Aggregate{
 						StartedAtHeight: payload.Syncable.Height,
@@ -69,7 +60,7 @@ func (t *validatorAggCreatorTask) Run(ctx context.Context, p pipeline.Payload) e
 					},
 
 					StashAccount:            stashAccount,
-					DisplayName:             strings.TrimSpace(identity.GetIdentity().GetDisplayName()),
+					DisplayName:             validatorData.DisplayName,
 					RecentAsValidatorHeight: payload.Syncable.Height,
 				}
 
@@ -95,6 +86,7 @@ func (t *validatorAggCreatorTask) Run(ctx context.Context, p pipeline.Payload) e
 				},
 
 				RecentAsValidatorHeight: payload.Syncable.Height,
+				DisplayName:             validatorData.DisplayName,
 			}
 
 			if payload.Syncable.LastInSession {
@@ -104,12 +96,6 @@ func (t *validatorAggCreatorTask) Run(ctx context.Context, p pipeline.Payload) e
 					validator.AccumulatedUptime = existing.AccumulatedUptime
 				}
 				validator.AccumulatedUptimeCount = existing.AccumulatedUptimeCount + 1
-
-				identity, err := t.accountClient.GetIdentity(stashAccount)
-				if err != nil {
-					return err
-				}
-				validator.DisplayName = strings.TrimSpace(identity.GetIdentity().GetDisplayName())
 			}
 
 			existing.Update(validator)

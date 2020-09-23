@@ -56,7 +56,7 @@ func NewPipeline(cfg *config.Config, db *store.Store, client *client.Client) (*i
 		pipeline.NewAsyncStageWithTasks(
 			pipeline.StageParser,
 			NewBlockParserTask(),
-			NewValidatorsParserTask(),
+			NewValidatorsParserTask(client.Account),
 		),
 	)
 
@@ -76,7 +76,7 @@ func NewPipeline(cfg *config.Config, db *store.Store, client *client.Client) (*i
 	p.AddStage(
 		pipeline.NewStageWithTasks(
 			pipeline.StageAggregator,
-			pipeline.RetryingTask(NewValidatorAggCreatorTask(db, client.Account), isTransient, maxRetries),
+			pipeline.RetryingTask(NewValidatorAggCreatorTask(db), isTransient, maxRetries),
 		),
 	)
 
