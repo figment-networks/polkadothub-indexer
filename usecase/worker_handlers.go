@@ -1,6 +1,9 @@
 package usecase
 
 import (
+	"fmt"
+	"reflect"
+
 	"github.com/figment-networks/polkadothub-indexer/client"
 	"github.com/figment-networks/polkadothub-indexer/config"
 	"github.com/figment-networks/polkadothub-indexer/store"
@@ -8,21 +11,55 @@ import (
 	"github.com/figment-networks/polkadothub-indexer/usecase/indexing"
 )
 
-func NewWorkerHandlers(cfg *config.Config, c *client.Client, accountEraSeqDb store.AccountEraSeq, blockSeqDb store.BlockSeq, blockSummaryDb store.BlockSummary,
-	databaseDb store.Database, eventSeqDb store.EventSeq, reportsDb store.Reports, syncablesDb store.Syncables, validatorAggDb store.ValidatorAgg,
-	validatorEraSeqDb store.ValidatorEraSeq, validatorSessionSeqDb store.ValidatorSessionSeq, validatorSummaryDb store.ValidatorSummary,
-) *WorkerHandlers {
-	return &WorkerHandlers{
-		RunIndexer: indexing.NewRunWorkerHandler(cfg, c, accountEraSeqDb, blockSeqDb, blockSummaryDb, databaseDb, eventSeqDb, reportsDb,
-			syncablesDb, validatorAggDb, validatorEraSeqDb, validatorSessionSeqDb, validatorSummaryDb,
-		),
-		SummarizeIndexer: indexing.NewSummarizeWorkerHandler(cfg, blockSeqDb, blockSummaryDb, validatorEraSeqDb, validatorSessionSeqDb, validatorSummaryDb),
-		PurgeIndexer:     indexing.NewPurgeWorkerHandler(cfg, blockSeqDb, blockSummaryDb, validatorSessionSeqDb, validatorSummaryDb),
+type WorkerHandlerParams struct {
+	Config                *config.Config
+	Client                *client.Client
+	AccountEraSeqDb       store.AccountEraSeq
+	BlockSeqDb            store.BlockSeq
+	BlockSummaryDb        store.BlockSummary
+	DatabaseDb            store.Database
+	EventSeqDb            store.EventSeq
+	ReportsDb             store.Reports
+	SyncablesDb           store.Syncables
+	ValidatorAggDb        store.ValidatorAgg
+	ValidatorEraSeqDb     store.ValidatorEraSeq
+	ValidatorSessionSeqDb store.ValidatorSessionSeq
+	ValidatorSummaryDb    store.ValidatorSummary
+}
+
+func NewWorkerHandlers(b *WorkerHandlerParams) (*WorkerHandlers, error) {
+	err := b.validate()
+	if err != nil {
+		return nil, err
 	}
+
+	return &WorkerHandlers{
+		RunIndexer: indexing.NewRunWorkerHandler(b.Config, b.Client, b.AccountEraSeqDb, b.BlockSeqDb, b.BlockSummaryDb, b.DatabaseDb, b.EventSeqDb, b.ReportsDb,
+			b.SyncablesDb, b.ValidatorAggDb, b.ValidatorEraSeqDb, b.ValidatorSessionSeqDb, b.ValidatorSummaryDb,
+		),
+		SummarizeIndexer: indexing.NewSummarizeWorkerHandler(b.Config, b.BlockSeqDb, b.BlockSummaryDb, b.ValidatorEraSeqDb, b.ValidatorSessionSeqDb, b.ValidatorSummaryDb),
+		PurgeIndexer:     indexing.NewPurgeWorkerHandler(b.Config, b.BlockSeqDb, b.BlockSummaryDb, b.ValidatorSessionSeqDb, b.ValidatorSummaryDb),
+	}, nil
 }
 
 type WorkerHandlers struct {
 	RunIndexer       types.WorkerHandler
 	SummarizeIndexer types.WorkerHandler
 	PurgeIndexer     types.WorkerHandler
+}
+
+func (b *WorkerHandlerParams) validate() error {
+	if b == nil {
+		return fmt.Errorf("WorkerHandlerParams cannot be nil")
+	}
+
+	v := reflect.ValueOf(*b)
+	typeOfS := v.Type()
+	for i := 0; i < v.NumField(); i++ {
+		if v.Field(i).IsZero() {
+			return fmt.Errorf("WorkerHandlerParams param %v is required", typeOfS.Field(i).Name)
+		}
+	}
+
+	return nil
 }

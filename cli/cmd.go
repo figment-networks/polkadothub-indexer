@@ -23,9 +23,24 @@ func runCmd(cfg *config.Config, flags Flags) error {
 	}
 	defer client.Close()
 
-	cmdHandlers := usecase.NewCmdHandlers(cfg, client, db.GetAccountEraSeq(), db.GetBlockSeq(), db.GetBlockSummary(), db.GetDatabase(), db.GetEventSeq(),
-		db.GetReports(), db.GetSyncables(), db.GetValidatorAgg(), db.GetValidatorEraSeq(), db.GetValidatorSessionSeq(), db.GetValidatorSummary(),
-	)
+	cmdHandlers, err := usecase.NewCmdHandlers(&usecase.CmdHandlerParams{
+		Config:                cfg,
+		Client:                client,
+		AccountEraSeqDb:       db.GetAccountEraSeq(),
+		BlockSeqDb:            db.GetBlockSeq(),
+		BlockSummaryDb:        db.GetBlockSummary(),
+		DatabaseDb:            db.GetDatabase(),
+		EventSeqDb:            db.GetEventSeq(),
+		ReportsDb:             db.GetReports(),
+		SyncablesDb:           db.GetSyncables(),
+		ValidatorAggDb:        db.GetValidatorAgg(),
+		ValidatorEraSeqDb:     db.GetValidatorEraSeq(),
+		ValidatorSessionSeqDb: db.GetValidatorSessionSeq(),
+		ValidatorSummaryDb:    db.GetValidatorSummary(),
+	})
+	if err != nil {
+		return err
+	}
 
 	logger.Info(fmt.Sprintf("executing cmd %s ...", flags.runCommand), logger.Field("app", "cli"))
 

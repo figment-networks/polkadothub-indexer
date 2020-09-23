@@ -1,6 +1,9 @@
 package usecase
 
 import (
+	"fmt"
+	"reflect"
+
 	"github.com/figment-networks/polkadothub-indexer/client"
 	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/types"
@@ -12,24 +15,39 @@ import (
 	"github.com/figment-networks/polkadothub-indexer/usecase/validator"
 )
 
-func NewHttpHandlers(c *client.Client, accountEraSeqDb store.AccountEraSeq, blockSeqDb store.BlockSeq, blockSummaryDb store.BlockSummary,
-	eventSeqDb store.EventSeq, syncablesDb store.Syncables, validatorAggDb store.ValidatorAgg, validatorEraSeqDb store.ValidatorEraSeq,
-	validatorSessionSeqDb store.ValidatorSessionSeq, validatorSummaryDb store.ValidatorSummary,
-) *HttpHandlers {
+type HttpHandlerParams struct {
+	Client                *client.Client
+	AccountEraSeqDb       store.AccountEraSeq
+	BlockSeqDb            store.BlockSeq
+	BlockSummaryDb        store.BlockSummary
+	EventSeqDb            store.EventSeq
+	SyncablesDb           store.Syncables
+	ValidatorAggDb        store.ValidatorAgg
+	ValidatorEraSeqDb     store.ValidatorEraSeq
+	ValidatorSessionSeqDb store.ValidatorSessionSeq
+	ValidatorSummaryDb    store.ValidatorSummary
+}
+
+func NewHttpHandlers(b *HttpHandlerParams) (*HttpHandlers, error) {
+	err := b.validate()
+	if err != nil {
+		return nil, err
+	}
+
 	return &HttpHandlers{
 		Health:                     health.NewHealthHttpHandler(),
-		GetStatus:                  chain.NewGetStatusHttpHandler(c, syncablesDb),
-		GetBlockByHeight:           block.NewGetByHeightHttpHandler(c, syncablesDb),
-		GetBlockTimes:              block.NewGetBlockTimesHttpHandler(blockSeqDb),
-		GetBlockSummary:            block.NewGetBlockSummaryHttpHandler(blockSummaryDb),
-		GetTransactionsByHeight:    transaction.NewGetByHeightHttpHandler(c, syncablesDb),
-		GetAccountByHeight:         account.NewGetByHeightHttpHandler(c, syncablesDb),
-		GetAccountDetails:          account.NewGetDetailsHttpHandler(c, accountEraSeqDb, eventSeqDb),
-		GetValidatorsByHeight:      validator.NewGetByHeightHttpHandler(syncablesDb, validatorEraSeqDb, validatorSessionSeqDb),
-		GetValidatorByStashAccount: validator.NewGetByStashAccountHttpHandler(accountEraSeqDb, validatorAggDb, validatorEraSeqDb, validatorSessionSeqDb),
-		GetValidatorSummary:        validator.NewGetSummaryHttpHandler(validatorSummaryDb),
-		GetValidatorsForMinHeight:  validator.NewGetForMinHeightHttpHandler(syncablesDb, validatorAggDb),
-	}
+		GetStatus:                  chain.NewGetStatusHttpHandler(b.Client, b.SyncablesDb),
+		GetBlockByHeight:           block.NewGetByHeightHttpHandler(b.Client, b.SyncablesDb),
+		GetBlockTimes:              block.NewGetBlockTimesHttpHandler(b.BlockSeqDb),
+		GetBlockSummary:            block.NewGetBlockSummaryHttpHandler(b.BlockSummaryDb),
+		GetTransactionsByHeight:    transaction.NewGetByHeightHttpHandler(b.Client, b.SyncablesDb),
+		GetAccountByHeight:         account.NewGetByHeightHttpHandler(b.Client, b.SyncablesDb),
+		GetAccountDetails:          account.NewGetDetailsHttpHandler(b.Client, b.AccountEraSeqDb, b.EventSeqDb),
+		GetValidatorsByHeight:      validator.NewGetByHeightHttpHandler(b.SyncablesDb, b.ValidatorEraSeqDb, b.ValidatorSessionSeqDb),
+		GetValidatorByStashAccount: validator.NewGetByStashAccountHttpHandler(b.AccountEraSeqDb, b.ValidatorAggDb, b.ValidatorEraSeqDb, b.ValidatorSessionSeqDb),
+		GetValidatorSummary:        validator.NewGetSummaryHttpHandler(b.ValidatorSummaryDb),
+		GetValidatorsForMinHeight:  validator.NewGetForMinHeightHttpHandler(b.SyncablesDb, b.ValidatorAggDb),
+	}, nil
 }
 
 type HttpHandlers struct {
@@ -45,4 +63,20 @@ type HttpHandlers struct {
 	GetValidatorByStashAccount types.HttpHandler
 	GetValidatorSummary        types.HttpHandler
 	GetValidatorsForMinHeight  types.HttpHandler
+}
+
+func (b *HttpHandlerParams) validate() error {
+	if b == nil {
+		return fmt.Errorf("HttpHandlerParams cannot be nil")
+	}
+
+	v := reflect.ValueOf(*b)
+	typeOfS := v.Type()
+	for i := 0; i < v.NumField(); i++ {
+		if v.Field(i).IsZero() {
+			return fmt.Errorf("HttpHandlerParams param %v is required", typeOfS.Field(i).Name)
+		}
+	}
+
+	return nil
 }
