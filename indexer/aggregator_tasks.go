@@ -96,6 +96,9 @@ func (t *validatorAggCreatorTask) Run(ctx context.Context, p pipeline.Payload) e
 					validator.AccumulatedUptime = existing.AccumulatedUptime
 				}
 				validator.AccumulatedUptimeCount = existing.AccumulatedUptimeCount + 1
+			} else {
+				validator.AccumulatedUptime = existing.AccumulatedUptime
+				validator.AccumulatedUptimeCount = existing.AccumulatedUptimeCount
 			}
 
 			existing.Update(validator)
