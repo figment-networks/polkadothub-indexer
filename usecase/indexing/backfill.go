@@ -2,6 +2,7 @@ package indexing
 
 import (
 	"context"
+
 	"github.com/figment-networks/polkadothub-indexer/client"
 	"github.com/figment-networks/polkadothub-indexer/config"
 	"github.com/figment-networks/polkadothub-indexer/indexer"
@@ -35,9 +36,9 @@ type BackfillUseCaseConfig struct {
 }
 
 func (uc *backfillUseCase) Execute(ctx context.Context, useCaseConfig BackfillUseCaseConfig) error {
-	//if err := uc.canExecute(); err != nil {
-	//	return err
-	//}
+	if err := uc.canExecute(); err != nil {
+		return err
+	}
 
 	indexingPipeline, err := indexer.NewPipeline(uc.cfg, uc.db, uc.client)
 	if err != nil {
