@@ -57,9 +57,8 @@ func (uc *backfillUseCase) canExecute() error {
 	if _, err := uc.db.Reports.FindNotCompletedByKind(model.ReportKindSequentialReindex, model.ReportKindParallelReindex); err != nil {
 		if err == store.ErrNotFound {
 			return nil
-		} else {
-			return err
 		}
+		return err
 	}
 	return ErrBackfillRunning
 }
