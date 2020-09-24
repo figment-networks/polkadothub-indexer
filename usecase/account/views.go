@@ -2,6 +2,8 @@ package account
 
 import (
 	"encoding/json"
+	"strings"
+
 	"github.com/figment-networks/polkadothub-indexer/model"
 	"github.com/figment-networks/polkadothub-indexer/usecase/common"
 	"github.com/figment-networks/polkadothub-proxy/grpc/account/accountpb"
@@ -101,12 +103,12 @@ type Identity struct {
 func ToIdentity(rawAccountIdentity *accountpb.AccountIdentity) *Identity {
 	return &Identity{
 		Deposit:     rawAccountIdentity.GetDeposit(),
-		DisplayName: rawAccountIdentity.GetDisplayName(),
-		LegalName:   rawAccountIdentity.GetLegalName(),
-		WebName:     rawAccountIdentity.GetWebName(),
-		RiotName:    rawAccountIdentity.GetRiotName(),
-		EmailName:   rawAccountIdentity.GetEmailName(),
-		TwitterName: rawAccountIdentity.GetTwitterName(),
+		DisplayName: strings.TrimSpace(rawAccountIdentity.GetDisplayName()),
+		LegalName:   strings.TrimSpace(rawAccountIdentity.GetLegalName()),
+		WebName:     strings.TrimSpace(rawAccountIdentity.GetWebName()),
+		RiotName:    strings.TrimSpace(rawAccountIdentity.GetRiotName()),
+		EmailName:   strings.TrimSpace(rawAccountIdentity.GetEmailName()),
+		TwitterName: strings.TrimSpace(rawAccountIdentity.GetTwitterName()),
 		Image:       rawAccountIdentity.GetImage(),
 	}
 }

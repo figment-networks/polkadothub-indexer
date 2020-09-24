@@ -23,6 +23,7 @@ type AggDetailsView struct {
 
 	StashAccount            string  `json:"stash_account"`
 	RecentAsValidatorHeight int64   `json:"recent_as_validator_height"`
+	DisplayName             string  `json:"display_name"`
 	Uptime                  float64 `json:"uptime"`
 
 	LastSessionSequences []model.ValidatorSessionSeq `json:"last_session_sequences"`
@@ -37,6 +38,7 @@ func ToAggDetailsView(m *model.ValidatorAgg, sessionSequences []model.ValidatorS
 
 		StashAccount:            m.StashAccount,
 		RecentAsValidatorHeight: m.RecentAsValidatorHeight,
+		DisplayName:             m.DisplayName,
 		Uptime:                  float64(m.AccumulatedUptime) / float64(m.AccumulatedUptimeCount),
 
 		LastSessionSequences: sessionSequences,
@@ -46,15 +48,14 @@ func ToAggDetailsView(m *model.ValidatorAgg, sessionSequences []model.ValidatorS
 }
 
 type SessionSeqListItem struct {
-	*model.Model
 	*model.SessionSequence
 
+	DisplayName  string `json:"display_name"`
 	StashAccount string `json:"stash_account"`
 	Online       bool   `json:"online"`
 }
 
 type EraSeqListItem struct {
-	*model.Model
 	*model.EraSequence
 
 	StashAccount      string         `json:"stash_account"`

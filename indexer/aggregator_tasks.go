@@ -3,12 +3,13 @@ package indexer
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/figment-networks/indexing-engine/pipeline"
 	"github.com/figment-networks/polkadothub-indexer/metric"
 	"github.com/figment-networks/polkadothub-indexer/model"
 	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/utils/logger"
-	"time"
 )
 
 const (
@@ -49,6 +50,7 @@ func (t *validatorAggCreatorTask) Run(ctx context.Context, p pipeline.Payload) e
 		if err != nil {
 			if err == store.ErrNotFound {
 				// Create new
+
 				validator := model.ValidatorAgg{
 					Aggregate: &model.Aggregate{
 						StartedAtHeight: payload.Syncable.Height,
@@ -58,6 +60,7 @@ func (t *validatorAggCreatorTask) Run(ctx context.Context, p pipeline.Payload) e
 					},
 
 					StashAccount:            stashAccount,
+					DisplayName:             validatorData.DisplayName,
 					RecentAsValidatorHeight: payload.Syncable.Height,
 				}
 
@@ -83,6 +86,7 @@ func (t *validatorAggCreatorTask) Run(ctx context.Context, p pipeline.Payload) e
 				},
 
 				RecentAsValidatorHeight: payload.Syncable.Height,
+				DisplayName:             validatorData.DisplayName,
 			}
 
 			if payload.Syncable.LastInSession {
