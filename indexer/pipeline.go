@@ -234,6 +234,10 @@ func (p *indexingPipeline) Backfill(ctx context.Context, backfillCfg BackfillCon
 		return err
 	}
 
+	if err := reportCreator.createIfNotExists(model.ReportKindSequentialReindex, model.ReportKindParallelReindex); err != nil {
+		return err
+	}
+
 	if err := p.db.Syncables.SetProcessedAtForRange(reportCreator.report.ID, source.startHeight, source.endHeight); err != nil {
 		return err
 	}
