@@ -28,7 +28,7 @@ func (uc *getStatusUseCase) Execute(ctx context.Context) (*DetailsView, error) {
 	}
 
 	if mostRecentSyncable != nil {
-		lastSessionSyncable, err := uc.db.Syncables.FindLastInSession(mostRecentSyncable.Session)
+		lastSessionSyncable, err := uc.db.Syncables.FindLastInSession(mostRecentSyncable.Session - 1)
 		if err != nil && err != store.ErrNotFound {
 			return nil, err
 		}
@@ -36,7 +36,7 @@ func (uc *getStatusUseCase) Execute(ctx context.Context) (*DetailsView, error) {
 			lastSessionHeight = lastSessionSyncable.Height
 		}
 
-		lastEraSyncable, err := uc.db.Syncables.FindLastInEra(mostRecentSyncable.Era)
+		lastEraSyncable, err := uc.db.Syncables.FindLastInEra(mostRecentSyncable.Era - 1)
 		if err != nil && err != store.ErrNotFound {
 			return nil, err
 		}
