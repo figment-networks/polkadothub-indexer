@@ -30,7 +30,7 @@ func NewGetStatusHttpHandler(db *store.Store, client *client.Client) *getStatusH
 }
 
 type GetStatusRequest struct {
-	IncludeNode bool `form:"include_node" binding:"-"`
+	IncludeChainStatus bool `form:"include_chain" binding:"-"`
 }
 
 func (h *getStatusHttpHandler) Handle(c *gin.Context) {
@@ -42,7 +42,7 @@ func (h *getStatusHttpHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.getUseCase().Execute(req.IncludeNode)
+	resp, err := h.getUseCase().Execute(req.IncludeChainStatus)
 	if err != nil {
 		logger.Error(err)
 		c.JSON(http.StatusInternalServerError, err)

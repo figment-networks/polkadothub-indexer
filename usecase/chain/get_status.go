@@ -18,7 +18,7 @@ func NewGetStatusUseCase(db *store.Store, c *client.Client) *getStatusUseCase {
 	}
 }
 
-func (uc *getStatusUseCase) Execute(includeNodeStatus bool) (*DetailsView, error) {
+func (uc *getStatusUseCase) Execute(includeChainStatus bool) (*DetailsView, error) {
 	var lastEraHeight, lastSessionHeight int64
 	var getHeadRes *chainpb.GetHeadResponse
 	var getStatusRes *chainpb.GetStatusResponse
@@ -46,7 +46,7 @@ func (uc *getStatusUseCase) Execute(includeNodeStatus bool) (*DetailsView, error
 		}
 	}
 
-	if includeNodeStatus {
+	if includeChainStatus {
 		getHeadRes, err = uc.client.Chain.GetHead()
 		if err != nil {
 			return nil, err
