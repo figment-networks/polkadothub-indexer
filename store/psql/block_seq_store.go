@@ -103,7 +103,7 @@ func (s *BlockSeqStore) DeleteOlderThan(purgeThreshold time.Time, activityPeriod
 }
 
 // Summarize gets the summarized version of block sequences
-func (s *BlockSeqStore) Summarize(interval types.SummaryInterval, activityPeriods []store.ActivityPeriodRow) ([]store.BlockSeqSummary, error) {
+func (s *BlockSeqStore) Summarize(interval types.SummaryInterval, activityPeriods []store.ActivityPeriodRow) ([]model.BlockSeqSummary, error) {
 	defer logQueryDuration(time.Now(), "BlockSummaryStore_Summarize")
 
 	tx := s.db.
@@ -139,9 +139,9 @@ func (s *BlockSeqStore) Summarize(interval types.SummaryInterval, activityPeriod
 	}
 	defer rows.Close()
 
-	var models []store.BlockSeqSummary
+	var models []model.BlockSeqSummary
 	for rows.Next() {
-		var summary store.BlockSeqSummary
+		var summary model.BlockSeqSummary
 		if err := s.db.ScanRows(rows, &summary); err != nil {
 			return nil, err
 		}

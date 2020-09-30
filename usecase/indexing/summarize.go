@@ -156,7 +156,7 @@ func (uc *summarizeUseCase) summarizeValidatorSeq(interval types.SummaryInterval
 			StashAccount: rawSessionSummaryItem.StashAccount,
 		}
 
-		var rawEraSeqSummary store.ValidatorEraSeqSummary
+		var rawEraSeqSummary model.ValidatorEraSeqSummary
 		for _, rawEraSummaryItem := range rawEraSummaryItems {
 			if rawEraSummaryItem.StashAccount == rawSessionSummaryItem.StashAccount && rawEraSummaryItem.TimeBucket == rawSessionSummaryItem.TimeBucket {
 				rawEraSeqSummary = rawEraSummaryItem

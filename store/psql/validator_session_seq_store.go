@@ -131,7 +131,7 @@ func (s *ValidatorSessionSeqStore) DeleteOlderThan(purgeThreshold time.Time) (*i
 }
 
 // Summarize gets the summarized version of validator sequences
-func (s *ValidatorSessionSeqStore) Summarize(interval types.SummaryInterval, activityPeriods []store.ActivityPeriodRow) ([]store.ValidatorSessionSeqSummary, error) {
+func (s *ValidatorSessionSeqStore) Summarize(interval types.SummaryInterval, activityPeriods []store.ActivityPeriodRow) ([]model.ValidatorSessionSeqSummary, error) {
 	defer logQueryDuration(time.Now(), "ValidatorSessionSeqStore_Summarize")
 
 	tx := s.db.
@@ -165,9 +165,9 @@ func (s *ValidatorSessionSeqStore) Summarize(interval types.SummaryInterval, act
 	}
 	defer rows.Close()
 
-	var models []store.ValidatorSessionSeqSummary
+	var models []model.ValidatorSessionSeqSummary
 	for rows.Next() {
-		var summary store.ValidatorSessionSeqSummary
+		var summary model.ValidatorSessionSeqSummary
 		if err := s.db.ScanRows(rows, &summary); err != nil {
 			return nil, err
 		}

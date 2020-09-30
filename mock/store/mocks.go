@@ -5,12 +5,13 @@
 package mock_store
 
 import (
+	reflect "reflect"
+	time "time"
+
 	model "github.com/figment-networks/polkadothub-indexer/model"
 	store "github.com/figment-networks/polkadothub-indexer/store"
 	types "github.com/figment-networks/polkadothub-indexer/types"
 	gomock "github.com/golang/mock/gomock"
-	reflect "reflect"
-	time "time"
 )
 
 // MockAccountEraSeq is a mock of AccountEraSeq interface
@@ -339,10 +340,10 @@ func (mr *MockBlockSeqMockRecorder) Save(arg0 interface{}) *gomock.Call {
 }
 
 // Summarize mocks base method
-func (m *MockBlockSeq) Summarize(arg0 types.SummaryInterval, arg1 []store.ActivityPeriodRow) ([]store.BlockSeqSummary, error) {
+func (m *MockBlockSeq) Summarize(arg0 types.SummaryInterval, arg1 []store.ActivityPeriodRow) ([]model.BlockSeqSummary, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Summarize", arg0, arg1)
-	ret0, _ := ret[0].([]store.BlockSeqSummary)
+	ret0, _ := ret[0].([]model.BlockSeqSummary)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1371,10 +1372,10 @@ func (mr *MockValidatorEraSeqMockRecorder) Save(arg0 interface{}) *gomock.Call {
 }
 
 // Summarize mocks base method
-func (m *MockValidatorEraSeq) Summarize(arg0 types.SummaryInterval, arg1 []store.ActivityPeriodRow) ([]store.ValidatorEraSeqSummary, error) {
+func (m *MockValidatorEraSeq) Summarize(arg0 types.SummaryInterval, arg1 []store.ActivityPeriodRow) ([]model.ValidatorEraSeqSummary, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Summarize", arg0, arg1)
-	ret0, _ := ret[0].([]store.ValidatorEraSeqSummary)
+	ret0, _ := ret[0].([]model.ValidatorEraSeqSummary)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1526,10 +1527,10 @@ func (mr *MockValidatorSessionSeqMockRecorder) Save(arg0 interface{}) *gomock.Ca
 }
 
 // Summarize mocks base method
-func (m *MockValidatorSessionSeq) Summarize(arg0 types.SummaryInterval, arg1 []store.ActivityPeriodRow) ([]store.ValidatorSessionSeqSummary, error) {
+func (m *MockValidatorSessionSeq) Summarize(arg0 types.SummaryInterval, arg1 []store.ActivityPeriodRow) ([]model.ValidatorSessionSeqSummary, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Summarize", arg0, arg1)
-	ret0, _ := ret[0].([]store.ValidatorSessionSeqSummary)
+	ret0, _ := ret[0].([]model.ValidatorSessionSeqSummary)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

@@ -14,13 +14,7 @@ type BlockSeq interface {
 	FindByID(id int64) (*model.BlockSeq, error)
 	FindMostRecent() (*model.BlockSeq, error)
 	GetAvgRecentTimes(limit int64) GetAvgRecentTimesResult
-	Summarize(interval types.SummaryInterval, activityPeriods []ActivityPeriodRow) ([]BlockSeqSummary, error)
-}
-
-type BlockSeqSummary struct {
-	TimeBucket   types.Time `json:"time_bucket"`
-	Count        int64      `json:"count"`
-	BlockTimeAvg float64    `json:"block_time_avg"`
+	Summarize(interval types.SummaryInterval, activityPeriods []ActivityPeriodRow) ([]model.BlockSeqSummary, error)
 }
 
 // GetAvgRecentTimesResult Contains results for GetAvgRecentTimes query
