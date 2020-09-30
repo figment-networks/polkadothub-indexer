@@ -20,10 +20,10 @@ type getByHeightHttpHandler struct {
 
 	useCase *getByHeightUseCase
 
-	syncablesDb store.Syncables
+	syncablesDb store.FindMostRecenter
 }
 
-func NewGetByHeightHttpHandler(c *client.Client, syncablesDb store.Syncables) *getByHeightHttpHandler {
+func NewGetByHeightHttpHandler(c *client.Client, syncablesDb store.FindMostRecenter) *getByHeightHttpHandler {
 	return &getByHeightHttpHandler{
 		client:      c,
 		syncablesDb: syncablesDb,

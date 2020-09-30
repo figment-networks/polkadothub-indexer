@@ -9,10 +9,10 @@ import (
 type getByHeightUseCase struct {
 	client *client.Client
 
-	syncablesDb store.Syncables
+	syncablesDb store.FindMostRecenter
 }
 
-func NewGetByHeightUseCase(c *client.Client, syncablesDb store.Syncables) *getByHeightUseCase {
+func NewGetByHeightUseCase(c *client.Client, syncablesDb store.FindMostRecenter) *getByHeightUseCase {
 	return &getByHeightUseCase{
 		client: c,
 
