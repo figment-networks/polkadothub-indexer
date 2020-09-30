@@ -18,14 +18,14 @@ const (
 	MainSyncerTaskName = "MainSyncer"
 )
 
-func NewMainSyncerTask(db store.Syncables) pipeline.Task {
+func NewMainSyncerTask(syncablesDb store.Syncables) pipeline.Task {
 	return &mainSyncerTask{
-		db: db,
+		syncablesDb: syncablesDb,
 	}
 }
 
 type mainSyncerTask struct {
-	db store.Syncables
+	syncablesDb store.Syncables
 }
 
 func (t *mainSyncerTask) GetName() string {
@@ -39,7 +39,7 @@ func (t *mainSyncerTask) Run(ctx context.Context, p pipeline.Payload) error {
 
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StageSyncer, t.GetName(), payload.CurrentHeight))
 
-	syncable, err := t.db.FindByHeight(payload.CurrentHeight)
+	syncable, err := t.syncablesDb.FindByHeight(payload.CurrentHeight)
 	if err != nil {
 		if err == store.ErrNotFound {
 			syncable = &model.Syncable{

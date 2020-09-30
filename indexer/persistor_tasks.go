@@ -22,14 +22,14 @@ const (
 )
 
 // NewSyncerPersistorTask is responsible for storing syncable to persistence layer
-func NewSyncerPersistorTask(db store.Syncables) pipeline.Task {
+func NewSyncerPersistorTask(syncablesDb store.Syncables) pipeline.Task {
 	return &syncerPersistorTask{
-		db: db,
+		syncablesDb: syncablesDb,
 	}
 }
 
 type syncerPersistorTask struct {
-	db store.Syncables
+	syncablesDb store.Syncables
 }
 
 func (t *syncerPersistorTask) GetName() string {
@@ -43,18 +43,18 @@ func (t *syncerPersistorTask) Run(ctx context.Context, p pipeline.Payload) error
 
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
 
-	return t.db.CreateOrUpdate(payload.Syncable)
+	return t.syncablesDb.CreateOrUpdate(payload.Syncable)
 }
 
 // NewBlockSeqPersistorTask is responsible for storing block to persistence layer
-func NewBlockSeqPersistorTask(db store.BlockSeq) pipeline.Task {
+func NewBlockSeqPersistorTask(blockSeqDb store.BlockSeq) pipeline.Task {
 	return &blockSeqPersistorTask{
-		db: db,
+		blockSeqDb: blockSeqDb,
 	}
 }
 
 type blockSeqPersistorTask struct {
-	db store.BlockSeq
+	blockSeqDb store.BlockSeq
 }
 
 func (t *blockSeqPersistorTask) GetName() string {
@@ -69,25 +69,25 @@ func (t *blockSeqPersistorTask) Run(ctx context.Context, p pipeline.Payload) err
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
 
 	if payload.NewBlockSequence != nil {
-		return t.db.Create(payload.NewBlockSequence)
+		return t.blockSeqDb.Create(payload.NewBlockSequence)
 	}
 
 	if payload.UpdatedBlockSequence != nil {
-		return t.db.Save(payload.UpdatedBlockSequence)
+		return t.blockSeqDb.Save(payload.UpdatedBlockSequence)
 	}
 
 	return nil
 }
 
 // NewValidatorSessionSeqPersistorTask is responsible for storing validator session info to persistence layer
-func NewValidatorSessionSeqPersistorTask(db store.ValidatorSessionSeq) pipeline.Task {
+func NewValidatorSessionSeqPersistorTask(validatorSessionSeqDb store.ValidatorSessionSeq) pipeline.Task {
 	return &validatorSessionSeqPersistorTask{
-		db: db,
+		validatorSessionSeqDb: validatorSessionSeqDb,
 	}
 }
 
 type validatorSessionSeqPersistorTask struct {
-	db store.ValidatorSessionSeq
+	validatorSessionSeqDb store.ValidatorSessionSeq
 }
 
 func (t *validatorSessionSeqPersistorTask) GetName() string {
@@ -107,13 +107,13 @@ func (t *validatorSessionSeqPersistorTask) Run(ctx context.Context, p pipeline.P
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
 
 	for _, sequence := range payload.NewValidatorSessionSequences {
-		if err := t.db.Create(&sequence); err != nil {
+		if err := t.validatorSessionSeqDb.Create(&sequence); err != nil {
 			return err
 		}
 	}
 
 	for _, sequence := range payload.UpdatedValidatorSessionSequences {
-		if err := t.db.Save(&sequence); err != nil {
+		if err := t.validatorSessionSeqDb.Save(&sequence); err != nil {
 			return err
 		}
 	}
@@ -122,14 +122,14 @@ func (t *validatorSessionSeqPersistorTask) Run(ctx context.Context, p pipeline.P
 }
 
 // NewValidatorEraSeqPersistorTask is responsible for storing validator era info to persistence layer
-func NewValidatorEraSeqPersistorTask(db store.ValidatorEraSeq) pipeline.Task {
+func NewValidatorEraSeqPersistorTask(validatorEraSeqDb store.ValidatorEraSeq) pipeline.Task {
 	return &validatorEraSeqPersistorTask{
-		db: db,
+		validatorEraSeqDb: validatorEraSeqDb,
 	}
 }
 
 type validatorEraSeqPersistorTask struct {
-	db store.ValidatorEraSeq
+	validatorEraSeqDb store.ValidatorEraSeq
 }
 
 func (t *validatorEraSeqPersistorTask) GetName() string {
@@ -149,13 +149,13 @@ func (t *validatorEraSeqPersistorTask) Run(ctx context.Context, p pipeline.Paylo
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
 
 	for _, sequence := range payload.NewValidatorEraSequences {
-		if err := t.db.Create(&sequence); err != nil {
+		if err := t.validatorEraSeqDb.Create(&sequence); err != nil {
 			return err
 		}
 	}
 
 	for _, sequence := range payload.UpdatedValidatorEraSequences {
-		if err := t.db.Save(&sequence); err != nil {
+		if err := t.validatorEraSeqDb.Save(&sequence); err != nil {
 			return err
 		}
 	}
@@ -163,14 +163,14 @@ func (t *validatorEraSeqPersistorTask) Run(ctx context.Context, p pipeline.Paylo
 	return nil
 }
 
-func NewValidatorAggPersistorTask(db store.ValidatorAgg) pipeline.Task {
+func NewValidatorAggPersistorTask(validatorAggDb store.ValidatorAgg) pipeline.Task {
 	return &validatorAggPersistorTask{
-		db: db,
+		validatorAggDb: validatorAggDb,
 	}
 }
 
 type validatorAggPersistorTask struct {
-	db store.ValidatorAgg
+	validatorAggDb store.ValidatorAgg
 }
 
 func (t *validatorAggPersistorTask) GetName() string {
@@ -185,13 +185,13 @@ func (t *validatorAggPersistorTask) Run(ctx context.Context, p pipeline.Payload)
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
 
 	for _, aggregate := range payload.NewValidatorAggregates {
-		if err := t.db.Create(&aggregate); err != nil {
+		if err := t.validatorAggDb.Create(&aggregate); err != nil {
 			return err
 		}
 	}
 
 	for _, aggregate := range payload.UpdatedValidatorAggregates {
-		if err := t.db.Save(&aggregate); err != nil {
+		if err := t.validatorAggDb.Save(&aggregate); err != nil {
 			return err
 		}
 	}
@@ -200,14 +200,14 @@ func (t *validatorAggPersistorTask) Run(ctx context.Context, p pipeline.Payload)
 }
 
 // NewEventSeqPersistorTask is responsible for storing events info to persistence layer
-func NewEventSeqPersistorTask(db store.EventSeq) pipeline.Task {
+func NewEventSeqPersistorTask(eventSeqDb store.EventSeq) pipeline.Task {
 	return &eventSeqPersistorTask{
-		db: db,
+		eventSeqDb: eventSeqDb,
 	}
 }
 
 type eventSeqPersistorTask struct {
-	db store.EventSeq
+	eventSeqDb store.EventSeq
 }
 
 func (t *eventSeqPersistorTask) GetName() string {
@@ -222,13 +222,13 @@ func (t *eventSeqPersistorTask) Run(ctx context.Context, p pipeline.Payload) err
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
 
 	for _, sequence := range payload.NewEventSequences {
-		if err := t.db.Create(&sequence); err != nil {
+		if err := t.eventSeqDb.Create(&sequence); err != nil {
 			return err
 		}
 	}
 
 	for _, sequence := range payload.UpdatedEventSequences {
-		if err := t.db.Save(&sequence); err != nil {
+		if err := t.eventSeqDb.Save(&sequence); err != nil {
 			return err
 		}
 	}
@@ -237,14 +237,14 @@ func (t *eventSeqPersistorTask) Run(ctx context.Context, p pipeline.Payload) err
 }
 
 // NewAccountEraSeqPersistorTask is responsible for storing account era info to persistence layer
-func NewAccountEraSeqPersistorTask(db store.AccountEraSeq) pipeline.Task {
+func NewAccountEraSeqPersistorTask(accountEraSeqDb store.AccountEraSeq) pipeline.Task {
 	return &accountEraSeqPersistorTask{
-		db: db,
+		accountEraSeqDb: accountEraSeqDb,
 	}
 }
 
 type accountEraSeqPersistorTask struct {
-	db store.AccountEraSeq
+	accountEraSeqDb store.AccountEraSeq
 }
 
 func (t *accountEraSeqPersistorTask) GetName() string {
@@ -264,13 +264,13 @@ func (t *accountEraSeqPersistorTask) Run(ctx context.Context, p pipeline.Payload
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
 
 	for _, sequence := range payload.NewAccountEraSequences {
-		if err := t.db.Create(&sequence); err != nil {
+		if err := t.accountEraSeqDb.Create(&sequence); err != nil {
 			return err
 		}
 	}
 
 	for _, sequence := range payload.UpdatedAccountEraSequences {
-		if err := t.db.Save(&sequence); err != nil {
+		if err := t.accountEraSeqDb.Save(&sequence); err != nil {
 			return err
 		}
 	}

@@ -20,14 +20,14 @@ var (
 	_ pipeline.Task = (*validatorAggCreatorTask)(nil)
 )
 
-func NewValidatorAggCreatorTask(db store.ValidatorAgg) *validatorAggCreatorTask {
+func NewValidatorAggCreatorTask(validatorAggDb store.ValidatorAgg) *validatorAggCreatorTask {
 	return &validatorAggCreatorTask{
-		db: db,
+		validatorAggDb: validatorAggDb,
 	}
 }
 
 type validatorAggCreatorTask struct {
-	db store.ValidatorAgg
+	validatorAggDb store.ValidatorAgg
 }
 
 func (t *validatorAggCreatorTask) GetName() string {
@@ -46,7 +46,7 @@ func (t *validatorAggCreatorTask) Run(ctx context.Context, p pipeline.Payload) e
 	var newValidatorAggs []model.ValidatorAgg
 	var updatedValidatorAggs []model.ValidatorAgg
 	for stashAccount, validatorData := range parsedValidators {
-		existing, err := t.db.FindByStashAccount(stashAccount)
+		existing, err := t.validatorAggDb.FindByStashAccount(stashAccount)
 		if err != nil {
 			if err == store.ErrNotFound {
 				// Create new

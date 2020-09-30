@@ -153,7 +153,7 @@ func (p *indexingPipeline) Start(ctx context.Context, indexCfg IndexConfig) erro
 		indexVersion: indexVersion,
 		startHeight:  source.startHeight,
 		endHeight:    source.endHeight,
-		store:        p.reportsDb,
+		reportsDb:    p.reportsDb,
 	}
 
 	if err := reportCreator.create(); err != nil {
@@ -229,7 +229,7 @@ func (p *indexingPipeline) Backfill(ctx context.Context, backfillCfg BackfillCon
 		indexVersion: indexVersion,
 		startHeight:  source.startHeight,
 		endHeight:    source.endHeight,
-		store:        p.reportsDb,
+		reportsDb:    p.reportsDb,
 	}
 
 	versionIds := p.status.missingVersionIds

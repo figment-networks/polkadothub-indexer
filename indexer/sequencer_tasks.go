@@ -27,14 +27,14 @@ var (
 )
 
 // NewBlockSeqCreatorTask creates block sequences
-func NewBlockSeqCreatorTask(db store.BlockSeq) *blockSeqCreatorTask {
+func NewBlockSeqCreatorTask(blockSeqDb store.BlockSeq) *blockSeqCreatorTask {
 	return &blockSeqCreatorTask{
-		db: db,
+		blockSeqDb: blockSeqDb,
 	}
 }
 
 type blockSeqCreatorTask struct {
-	db store.BlockSeq
+	blockSeqDb store.BlockSeq
 }
 
 func (t *blockSeqCreatorTask) GetName() string {
@@ -53,7 +53,7 @@ func (t *blockSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) error
 		return err
 	}
 
-	blockSeq, err := t.db.FindByHeight(payload.CurrentHeight)
+	blockSeq, err := t.blockSeqDb.FindByHeight(payload.CurrentHeight)
 	if err != nil {
 		if err == store.ErrNotFound {
 			payload.NewBlockSequence = mappedBlockSeq
