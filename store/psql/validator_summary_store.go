@@ -19,8 +19,18 @@ type ValidatorSummaryStore struct {
 	baseStore
 }
 
-// Find find validator summary by query
-func (s ValidatorSummaryStore) Find(query *model.ValidatorSummary) (*model.ValidatorSummary, error) {
+// CreateSummary creates the validator aggregate
+func (s ValidatorSummaryStore) CreateSummary(val *model.ValidatorSummary) error {
+	return s.Create(val)
+}
+
+// SaveSummary creates the validator aggregate
+func (s ValidatorSummaryStore) SaveSummary(val *model.ValidatorSummary) error {
+	return s.Save(val)
+}
+
+// FindSummary find validator summary by query
+func (s ValidatorSummaryStore) FindSummary(query *model.ValidatorSummary) (*model.ValidatorSummary, error) {
 	var result model.ValidatorSummary
 
 	err := s.db.
@@ -55,8 +65,8 @@ func (s *ValidatorSummaryStore) FindActivityPeriods(interval types.SummaryInterv
 	return res, nil
 }
 
-// FindSummary gets summary for validator summary
-func (s *ValidatorSummaryStore) FindSummary(interval types.SummaryInterval, period string) ([]store.ValidatorSummaryRow, error) {
+// FindSummaries gets summary for validator summary
+func (s *ValidatorSummaryStore) FindSummaries(interval types.SummaryInterval, period string) ([]store.ValidatorSummaryRow, error) {
 	defer logQueryDuration(time.Now(), "ValidatorSummaryStore_FindSummary")
 
 	rows, err := s.db.
@@ -100,8 +110,8 @@ func (s *ValidatorSummaryStore) FindSummaryByStashAccount(stashAccount string, i
 	return res, nil
 }
 
-// FindMostRecent finds most recent validator summary
-func (s *ValidatorSummaryStore) FindMostRecent() (*model.ValidatorSummary, error) {
+// FindMostRecentSummary finds most recent validator summary
+func (s *ValidatorSummaryStore) FindMostRecentSummary() (*model.ValidatorSummary, error) {
 	validatorSummary := &model.ValidatorSummary{}
 	err := findMostRecent(s.db, "time_bucket", validatorSummary)
 	return validatorSummary, checkErr(err)
@@ -123,8 +133,8 @@ func (s *ValidatorSummaryStore) FindMostRecentByInterval(interval types.SummaryI
 	return &result, checkErr(err)
 }
 
-// DeleteOlderThan deleted validator summary records older than given threshold
-func (s *ValidatorSummaryStore) DeleteOlderThan(interval types.SummaryInterval, purgeThreshold time.Time) (*int64, error) {
+// DeleteSummaryOlderThan deleted validator summary records older than given threshold
+func (s *ValidatorSummaryStore) DeleteSummaryOlderThan(interval types.SummaryInterval, purgeThreshold time.Time) (*int64, error) {
 	statement := s.db.
 		Unscoped().
 		Where("time_interval = ? AND time_bucket < ?", interval, purgeThreshold).

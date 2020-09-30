@@ -17,7 +17,7 @@ func NewGetSummaryUseCase(validatorSummaryDb store.ValidatorSummary) *getSummary
 
 func (uc *getSummaryUseCase) Execute(interval types.SummaryInterval, period string, stashAccount string) (interface{}, error) {
 	if stashAccount == "" {
-		return uc.validatorSummaryDb.FindSummary(interval, period)
+		return uc.validatorSummaryDb.FindSummaries(interval, period)
 	}
 	return uc.validatorSummaryDb.FindSummaryByStashAccount(stashAccount, interval, period)
 }

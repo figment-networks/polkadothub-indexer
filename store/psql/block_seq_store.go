@@ -21,9 +21,19 @@ type BlockSeqStore struct {
 	baseStore
 }
 
+// Create creates the block
+func (s BlockSeqStore) CreateSeq(block *model.BlockSeq) error {
+	return s.Create(block)
+}
+
+// Save saves the block
+func (s BlockSeqStore) SaveSeq(block *model.BlockSeq) error {
+	return s.Save(block)
+}
+
 // CreateIfNotExists creates the block if it does not exist
 func (s BlockSeqStore) CreateIfNotExists(block *model.BlockSeq) error {
-	_, err := s.FindByHeight(block.Height)
+	_, err := s.FindSeqByHeight(block.Height)
 	if isNotFound(err) {
 		return s.Create(block)
 	}
@@ -42,8 +52,8 @@ func (s BlockSeqStore) FindByID(id int64) (*model.BlockSeq, error) {
 	return s.FindBy("id", id)
 }
 
-// FindByHeight returns a block with the matching height
-func (s BlockSeqStore) FindByHeight(height int64) (*model.BlockSeq, error) {
+// FindSeqByHeight returns a block with the matching height
+func (s BlockSeqStore) FindSeqByHeight(height int64) (*model.BlockSeq, error) {
 	return s.FindBy("height", height)
 }
 
@@ -64,8 +74,8 @@ type GetAvgTimesForIntervalRow struct {
 	Avg          float64 `json:"avg"`
 }
 
-// FindMostRecent finds most recent block sequence
-func (s *BlockSeqStore) FindMostRecent() (*model.BlockSeq, error) {
+// FindMostRecentSeq finds most recent block sequence
+func (s *BlockSeqStore) FindMostRecentSeq() (*model.BlockSeq, error) {
 	blockSeq := &model.BlockSeq{}
 	if err := findMostRecent(s.db, "time", blockSeq); err != nil {
 		return nil, err
@@ -73,8 +83,8 @@ func (s *BlockSeqStore) FindMostRecent() (*model.BlockSeq, error) {
 	return blockSeq, nil
 }
 
-// DeleteOlderThan deletes block sequence older than given threshold
-func (s *BlockSeqStore) DeleteOlderThan(purgeThreshold time.Time, activityPeriods []store.ActivityPeriodRow) (*int64, error) {
+// DeleteSeqOlderThan deletes block sequence older than given threshold
+func (s *BlockSeqStore) DeleteSeqOlderThan(purgeThreshold time.Time, activityPeriods []store.ActivityPeriodRow) (*int64, error) {
 	tx := s.db.
 		Unscoped()
 

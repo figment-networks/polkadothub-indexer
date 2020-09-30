@@ -46,7 +46,7 @@ func (t *validatorAggCreatorTask) Run(ctx context.Context, p pipeline.Payload) e
 	var newValidatorAggs []model.ValidatorAgg
 	var updatedValidatorAggs []model.ValidatorAgg
 	for stashAccount, validatorData := range parsedValidators {
-		existing, err := t.validatorAggDb.FindByStashAccount(stashAccount)
+		existing, err := t.validatorAggDb.FindAggByStashAccount(stashAccount)
 		if err != nil {
 			if err == store.ErrNotFound {
 				// Create new

@@ -7,7 +7,7 @@ import (
 )
 
 type AccountEraSeq interface {
-	BaseStore
+	baseStore
 	DeleteOlderThan(purgeThreshold time.Time) (*int64, error)
 	FindByEra(era int64) ([]model.AccountEraSeq, error)
 	FindByEraAndStashAccount(era int64, stash string) (*model.AccountEraSeq, error)

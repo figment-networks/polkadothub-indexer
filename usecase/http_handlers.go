@@ -1,9 +1,6 @@
 package usecase
 
 import (
-	"fmt"
-	"reflect"
-
 	"github.com/figment-networks/polkadothub-indexer/client"
 	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/types"
@@ -15,38 +12,20 @@ import (
 	"github.com/figment-networks/polkadothub-indexer/usecase/validator"
 )
 
-type HttpHandlerParams struct {
-	Client                *client.Client
-	AccountEraSeqDb       store.AccountEraSeq
-	BlockSeqDb            store.BlockSeq
-	BlockSummaryDb        store.BlockSummary
-	EventSeqDb            store.EventSeq
-	SyncablesDb           store.Syncables
-	ValidatorAggDb        store.ValidatorAgg
-	ValidatorEraSeqDb     store.ValidatorEraSeq
-	ValidatorSessionSeqDb store.ValidatorSessionSeq
-	ValidatorSummaryDb    store.ValidatorSummary
-}
-
-func NewHttpHandlers(b *HttpHandlerParams) (*HttpHandlers, error) {
-	err := b.validate()
-	if err != nil {
-		return nil, err
-	}
-
+func NewHttpHandlers(cli *client.Client, accountDb store.Accounts, blockDb store.Blocks, eventDb store.Events, syncableDb store.Syncables, validatorDb store.Validators) (*HttpHandlers, error) {
 	return &HttpHandlers{
 		Health:                     health.NewHealthHttpHandler(),
-		GetStatus:                  chain.NewGetStatusHttpHandler(b.Client, b.SyncablesDb),
-		GetBlockByHeight:           block.NewGetByHeightHttpHandler(b.Client, b.SyncablesDb),
-		GetBlockTimes:              block.NewGetBlockTimesHttpHandler(b.BlockSeqDb),
-		GetBlockSummary:            block.NewGetBlockSummaryHttpHandler(b.BlockSummaryDb),
-		GetTransactionsByHeight:    transaction.NewGetByHeightHttpHandler(b.Client, b.SyncablesDb),
-		GetAccountByHeight:         account.NewGetByHeightHttpHandler(b.Client, b.SyncablesDb),
-		GetAccountDetails:          account.NewGetDetailsHttpHandler(b.Client, b.AccountEraSeqDb, b.EventSeqDb),
-		GetValidatorsByHeight:      validator.NewGetByHeightHttpHandler(b.SyncablesDb, b.ValidatorEraSeqDb, b.ValidatorSessionSeqDb),
-		GetValidatorByStashAccount: validator.NewGetByStashAccountHttpHandler(b.AccountEraSeqDb, b.ValidatorAggDb, b.ValidatorEraSeqDb, b.ValidatorSessionSeqDb),
-		GetValidatorSummary:        validator.NewGetSummaryHttpHandler(b.ValidatorSummaryDb),
-		GetValidatorsForMinHeight:  validator.NewGetForMinHeightHttpHandler(b.SyncablesDb, b.ValidatorAggDb),
+		GetStatus:                  chain.NewGetStatusHttpHandler(cli, syncableDb),
+		GetBlockByHeight:           block.NewGetByHeightHttpHandler(cli, syncableDb),
+		GetBlockTimes:              block.NewGetBlockTimesHttpHandler(blockDb),
+		GetBlockSummary:            block.NewGetBlockSummaryHttpHandler(blockDb),
+		GetTransactionsByHeight:    transaction.NewGetByHeightHttpHandler(cli, syncableDb),
+		GetAccountByHeight:         account.NewGetByHeightHttpHandler(cli, syncableDb),
+		GetAccountDetails:          account.NewGetDetailsHttpHandler(cli, accountDb, eventDb),
+		GetValidatorsByHeight:      validator.NewGetByHeightHttpHandler(syncableDb, validatorDb),
+		GetValidatorByStashAccount: validator.NewGetByStashAccountHttpHandler(accountDb, validatorDb),
+		GetValidatorSummary:        validator.NewGetSummaryHttpHandler(validatorDb),
+		GetValidatorsForMinHeight:  validator.NewGetForMinHeightHttpHandler(syncableDb, validatorDb),
 	}, nil
 }
 
@@ -63,20 +42,4 @@ type HttpHandlers struct {
 	GetValidatorByStashAccount types.HttpHandler
 	GetValidatorSummary        types.HttpHandler
 	GetValidatorsForMinHeight  types.HttpHandler
-}
-
-func (b *HttpHandlerParams) validate() error {
-	if b == nil {
-		return fmt.Errorf("HttpHandlerParams cannot be nil")
-	}
-
-	v := reflect.ValueOf(*b)
-	typeOfS := v.Type()
-	for i := 0; i < v.NumField(); i++ {
-		if v.Field(i).IsZero() {
-			return fmt.Errorf("HttpHandlerParams param %v is required", typeOfS.Field(i).Name)
-		}
-	}
-
-	return nil
 }

@@ -18,13 +18,14 @@ type ValidatorSessionSeqStore struct {
 	baseStore
 }
 
-// CreateIfNotExists creates the validator if it does not exist
-func (s ValidatorSessionSeqStore) CreateIfNotExists(validator *model.ValidatorSessionSeq) error {
-	_, err := s.FindByHeight(validator.Session)
-	if isNotFound(err) {
-		return s.Create(validator)
-	}
-	return nil
+// CreateSessionSeq creates the validator aggregate
+func (s ValidatorSessionSeqStore) CreateSessionSeq(val *model.ValidatorSessionSeq) error {
+	return s.Create(val)
+}
+
+// SaveSessionSeq creates the validator aggregate
+func (s ValidatorSessionSeqStore) SaveSessionSeq(val *model.ValidatorSessionSeq) error {
+	return s.Save(val)
 }
 
 // FindByHeightAndStashAccount finds validator by height and stash account
@@ -61,8 +62,8 @@ func (s ValidatorSessionSeqStore) FindBySessionAndStashAccount(session int64, st
 	return &result, checkErr(err)
 }
 
-// FindByHeight finds validator session sequences by height
-func (s ValidatorSessionSeqStore) FindByHeight(h int64) ([]model.ValidatorSessionSeq, error) {
+// FindSessionSeqsByHeight finds validator session sequences by height
+func (s ValidatorSessionSeqStore) FindSessionSeqsByHeight(h int64) ([]model.ValidatorSessionSeq, error) {
 	var result []model.ValidatorSessionSeq
 
 	err := s.db.
@@ -73,7 +74,7 @@ func (s ValidatorSessionSeqStore) FindByHeight(h int64) ([]model.ValidatorSessio
 	return result, checkErr(err)
 }
 
-// FindByHeight finds validator session sequences by session
+// FindBySession finds validator session sequences by session
 func (s ValidatorSessionSeqStore) FindBySession(session int64) ([]model.ValidatorSessionSeq, error) {
 	q := model.ValidatorSessionSeq{
 		SessionSequence: &model.SessionSequence{
@@ -90,8 +91,8 @@ func (s ValidatorSessionSeqStore) FindBySession(session int64) ([]model.Validato
 	return result, checkErr(err)
 }
 
-// FindLastByStashAccount finds last validator session sequences for given stash account
-func (s ValidatorSessionSeqStore) FindLastByStashAccount(stashAccount string, limit int64) ([]model.ValidatorSessionSeq, error) {
+// FindLastSessionSeqByStashAccount finds last validator session sequences for given stash account
+func (s ValidatorSessionSeqStore) FindLastSessionSeqByStashAccount(stashAccount string, limit int64) ([]model.ValidatorSessionSeq, error) {
 	q := model.ValidatorSessionSeq{
 		StashAccount: stashAccount,
 	}
@@ -107,8 +108,8 @@ func (s ValidatorSessionSeqStore) FindLastByStashAccount(stashAccount string, li
 	return result, checkErr(err)
 }
 
-// FindMostRecent finds most recent validator session sequence
-func (s *ValidatorSessionSeqStore) FindMostRecent() (*model.ValidatorSessionSeq, error) {
+// FindMostRecentSessionSeq finds most recent validator session sequence
+func (s *ValidatorSessionSeqStore) FindMostRecentSessionSeq() (*model.ValidatorSessionSeq, error) {
 	validatorSeq := &model.ValidatorSessionSeq{}
 	if err := findMostRecent(s.db, "time", validatorSeq); err != nil {
 		return nil, err
@@ -116,8 +117,8 @@ func (s *ValidatorSessionSeqStore) FindMostRecent() (*model.ValidatorSessionSeq,
 	return validatorSeq, nil
 }
 
-// DeleteOlderThan deletes validator sequence older than given threshold
-func (s *ValidatorSessionSeqStore) DeleteOlderThan(purgeThreshold time.Time) (*int64, error) {
+// DeleteSessionSeqsOlderThan deletes validator sequence older than given threshold
+func (s *ValidatorSessionSeqStore) DeleteSessionSeqsOlderThan(purgeThreshold time.Time) (*int64, error) {
 	tx := s.db.
 		Unscoped().
 		Where("time < ?", purgeThreshold).
@@ -130,8 +131,8 @@ func (s *ValidatorSessionSeqStore) DeleteOlderThan(purgeThreshold time.Time) (*i
 	return &tx.RowsAffected, nil
 }
 
-// Summarize gets the summarized version of validator sequences
-func (s *ValidatorSessionSeqStore) Summarize(interval types.SummaryInterval, activityPeriods []store.ActivityPeriodRow) ([]model.ValidatorSessionSeqSummary, error) {
+// SummarizeSessionSeqs gets the summarized version of validator sequences
+func (s *ValidatorSessionSeqStore) SummarizeSessionSeqs(interval types.SummaryInterval, activityPeriods []store.ActivityPeriodRow) ([]model.ValidatorSessionSeqSummary, error) {
 	defer logQueryDuration(time.Now(), "ValidatorSessionSeqStore_Summarize")
 
 	tx := s.db.

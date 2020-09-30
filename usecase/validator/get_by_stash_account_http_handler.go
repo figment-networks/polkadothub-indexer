@@ -17,19 +17,14 @@ var (
 type getByStashAccountHttpHandler struct {
 	useCase *getByStashAccountUseCase
 
-	accountEraSeqDb       store.AccountEraSeq
-	validatorAggDb        store.ValidatorAgg
-	validatorEraSeqDb     store.ValidatorEraSeq
-	validatorSessionSeqDb store.ValidatorSessionSeq
+	accountEraSeqDb store.AccountEraSeq
+	validatorDb     store.Validators
 }
 
-func NewGetByStashAccountHttpHandler(accountEraSeqDb store.AccountEraSeq, validatorAggDb store.ValidatorAgg, validatorEraSeqDb store.ValidatorEraSeq,
-	validatorSessionSeqDb store.ValidatorSessionSeq) *getByStashAccountHttpHandler {
+func NewGetByStashAccountHttpHandler(accountEraSeqDb store.AccountEraSeq, validatorDb store.Validators) *getByStashAccountHttpHandler {
 	return &getByStashAccountHttpHandler{
-		accountEraSeqDb:       accountEraSeqDb,
-		validatorAggDb:        validatorAggDb,
-		validatorEraSeqDb:     validatorEraSeqDb,
-		validatorSessionSeqDb: validatorSessionSeqDb,
+		accountEraSeqDb: accountEraSeqDb,
+		validatorDb:     validatorDb,
 	}
 }
 
@@ -66,7 +61,7 @@ func (h *getByStashAccountHttpHandler) Handle(c *gin.Context) {
 
 func (h *getByStashAccountHttpHandler) getUseCase() *getByStashAccountUseCase {
 	if h.useCase == nil {
-		return NewGetByStashAccountUseCase(h.accountEraSeqDb, h.validatorAggDb, h.validatorEraSeqDb, h.validatorSessionSeqDb)
+		return NewGetByStashAccountUseCase(h.accountEraSeqDb, h.validatorDb)
 
 	}
 	return h.useCase

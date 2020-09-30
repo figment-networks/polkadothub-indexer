@@ -19,8 +19,18 @@ type BlockSummaryStore struct {
 	baseStore
 }
 
-// Find find block summary by query
-func (s BlockSummaryStore) Find(query *model.BlockSummary) (*model.BlockSummary, error) {
+// CreateSummary creates the summary
+func (s BlockSummaryStore) CreateSummary(val *model.BlockSummary) error {
+	return s.Create(val)
+}
+
+// SaveSummary saves the summary
+func (s BlockSummaryStore) SaveSummary(val *model.BlockSummary) error {
+	return s.Save(val)
+}
+
+// FindSummary find block summary by query
+func (s BlockSummaryStore) FindSummary(query *model.BlockSummary) (*model.BlockSummary, error) {
 	var result model.BlockSummary
 
 	err := s.db.
@@ -31,8 +41,8 @@ func (s BlockSummaryStore) Find(query *model.BlockSummary) (*model.BlockSummary,
 	return &result, checkErr(err)
 }
 
-// FindMostRecent finds most recent block summary
-func (s *BlockSummaryStore) FindMostRecent() (*model.BlockSummary, error) {
+// FindMostRecentSummary finds most recent block summary
+func (s *BlockSummaryStore) FindMostRecentSummary() (*model.BlockSummary, error) {
 	blockSummary := &model.BlockSummary{}
 	err := findMostRecent(s.db, "time_bucket", blockSummary)
 	return blockSummary, checkErr(err)
@@ -78,8 +88,8 @@ func (s *BlockSummaryStore) FindActivityPeriods(interval types.SummaryInterval, 
 	return res, nil
 }
 
-// FindSummary Gets summary of block sequences
-func (s *BlockSummaryStore) FindSummary(interval types.SummaryInterval, period string) ([]model.BlockSummary, error) {
+// FindSummaries Gets summary of block sequences
+func (s *BlockSummaryStore) FindSummaries(interval types.SummaryInterval, period string) ([]model.BlockSummary, error) {
 	defer logQueryDuration(time.Now(), "BlockSummaryStore_FindSummary")
 
 	rows, err := s.db.

@@ -17,18 +17,14 @@ var (
 type getByHeightHttpHandler struct {
 	useCase *getByHeightUseCase
 
-	syncablesDb           store.Syncables
-	validatorEraSeqDb     store.ValidatorEraSeq
-	validatorSessionSeqDb store.ValidatorSessionSeq
+	syncablesDb store.Syncables
+	validatorDb store.Validators
 }
 
-func NewGetByHeightHttpHandler(syncablesDb store.Syncables,
-	validatorEraSeqDb store.ValidatorEraSeq, validatorSessionSeqDb store.ValidatorSessionSeq,
-) *getByHeightHttpHandler {
+func NewGetByHeightHttpHandler(syncablesDb store.Syncables, validatorDb store.Validators) *getByHeightHttpHandler {
 	return &getByHeightHttpHandler{
-		syncablesDb:           syncablesDb,
-		validatorEraSeqDb:     validatorEraSeqDb,
-		validatorSessionSeqDb: validatorSessionSeqDb,
+		syncablesDb: syncablesDb,
+		validatorDb: validatorDb,
 	}
 }
 
@@ -57,7 +53,7 @@ func (h *getByHeightHttpHandler) Handle(c *gin.Context) {
 
 func (h *getByHeightHttpHandler) getUseCase() *getByHeightUseCase {
 	if h.useCase == nil {
-		return NewGetByHeightUseCase(h.syncablesDb, h.validatorEraSeqDb, h.validatorSessionSeqDb)
+		return NewGetByHeightUseCase(h.syncablesDb, h.validatorDb)
 	}
 	return h.useCase
 }

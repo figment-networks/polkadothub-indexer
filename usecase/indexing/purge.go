@@ -81,7 +81,7 @@ func (uc *purgeUseCase) purgeValidators(currentIndexVersion int64) error {
 }
 
 func (uc *purgeUseCase) purgeBlockSequences(currentIndexVersion int64) error {
-	blockSeq, err := uc.blockSeqDb.FindMostRecent()
+	blockSeq, err := uc.blockSeqDb.FindMostRecentSeq()
 	if err != nil {
 		return err
 	}
@@ -104,7 +104,7 @@ func (uc *purgeUseCase) purgeBlockSequences(currentIndexVersion int64) error {
 
 	logger.Info(fmt.Sprintf("purging summarized block sequences... [older than=%s]", purgeThresholdFromLastSeq))
 
-	deletedCount, err := uc.blockSeqDb.DeleteOlderThan(purgeThresholdFromLastSeq, activityPeriods)
+	deletedCount, err := uc.blockSeqDb.DeleteSeqOlderThan(purgeThresholdFromLastSeq, activityPeriods)
 	if err != nil {
 		return err
 	}
@@ -144,13 +144,13 @@ func (uc *purgeUseCase) purgeBlockSummaries(interval types.SummaryInterval, purg
 }
 
 func (uc *purgeUseCase) purgeValidatorSessionSequences(currentIndexVersion int64) error {
-	validatorSeq, err := uc.validatorSessionSeqDb.FindMostRecent()
+	validatorSeq, err := uc.validatorSessionSeqDb.FindMostRecentSessionSeq()
 	if err != nil {
 		return err
 	}
 	lastSeqTime := validatorSeq.Time.Time
 
-	validatorSummary, err := uc.validatorSummaryDb.FindMostRecent()
+	validatorSummary, err := uc.validatorSummaryDb.FindMostRecentSummary()
 	if err != nil {
 		return err
 	}
@@ -175,7 +175,7 @@ func (uc *purgeUseCase) purgeValidatorSessionSequences(currentIndexVersion int64
 
 	logger.Info(fmt.Sprintf("purging validator sequences... [older than=%s]", purgeThreshold))
 
-	deletedCount, err := uc.validatorSessionSeqDb.DeleteOlderThan(purgeThreshold)
+	deletedCount, err := uc.validatorSessionSeqDb.DeleteSessionSeqsOlderThan(purgeThreshold)
 	if err != nil {
 		return err
 	}
@@ -204,7 +204,7 @@ func (uc *purgeUseCase) purgeValidatorSummaries(interval types.SummaryInterval, 
 
 	logger.Info(fmt.Sprintf("purging validator summaries... [interval=%s] [older than=%s]", interval, purgeThreshold))
 
-	deletedCount, err := uc.validatorSummaryDb.DeleteOlderThan(interval, purgeThreshold)
+	deletedCount, err := uc.validatorSummaryDb.DeleteSummaryOlderThan(interval, purgeThreshold)
 	if err != nil {
 		return err
 	}

@@ -18,13 +18,14 @@ type ValidatorEraSeqStore struct {
 	baseStore
 }
 
-// CreateIfNotExists creates the validator if it does not exist
-func (s ValidatorEraSeqStore) CreateIfNotExists(validator *model.ValidatorEraSeq) error {
-	_, err := s.FindByHeight(validator.Era)
-	if isNotFound(err) {
-		return s.Create(validator)
-	}
-	return nil
+// CreateEraSeq creates the validator aggregate
+func (s ValidatorEraSeqStore) CreateEraSeq(val *model.ValidatorEraSeq) error {
+	return s.Create(val)
+}
+
+// SaveEraSeq creates the validator aggregate
+func (s ValidatorEraSeqStore) SaveEraSeq(val *model.ValidatorEraSeq) error {
+	return s.Save(val)
 }
 
 // FindByHeightAndStashAccount finds validator by height and stash account
@@ -61,8 +62,8 @@ func (s ValidatorEraSeqStore) FindByEraAndStashAccount(era int64, stash string) 
 	return &result, checkErr(err)
 }
 
-// FindByHeight finds validator era sequences by height
-func (s ValidatorEraSeqStore) FindByHeight(h int64) ([]model.ValidatorEraSeq, error) {
+// FindEraSeqsByHeight finds validator era sequences by height
+func (s ValidatorEraSeqStore) FindEraSeqsByHeight(h int64) ([]model.ValidatorEraSeq, error) {
 	var result []model.ValidatorEraSeq
 
 	err := s.db.
@@ -73,7 +74,7 @@ func (s ValidatorEraSeqStore) FindByHeight(h int64) ([]model.ValidatorEraSeq, er
 	return result, checkErr(err)
 }
 
-// FindByHeight finds validator era sequences by era
+// FindByEra finds validator era sequences by era
 func (s ValidatorEraSeqStore) FindByEra(era int64) ([]model.ValidatorEraSeq, error) {
 	q := model.ValidatorEraSeq{
 		EraSequence: &model.EraSequence{
@@ -90,8 +91,8 @@ func (s ValidatorEraSeqStore) FindByEra(era int64) ([]model.ValidatorEraSeq, err
 	return result, checkErr(err)
 }
 
-// FindMostRecent finds most recent validator era sequence
-func (s *ValidatorEraSeqStore) FindMostRecent() (*model.ValidatorEraSeq, error) {
+// FindMostRecentEraSeq finds most recent validator era sequence
+func (s *ValidatorEraSeqStore) FindMostRecentEraSeq() (*model.ValidatorEraSeq, error) {
 	validatorSeq := &model.ValidatorEraSeq{}
 	if err := findMostRecent(s.db, "time", validatorSeq); err != nil {
 		return nil, err
@@ -99,8 +100,8 @@ func (s *ValidatorEraSeqStore) FindMostRecent() (*model.ValidatorEraSeq, error) 
 	return validatorSeq, nil
 }
 
-// FindLastByStashAccount finds last validator era sequences for given stash account
-func (s ValidatorEraSeqStore) FindLastByStashAccount(stashAccount string, limit int64) ([]model.ValidatorEraSeq, error) {
+// FindLastEraSeqByStashAccount finds last validator era sequences for given stash account
+func (s ValidatorEraSeqStore) FindLastEraSeqByStashAccount(stashAccount string, limit int64) ([]model.ValidatorEraSeq, error) {
 	q := model.ValidatorEraSeq{
 		StashAccount: stashAccount,
 	}
@@ -116,8 +117,8 @@ func (s ValidatorEraSeqStore) FindLastByStashAccount(stashAccount string, limit 
 	return result, checkErr(err)
 }
 
-// DeleteOlderThan deletes validator sequence older than given threshold
-func (s *ValidatorEraSeqStore) DeleteOlderThan(purgeThreshold time.Time) (*int64, error) {
+// DeleteEraSeqsOlderThan deletes validator sequence older than given threshold
+func (s *ValidatorEraSeqStore) DeleteEraSeqsOlderThan(purgeThreshold time.Time) (*int64, error) {
 	tx := s.db.
 		Unscoped().
 		Where("time < ?", purgeThreshold).
@@ -130,8 +131,8 @@ func (s *ValidatorEraSeqStore) DeleteOlderThan(purgeThreshold time.Time) (*int64
 	return &tx.RowsAffected, nil
 }
 
-// Summarize gets the summarized version of validator sequences
-func (s *ValidatorEraSeqStore) Summarize(interval types.SummaryInterval, activityPeriods []store.ActivityPeriodRow) ([]model.ValidatorEraSeqSummary, error) {
+// SummarizeEraSeqs gets the summarized version of validator sequences
+func (s *ValidatorEraSeqStore) SummarizeEraSeqs(interval types.SummaryInterval, activityPeriods []store.ActivityPeriodRow) ([]model.ValidatorEraSeqSummary, error) {
 	defer logQueryDuration(time.Now(), "ValidatorEraSeqStore_Summarize")
 
 	tx := s.db.

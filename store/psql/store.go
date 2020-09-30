@@ -12,24 +12,56 @@ import (
 )
 
 var (
-	_ store.Store = (*Store)(nil)
+	_ store.Accounts   = (*accounts)(nil)
+	_ store.Blocks     = (*blocks)(nil)
+	_ store.Database   = (*database)(nil)
+	_ store.Events     = (*events)(nil)
+	_ store.Reports    = (*reports)(nil)
+	_ store.Validators = (*validators)(nil)
+	_ store.Syncables  = (*syncables)(nil)
 )
 
-// Store handles all database operations
 type Store struct {
-	db *gorm.DB
+	db         *gorm.DB
+	accounts   *accounts
+	blocks     *blocks
+	database   *database
+	events     *events
+	reports    *reports
+	syncables  *syncables
+	validators *validators
+}
 
-	AccountEraSeq       store.AccountEraSeq
-	BlockSeq            store.BlockSeq
-	BlockSummary        store.BlockSummary
-	Database            store.Database
-	EventSeq            store.EventSeq
-	Reports             store.Reports
-	Syncables           store.Syncables
-	ValidatorAgg        store.ValidatorAgg
-	ValidatorEraSeq     store.ValidatorEraSeq
-	ValidatorSessionSeq store.ValidatorSessionSeq
-	ValidatorSummary    store.ValidatorSummary
+type accounts struct {
+	*AccountEraSeqStore
+}
+
+type blocks struct {
+	*BlockSeqStore
+	*BlockSummaryStore
+}
+
+type database struct {
+	*DatabaseStore
+}
+
+type events struct {
+	*EventSeqStore
+}
+
+type reports struct {
+	*ReportsStore
+}
+
+type syncables struct {
+	*SyncablesStore
+}
+
+type validators struct {
+	*ValidatorAggStore
+	*ValidatorEraSeqStore
+	*ValidatorSessionSeqStore
+	*ValidatorSummaryStore
 }
 
 // New returns a new postgres store from the connection string
@@ -43,21 +75,6 @@ func New(connStr string) (*Store, error) {
 
 	return &Store{
 		db: conn,
-
-		Database:  NewDatabaseStore(conn),
-		Syncables: NewSyncablesStore(conn),
-		Reports:   NewReportsStore(conn),
-
-		BlockSeq:            NewBlockSeqStore(conn),
-		ValidatorSessionSeq: NewValidatorSessionSeqStore(conn),
-		ValidatorEraSeq:     NewValidatorEraSeqStore(conn),
-		AccountEraSeq:       NewAccountEraSeqStore(conn),
-		EventSeq:            NewEventSeqStore(conn),
-
-		ValidatorAgg: NewValidatorAggStore(conn),
-
-		BlockSummary:     NewBlockSummaryStore(conn),
-		ValidatorSummary: NewValidatorSummaryStore(conn),
 	}, nil
 }
 
@@ -66,59 +83,78 @@ func (s *Store) Close() error {
 	return s.db.Close()
 }
 
-// GetAccountEraSeq gets AccountEraSeq
-func (s *Store) GetAccountEraSeq() store.AccountEraSeq {
-	return s.AccountEraSeq
+// GetAccounts gets accounts
+func (s *Store) GetAccounts() *accounts {
+	if s.accounts == nil {
+		s.accounts = &accounts{
+			NewAccountEraSeqStore(s.db),
+		}
+	}
+	return s.accounts
 }
 
-// GetBlockSeq gets BlockSeq
-func (s *Store) GetBlockSeq() store.BlockSeq {
-	return s.BlockSeq
+// GetBlocks gets blocks
+func (s *Store) GetBlocks() *blocks {
+	if s.blocks == nil {
+		s.blocks = &blocks{
+			NewBlockSeqStore(s.db),
+			NewBlockSummaryStore(s.db),
+		}
+	}
+	return s.blocks
 }
 
-// GetBlockSummary gets BlockSummary
-func (s *Store) GetBlockSummary() store.BlockSummary {
-	return s.BlockSummary
+// GetDatabase gets database
+func (s *Store) GetDatabase() *database {
+	if s.database == nil {
+		s.database = &database{
+			NewDatabaseStore(s.db),
+		}
+	}
+	return s.database
 }
 
-// GetDatabase gets Database
-func (s *Store) GetDatabase() store.Database {
-	return s.Database
+// GetEvents gets events
+func (s *Store) GetEvents() *events {
+	if s.events == nil {
+		s.events = &events{
+			NewEventSeqStore(s.db),
+		}
+	}
+	return s.events
 }
 
-// GetEventSeq gets EventSeq
-func (s *Store) GetEventSeq() store.EventSeq {
-	return s.EventSeq
+// GetReports gets reports
+func (s *Store) GetReports() *reports {
+	if s.reports == nil {
+		s.reports = &reports{
+			NewReportsStore(s.db),
+		}
+	}
+	return s.reports
 }
 
-// GetReports gets Reports
-func (s *Store) GetReports() store.Reports {
-	return s.Reports
+// GetSyncables gets syncables
+func (s *Store) GetSyncables() *syncables {
+	if s.syncables == nil {
+		s.syncables = &syncables{
+			NewSyncablesStore(s.db),
+		}
+	}
+	return s.syncables
 }
 
-// GetSyncables gets Syncables
-func (s *Store) GetSyncables() store.Syncables {
-	return s.Syncables
-}
-
-// GetValidatorAgg gets ValidatorAgg
-func (s *Store) GetValidatorAgg() store.ValidatorAgg {
-	return s.ValidatorAgg
-}
-
-// GetValidatorEraSeq gets ValidatorEraSeq
-func (s *Store) GetValidatorEraSeq() store.ValidatorEraSeq {
-	return s.ValidatorEraSeq
-}
-
-// GetValidatorSessionSeq gets ValidatorSessionSeq
-func (s *Store) GetValidatorSessionSeq() store.ValidatorSessionSeq {
-	return s.ValidatorSessionSeq
-}
-
-// GetValidatorSummary gets ValidatorSummary
-func (s *Store) GetValidatorSummary() store.ValidatorSummary {
-	return s.ValidatorSummary
+// GetValidators gets validators
+func (s *Store) GetValidators() *validators {
+	if s.validators == nil {
+		s.validators = &validators{
+			NewValidatorAggStore(s.db),
+			NewValidatorEraSeqStore(s.db),
+			NewValidatorSessionSeqStore(s.db),
+			NewValidatorSummaryStore(s.db),
+		}
+	}
+	return s.validators
 }
 
 // Test checks the connection status

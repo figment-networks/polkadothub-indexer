@@ -17,5 +17,5 @@ func NewGetBlockSummaryUseCase(blockSummaryDb store.BlockSummary) *getBlockSumma
 }
 
 func (uc *getBlockSummaryUseCase) Execute(interval types.SummaryInterval, period string) ([]model.BlockSummary, error) {
-	return uc.blockSummaryDb.FindSummary(interval, period)
+	return uc.blockSummaryDb.FindSummaries(interval, period)
 }

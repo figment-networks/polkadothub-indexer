@@ -12,24 +12,14 @@ func startServer(cfg *config.Config) error {
 		return err
 	}
 	defer client.Close()
-	db, err := initStore(cfg)
+
+	db, err := initPostgres(cfg)
 	if err != nil {
 		return err
 	}
 	defer db.Close()
 
-	httpHandlers, err := usecase.NewHttpHandlers(&usecase.HttpHandlerParams{
-		Client:                client,
-		AccountEraSeqDb:       db.GetAccountEraSeq(),
-		BlockSeqDb:            db.GetBlockSeq(),
-		BlockSummaryDb:        db.GetBlockSummary(),
-		EventSeqDb:            db.GetEventSeq(),
-		SyncablesDb:           db.GetSyncables(),
-		ValidatorAggDb:        db.GetValidatorAgg(),
-		ValidatorEraSeqDb:     db.GetValidatorEraSeq(),
-		ValidatorSessionSeqDb: db.GetValidatorSessionSeq(),
-		ValidatorSummaryDb:    db.GetValidatorSummary(),
-	})
+	httpHandlers, err := usecase.NewHttpHandlers(client, db.GetAccounts(), db.GetBlocks(), db.GetEvents(), db.GetSyncables(), db.GetValidators())
 	if err != nil {
 		return err
 	}

@@ -18,23 +18,15 @@ type summarizeWorkerHandler struct {
 
 	useCase *summarizeUseCase
 
-	blockSeqDb            store.BlockSeq
-	blockSummaryDb        store.BlockSummary
-	validatorEraSeqDb     store.ValidatorEraSeq
-	validatorSessionSeqDb store.ValidatorSessionSeq
-	validatorSummaryDb    store.ValidatorSummary
+	blockDb     store.Blocks
+	validatorDb store.Validators
 }
 
-func NewSummarizeWorkerHandler(cfg *config.Config, blockSeqDb store.BlockSeq, blockSummaryDb store.BlockSummary, validatorEraSeqDb store.ValidatorEraSeq,
-	validatorSessionSeqDb store.ValidatorSessionSeq, validatorSummaryDb store.ValidatorSummary,
-) *summarizeWorkerHandler {
+func NewSummarizeWorkerHandler(cfg *config.Config, blockDb store.Blocks, validatorDb store.Validators) *summarizeWorkerHandler {
 	return &summarizeWorkerHandler{
-		cfg:                   cfg,
-		blockSeqDb:            blockSeqDb,
-		blockSummaryDb:        blockSummaryDb,
-		validatorEraSeqDb:     validatorEraSeqDb,
-		validatorSessionSeqDb: validatorSessionSeqDb,
-		validatorSummaryDb:    validatorSummaryDb,
+		cfg:         cfg,
+		blockDb:     blockDb,
+		validatorDb: validatorDb,
 	}
 }
 
@@ -52,7 +44,7 @@ func (h *summarizeWorkerHandler) Handle() {
 
 func (h *summarizeWorkerHandler) getUseCase() *summarizeUseCase {
 	if h.useCase == nil {
-		return NewSummarizeUseCase(h.cfg, h.blockSeqDb, h.blockSummaryDb, h.validatorEraSeqDb, h.validatorSessionSeqDb, h.validatorSummaryDb)
+		return NewSummarizeUseCase(h.cfg, h.blockDb, h.validatorDb)
 	}
 	return h.useCase
 }

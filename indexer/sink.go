@@ -58,7 +58,7 @@ func (s *sink) Consume(ctx context.Context, p pipeline.Payload) error {
 
 func (s *sink) setProcessed(payload *payload) error {
 	payload.Syncable.MarkProcessed(s.versionNumber)
-	if err := s.syncablesDb.Save(payload.Syncable); err != nil {
+	if err := s.syncablesDb.SaveSyncable(payload.Syncable); err != nil {
 		return errors.Wrap(err, "failed saving syncable in sink")
 	}
 	return nil

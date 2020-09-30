@@ -69,11 +69,11 @@ func (t *blockSeqPersistorTask) Run(ctx context.Context, p pipeline.Payload) err
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
 
 	if payload.NewBlockSequence != nil {
-		return t.blockSeqDb.Create(payload.NewBlockSequence)
+		return t.blockSeqDb.CreateSeq(payload.NewBlockSequence)
 	}
 
 	if payload.UpdatedBlockSequence != nil {
-		return t.blockSeqDb.Save(payload.UpdatedBlockSequence)
+		return t.blockSeqDb.SaveSeq(payload.UpdatedBlockSequence)
 	}
 
 	return nil
@@ -107,13 +107,13 @@ func (t *validatorSessionSeqPersistorTask) Run(ctx context.Context, p pipeline.P
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
 
 	for _, sequence := range payload.NewValidatorSessionSequences {
-		if err := t.validatorSessionSeqDb.Create(&sequence); err != nil {
+		if err := t.validatorSessionSeqDb.CreateSessionSeq(&sequence); err != nil {
 			return err
 		}
 	}
 
 	for _, sequence := range payload.UpdatedValidatorSessionSequences {
-		if err := t.validatorSessionSeqDb.Save(&sequence); err != nil {
+		if err := t.validatorSessionSeqDb.SaveSessionSeq(&sequence); err != nil {
 			return err
 		}
 	}
@@ -149,13 +149,13 @@ func (t *validatorEraSeqPersistorTask) Run(ctx context.Context, p pipeline.Paylo
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
 
 	for _, sequence := range payload.NewValidatorEraSequences {
-		if err := t.validatorEraSeqDb.Create(&sequence); err != nil {
+		if err := t.validatorEraSeqDb.CreateEraSeq(&sequence); err != nil {
 			return err
 		}
 	}
 
 	for _, sequence := range payload.UpdatedValidatorEraSequences {
-		if err := t.validatorEraSeqDb.Save(&sequence); err != nil {
+		if err := t.validatorEraSeqDb.SaveEraSeq(&sequence); err != nil {
 			return err
 		}
 	}
@@ -185,13 +185,13 @@ func (t *validatorAggPersistorTask) Run(ctx context.Context, p pipeline.Payload)
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
 
 	for _, aggregate := range payload.NewValidatorAggregates {
-		if err := t.validatorAggDb.Create(&aggregate); err != nil {
+		if err := t.validatorAggDb.CreateAgg(&aggregate); err != nil {
 			return err
 		}
 	}
 
 	for _, aggregate := range payload.UpdatedValidatorAggregates {
-		if err := t.validatorAggDb.Save(&aggregate); err != nil {
+		if err := t.validatorAggDb.SaveAgg(&aggregate); err != nil {
 			return err
 		}
 	}

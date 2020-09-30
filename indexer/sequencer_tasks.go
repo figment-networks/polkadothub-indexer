@@ -53,7 +53,7 @@ func (t *blockSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) error
 		return err
 	}
 
-	blockSeq, err := t.blockSeqDb.FindByHeight(payload.CurrentHeight)
+	blockSeq, err := t.blockSeqDb.FindSeqByHeight(payload.CurrentHeight)
 	if err != nil {
 		if err == store.ErrNotFound {
 			payload.NewBlockSequence = mappedBlockSeq

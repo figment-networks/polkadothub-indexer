@@ -6,24 +6,19 @@ import (
 )
 
 type getByStashAccountUseCase struct {
-	accountEraSeqDb       store.AccountEraSeq
-	validatorAggDb        store.ValidatorAgg
-	validatorEraSeqDb     store.ValidatorEraSeq
-	validatorSessionSeqDb store.ValidatorSessionSeq
+	accountEraSeqDb store.AccountEraSeq
+	validatorDb     store.Validators
 }
 
-func NewGetByStashAccountUseCase(accountEraSeqDb store.AccountEraSeq, validatorAggDb store.ValidatorAgg, validatorEraSeqDb store.ValidatorEraSeq,
-	validatorSessionSeqDb store.ValidatorSessionSeq) *getByStashAccountUseCase {
+func NewGetByStashAccountUseCase(accountEraSeqDb store.AccountEraSeq, validatorDb store.Validators) *getByStashAccountUseCase {
 	return &getByStashAccountUseCase{
-		accountEraSeqDb:       accountEraSeqDb,
-		validatorAggDb:        validatorAggDb,
-		validatorEraSeqDb:     validatorEraSeqDb,
-		validatorSessionSeqDb: validatorSessionSeqDb,
+		accountEraSeqDb: accountEraSeqDb,
+		validatorDb:     validatorDb,
 	}
 }
 
 func (uc *getByStashAccountUseCase) Execute(stashAccount string, sessionsLimit int64, erasLimit int64) (*AggDetailsView, error) {
-	validatorAggs, err := uc.validatorAggDb.FindByStashAccount(stashAccount)
+	validatorAggs, err := uc.validatorDb.FindAggByStashAccount(stashAccount)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +46,7 @@ func (uc *getByStashAccountUseCase) getSessionSequences(stashAccount string, seq
 	var sequences []model.ValidatorSessionSeq
 	var err error
 	if sequencesLimit > 0 {
-		sequences, err = uc.validatorSessionSeqDb.FindLastByStashAccount(stashAccount, sequencesLimit)
+		sequences, err = uc.validatorDb.FindLastSessionSeqByStashAccount(stashAccount, sequencesLimit)
 		if err != nil {
 			return nil, err
 		}
@@ -63,7 +58,7 @@ func (uc *getByStashAccountUseCase) getEraSequences(stashAccount string, sequenc
 	var sequences []model.ValidatorEraSeq
 	var err error
 	if sequencesLimit > 0 {
-		sequences, err = uc.validatorEraSeqDb.FindLastByStashAccount(stashAccount, sequencesLimit)
+		sequences, err = uc.validatorDb.FindLastEraSeqByStashAccount(stashAccount, sequencesLimit)
 		if err != nil {
 			return nil, err
 		}
