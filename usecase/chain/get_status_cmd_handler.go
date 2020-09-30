@@ -3,6 +3,7 @@ package chain
 import (
 	"context"
 	"fmt"
+
 	"github.com/figment-networks/polkadothub-indexer/client"
 	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/utils/logger"
@@ -25,7 +26,7 @@ func NewGetStatusCmdHandler(db *store.Store, c *client.Client) *GetStatusCmdHand
 func (h *GetStatusCmdHandler) Handle(ctx context.Context) {
 	logger.Info("chain get status use case [handler=cmd]")
 
-	details, err := h.getUseCase().Execute(ctx)
+	details, err := h.getUseCase().Execute(true)
 	if err != nil {
 		logger.Error(err)
 		return
@@ -82,4 +83,3 @@ func (h *GetStatusCmdHandler) getUseCase() *getStatusUseCase {
 	}
 	return h.useCase
 }
-
