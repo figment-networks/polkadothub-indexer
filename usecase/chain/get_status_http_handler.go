@@ -2,11 +2,11 @@ package chain
 
 import (
 	"errors"
-	"net/http"
 
 	"github.com/figment-networks/polkadothub-indexer/client"
 	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/types"
+	"github.com/figment-networks/polkadothub-indexer/usecase/http"
 	"github.com/figment-networks/polkadothub-indexer/utils/logger"
 	"github.com/gin-gonic/gin"
 )
@@ -37,19 +37,18 @@ func (h *getStatusHttpHandler) Handle(c *gin.Context) {
 	var req GetStatusRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
 		logger.Error(err)
-		err := errors.New("invalid query")
-		c.JSON(http.StatusBadRequest, err)
+		http.BadRequest(c, errors.New("invalid query"))
 		return
 	}
 
 	resp, err := h.getUseCase().Execute(req.IncludeChainStatus)
 	if err != nil {
 		logger.Error(err)
-		c.JSON(http.StatusInternalServerError, err)
+		http.ServerError(c, err)
 		return
 	}
 
-	c.JSON(http.StatusOK, resp)
+	http.JsonOK(c, resp)
 }
 
 func (h *getStatusHttpHandler) getUseCase() *getStatusUseCase {
