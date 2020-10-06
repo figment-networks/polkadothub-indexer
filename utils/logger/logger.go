@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/figment-networks/polkadothub-indexer/config"
+	"github.com/rollbar/rollbar-go"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"strings"
@@ -34,14 +35,17 @@ func Init(cfg *config.Config) (*Logger, error) {
 	}
 
 	Log.log = log
+	Log.rollbarAccessToken = cfg.RollbarAccessToken
 
 	return &Logger{
 		log: log,
+		rollbarAccessToken: cfg.RollbarAccessToken,
 	}, nil
 }
 
 type Logger struct {
 	log *zap.Logger
+	rollbarAccessToken string
 }
 
 func Field(key string, value interface{}) zap.Field {
@@ -73,6 +77,8 @@ func Error(err error, tags ...zap.Field) {
 	msg := fmt.Sprintf("[ERROR: %v]", err)
 	Log.log.Error(msg, tags...)
 	Log.log.Sync()
+	rollbar.SetToken(Log.rollbarAccessToken)
+	rollbar.Error(msg)
 }
 
 func getLevel(level string) zapcore.Level {
