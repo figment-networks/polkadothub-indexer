@@ -4,8 +4,17 @@ import (
 	"google.golang.org/grpc"
 )
 
+// maxMsgSize increases the grpc max message size from 4194304 to 419430400
+var maxMsgSize = 1024 * 1024 * 400
+
 func New(connStr string) (*Client, error) {
-	conn, err := grpc.Dial(connStr, grpc.WithInsecure())
+	conn, err := grpc.Dial(
+		connStr,
+		grpc.WithInsecure(),
+		grpc.WithDefaultCallOptions(
+			grpc.MaxCallRecvMsgSize(maxMsgSize),
+		),
+	)
 	if err != nil {
 		return nil, err
 	}
