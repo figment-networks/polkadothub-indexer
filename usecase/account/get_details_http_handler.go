@@ -4,10 +4,10 @@ import (
 	"github.com/figment-networks/polkadothub-indexer/client"
 	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/types"
+	"github.com/figment-networks/polkadothub-indexer/usecase/http"
 	"github.com/figment-networks/polkadothub-indexer/utils/logger"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
-	"net/http"
 )
 
 var (
@@ -23,7 +23,7 @@ type getDetailsHttpHandler struct {
 
 func NewGetDetailsHttpHandler(db *store.Store, c *client.Client) *getDetailsHttpHandler {
 	return &getDetailsHttpHandler{
-		db: db,
+		db:     db,
 		client: c,
 	}
 }
@@ -36,19 +36,18 @@ func (h *getDetailsHttpHandler) Handle(c *gin.Context) {
 	var req GetDetailsRequest
 	if err := c.ShouldBindUri(&req); err != nil {
 		logger.Error(err)
-		err := errors.New("invalid stash account")
-		c.JSON(http.StatusBadRequest, err)
+		http.BadRequest(c, errors.New("invalid stash account"))
 		return
 	}
 
 	ds, err := h.getUseCase().Execute(req.StashAccount)
 	if err != nil {
 		logger.Error(err)
-		c.JSON(http.StatusInternalServerError, err)
+		http.ServerError(c, err)
 		return
 	}
 
-	c.JSON(http.StatusOK, ds)
+	http.JsonOK(c, ds)
 }
 
 func (h *getDetailsHttpHandler) getUseCase() *getDetailsUseCase {
@@ -57,6 +56,3 @@ func (h *getDetailsHttpHandler) getUseCase() *getDetailsUseCase {
 	}
 	return h.useCase
 }
-
-
-

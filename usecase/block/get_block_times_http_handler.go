@@ -4,9 +4,10 @@ import (
 	"github.com/figment-networks/polkadothub-indexer/client"
 	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/types"
+	"github.com/figment-networks/polkadothub-indexer/usecase/http"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
-	"net/http"
+	"github.com/prometheus/common/log"
 )
 
 var (
@@ -34,15 +35,13 @@ type GetBlockTimesRequest struct {
 func (h *getBlockTimesHttpHandler) Handle(c *gin.Context) {
 	var req GetBlockTimesRequest
 	if err := c.ShouldBindUri(&req); err != nil {
-		//log.Error(err)
-		err := errors.New("invalid height")
-		c.JSON(http.StatusBadRequest, err)
+		log.Error(err)
+		http.BadRequest(c, errors.New("invalid height"))
 		return
 	}
 
 	resp := h.getUseCase().Execute(req.Limit)
-
-	c.JSON(http.StatusOK, resp)
+	http.JsonOK(c, resp)
 }
 
 func (h *getBlockTimesHttpHandler) getUseCase() *getBlockTimesUseCase {
