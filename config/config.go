@@ -27,7 +27,7 @@ type Config struct {
 	ServerAddr                   string `json:"server_addr" envconfig:"SERVER_ADDR" default:"0.0.0.0"`
 	ServerPort                   int64  `json:"server_port" envconfig:"SERVER_PORT" default:"8081"`
 	FirstBlockHeight             int64  `json:"first_block_height" envconfig:"FIRST_BLOCK_HEIGHT" default:"1"`
-	IndexWorkerInterval          string `json:"index_worker_interval" envconfig:"SYNC_INTERVAL" default:"@every 15m"`
+	IndexWorkerInterval          string `json:"index_worker_interval" envconfig:"INDEX_WORKER_INTERVAL" default:"@every 15m"`
 	SummarizeWorkerInterval      string `json:"summarize_worker_interval" envconfig:"SUMMARIZE_WORKER_INTERVAL" default:"@every 20m"`
 	PurgeWorkerInterval          string `json:"purge_worker_interval" envconfig:"PURGE_WORKER_INTERVAL" default:"@every 1h"`
 	DefaultBatchSize             int64  `json:"default_batch_size" envconfig:"DEFAULT_BATCH_SIZE" default:"0"`
