@@ -2,7 +2,6 @@ package chain
 
 import (
 	"errors"
-	"net/http"
 
 	"github.com/figment-networks/polkadothub-indexer/client"
 	"github.com/figment-networks/polkadothub-indexer/store"
@@ -38,8 +37,7 @@ func (h *getStatusHttpHandler) Handle(c *gin.Context) {
 	var req GetStatusRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
 		logger.Error(err)
-		err := errors.New("invalid query")
-		c.JSON(http.StatusBadRequest, err)
+		http.BadRequest(c, errors.New("invalid query"))
 		return
 	}
 
