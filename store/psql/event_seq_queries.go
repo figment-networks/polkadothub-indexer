@@ -1,5 +1,0 @@
-package psql
-
-const (
-
-)
