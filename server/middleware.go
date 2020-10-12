@@ -1,11 +1,12 @@
 package server
 
 import (
-	"time"
-
 	"github.com/figment-networks/polkadothub-indexer/metric"
+	"github.com/figment-networks/polkadothub-indexer/usecase/http"
 	"github.com/figment-networks/polkadothub-indexer/utils/reporting"
 	"github.com/gin-gonic/gin"
+	"github.com/pkg/errors"
+	"time"
 )
 
 // setupMiddleware sets up middleware for gin application
@@ -29,6 +30,7 @@ func MetricMiddleware() gin.HandlerFunc {
 func ErrorReportingMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer reporting.RecoverError()
+		http.ServerError(c, errors.New("Unexpected internal server error occurred"))
 		c.Next()
 	}
 }
