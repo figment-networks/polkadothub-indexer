@@ -9,6 +9,8 @@ import (
 	"time"
 )
 
+var ErrUnexpectedError = errors.New("Unexpected internal server error occurred")
+
 // setupMiddleware sets up middleware for gin application
 func (s *Server) setupMiddleware() {
 	s.engine.Use(gin.Recovery())
@@ -30,7 +32,7 @@ func MetricMiddleware() gin.HandlerFunc {
 func ErrorReportingMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer reporting.RecoverError()
-		http.ServerError(c, errors.New("Unexpected internal server error occurred"))
+		http.ServerError(c, ErrUnexpectedError)
 		c.Next()
 	}
 }
