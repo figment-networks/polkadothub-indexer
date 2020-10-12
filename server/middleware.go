@@ -32,7 +32,7 @@ func MetricMiddleware() gin.HandlerFunc {
 func ErrorReportingMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer reporting.RecoverError()
-		http.ServerError(c, ErrUnexpectedError)
+		go http.ServerError(c, ErrUnexpectedError)
 		c.Next()
 	}
 }
