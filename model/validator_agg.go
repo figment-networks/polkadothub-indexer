@@ -28,8 +28,11 @@ func (s *ValidatorAgg) Equal(m ValidatorAgg) bool {
 func (s *ValidatorAgg) Update(u *ValidatorAgg) {
 	s.Aggregate.RecentAtHeight = u.Aggregate.RecentAtHeight
 	s.Aggregate.RecentAt = u.Aggregate.RecentAt
-	s.DisplayName = u.DisplayName
 	s.RecentAsValidatorHeight = u.RecentAsValidatorHeight
 	s.AccumulatedUptime = u.AccumulatedUptime
 	s.AccumulatedUptimeCount = u.AccumulatedUptimeCount
+
+	if u.DisplayName != "" {
+		s.DisplayName = u.DisplayName
+	}
 }

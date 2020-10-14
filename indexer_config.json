@@ -9,6 +9,11 @@
           "id": 2,
           "targets": [2,4],
           "parallel": true
+      },
+      {
+          "id": 3,
+          "targets": [4],
+          "parallel": true
       }
     ],
     "shared_tasks": [
