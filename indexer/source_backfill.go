@@ -3,6 +3,7 @@ package indexer
 import (
 	"context"
 	"fmt"
+	"github.com/figment-networks/polkadothub-indexer/model"
 
 	"github.com/figment-networks/indexing-engine/pipeline"
 	"github.com/figment-networks/polkadothub-indexer/client"
@@ -37,7 +38,7 @@ type backfillSource struct {
 	client *client.Client
 
 	currentIndexVersion int64
-
+	endSyncsOfSessionsAndEras *[]model.Syncable
 	currentHeight int64
 	startHeight   int64
 	endHeight     int64
@@ -65,12 +66,28 @@ func (s *backfillSource) Len() int64 {
 }
 
 func (s *backfillSource) setHeightValues() error {
+	if err := s.setEndSyncsOfSessionsAndEras(); err != nil {
+		return err
+	}
 	if err := s.setStartHeight(); err != nil {
 		return err
 	}
 	if err := s.setEndHeight(); err != nil {
 		return err
 	}
+	return nil
+}
+
+func (s *backfillSource) setEndSyncsOfSessionsAndEras() error {
+	endSyncsOfSessionsAndEras, err := s.db.Syncables.FindEndSyncsOfSessionsAndEras(s.currentIndexVersion)
+	if err != nil {
+		if err == store.ErrNotFound {
+			return errors.New(fmt.Sprintf("nothing to backfill [currentIndexVersion=%d]", s.currentIndexVersion))
+		}
+		return err
+	}
+
+	s.endSyncsOfSessionsAndEras = &endSyncsOfSessionsAndEras
 	return nil
 }
 

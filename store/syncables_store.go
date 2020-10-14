@@ -113,6 +113,19 @@ func (s SyncablesStore) FindMostRecentByDifferentIndexVersion(indexVersion int64
 	return result, checkErr(err)
 }
 
+// FindHeightsForEndOfSessionsAndEras returns end syncs of sessions and eras
+func (s SyncablesStore) FindEndSyncsOfSessionsAndEras(indexVersion int64) ([]model.Syncable, error) {
+	result := &[]model.Syncable{}
+
+	err := s.db.
+		Not("index_version = ?", indexVersion).
+		Where("last_in_session='t' and last_in_era='t'").
+		Order("height asc").
+		Find(result).Error
+
+	return *result, checkErr(err)
+}
+
 // CreateOrUpdate creates a new syncable or updates an existing one
 func (s SyncablesStore) CreateOrUpdate(val *model.Syncable) error {
 	existing, err := s.FindByHeight(val.Height)
