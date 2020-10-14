@@ -101,18 +101,6 @@ func (s SyncablesStore) FindFirstByDifferentIndexVersion(indexVersion int64) (*m
 	return result, checkErr(err)
 }
 
-// FindMostRecentByDifferentIndexVersion returns the most recent syncable with different index version
-func (s SyncablesStore) FindMostRecentByDifferentIndexVersion(indexVersion int64) (*model.Syncable, error) {
-	result := &model.Syncable{}
-
-	err := s.db.
-		Not("index_version = ?", indexVersion).
-		Order("height desc").
-		First(result).Error
-
-	return result, checkErr(err)
-}
-
 // FindHeightsForEndOfSessionsAndEras returns end syncs of sessions and eras
 func (s SyncablesStore) FindEndSyncsOfSessionsAndEras(indexVersion int64) ([]model.Syncable, error) {
 	result := &[]model.Syncable{}

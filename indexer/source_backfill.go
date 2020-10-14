@@ -44,7 +44,8 @@ type backfillSource struct {
 
 func (s *backfillSource) Next(context.Context, pipeline.Payload) bool {
 	if s.err == nil && s.currentHeight < s.endHeight {
-		s.currentHeight = s.currentHeight + 1
+		s.endSyncsOfSessionsAndEras = s.endSyncsOfSessionsAndEras[1:]
+		s.setCurrentHeight()
 		return true
 	}
 	return false
@@ -66,12 +67,8 @@ func (s *backfillSource) setHeightValues() error {
 	if err := s.setEndSyncsOfSessionsAndEras(); err != nil {
 		return err
 	}
-	if err := s.setStartHeight(); err != nil {
-		return err
-	}
-	if err := s.setEndHeight(); err != nil {
-		return err
-	}
+	s.setCurrentHeight()
+	s.setEndHeight()
 	return nil
 }
 
@@ -93,28 +90,10 @@ func (s *backfillSource) setEndSyncsOfSessionsAndEras() error {
 	return nil
 }
 
-func (s *backfillSource) setStartHeight() error {
-	syncable, err := s.db.Syncables.FindFirstByDifferentIndexVersion(s.currentIndexVersion)
-	if err != nil {
-		if err == store.ErrNotFound {
-			return errors.New(fmt.Sprintf("nothing to backfill [currentIndexVersion=%d]", s.currentIndexVersion))
-		}
-		return err
-	}
-
-	s.currentHeight = syncable.Height
-	return nil
+func (s *backfillSource) setCurrentHeight(){
+	s.currentHeight =  s.endSyncsOfSessionsAndEras[0]
 }
 
-func (s *backfillSource) setEndHeight() error {
-	syncable, err := s.db.Syncables.FindMostRecentByDifferentIndexVersion(s.currentIndexVersion)
-	if err != nil {
-		if err == store.ErrNotFound {
-			return errors.New(fmt.Sprintf("nothing to backfill [currentIndexVersion=%d]", s.currentIndexVersion))
-		}
-		return err
-	}
-
-	s.endHeight = syncable.Height
-	return nil
+func (s *backfillSource) setEndHeight(){
+	s.endHeight = s.endSyncsOfSessionsAndEras[len(s.endSyncsOfSessionsAndEras)-1]
 }
