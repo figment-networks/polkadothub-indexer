@@ -138,10 +138,9 @@ func (s SyncablesStore) CreateOrUpdate(val *model.Syncable) error {
 	return s.Update(existing)
 }
 
-// CreateOrUpdate creates a new syncable or updates an existing one
-func (s SyncablesStore) SetProcessedAtForRange(reportID types.ID, startHeight int64, endHeight int64) error {
+func (s SyncablesStore) SetProcessedAtForEndSyncs(reportID types.ID, endSyncs []int64) error {
 	err := s.db.
-		Exec("UPDATE syncables SET report_id = ?, processed_at = NULL WHERE height >= ? AND height <= ?", reportID, startHeight, endHeight).
+		Exec("UPDATE syncables SET report_id = ?, processed_at = NULL WHERE height IN (?)", reportID, endSyncs).
 		Error
 
 	return checkErr(err)

@@ -3,8 +3,6 @@ package indexer
 import (
 	"context"
 	"fmt"
-	"github.com/figment-networks/polkadothub-indexer/model"
-
 	"github.com/figment-networks/indexing-engine/pipeline"
 	"github.com/figment-networks/polkadothub-indexer/client"
 	"github.com/figment-networks/polkadothub-indexer/config"
@@ -21,7 +19,6 @@ func NewBackfillSource(cfg *config.Config, db *store.Store, client *client.Clien
 		cfg:    cfg,
 		db:     db,
 		client: client,
-
 		currentIndexVersion: indexVersion,
 	}
 
@@ -38,9 +35,9 @@ type backfillSource struct {
 	client *client.Client
 
 	currentIndexVersion int64
-	endSyncsOfSessionsAndEras *[]model.Syncable
+	endSyncsOfSessionsAndEras []int64
+	length  int64
 	currentHeight int64
-	startHeight   int64
 	endHeight     int64
 	err           error
 }
@@ -62,7 +59,7 @@ func (s *backfillSource) Err() error {
 }
 
 func (s *backfillSource) Len() int64 {
-	return s.endHeight - s.startHeight + 1
+	return s.length
 }
 
 func (s *backfillSource) setHeightValues() error {
@@ -87,7 +84,12 @@ func (s *backfillSource) setEndSyncsOfSessionsAndEras() error {
 		return err
 	}
 
-	s.endSyncsOfSessionsAndEras = &endSyncsOfSessionsAndEras
+	var heights []int64
+	for i := 0; i < len(endSyncsOfSessionsAndEras); i++ {
+		heights = append(heights, endSyncsOfSessionsAndEras[i].Height)
+	}
+	s.endSyncsOfSessionsAndEras = heights
+	s.length = int64(len(heights))
 	return nil
 }
 
@@ -101,7 +103,6 @@ func (s *backfillSource) setStartHeight() error {
 	}
 
 	s.currentHeight = syncable.Height
-	s.startHeight = syncable.Height
 	return nil
 }
 

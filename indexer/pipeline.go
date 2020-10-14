@@ -207,7 +207,7 @@ func (p *indexingPipeline) Backfill(ctx context.Context, backfillCfg BackfillCon
 	}
 
 	// set for null processed_at column
-	if err := p.db.Syncables.SetProcessedAtForRange(reportCreator.report.ID, source.startHeight, source.endHeight); err != nil {
+	if err := p.db.Syncables.SetProcessedAtForEndSyncs(reportCreator.report.ID, source.endSyncsOfSessionsAndEras); err != nil {
 		return err
 	}
 
@@ -218,7 +218,7 @@ func (p *indexingPipeline) Backfill(ctx context.Context, backfillCfg BackfillCon
 		return err
 	}
 
-	logger.Info(fmt.Sprintf("Preconditions are set without error, starting pipeline backfill [start=%d] [end=%d] [kind=%s]", source.startHeight, source.endHeight, reportCreator.kind))
+	logger.Info(fmt.Sprintf("Preconditions are set without error, starting pipeline backfill [end syncs=%d] [kind=%s]", source.endSyncsOfSessionsAndEras, reportCreator.kind))
 
 	if err := p.pipeline.Start(ctxWithReport, source, sink, pipelineOptions); err != nil {
 		return err
@@ -255,7 +255,6 @@ func (p *indexingPipeline) generateReportCreatureAndSource(indexVersion int64, i
     reportCreator := &reportCreator{
 		kind:         kind,
 		indexVersion: indexVersion,
-		startHeight:  source.startHeight,
 		endHeight:    source.endHeight,
 		store:        p.db.Reports,
 	}
