@@ -3,7 +3,6 @@ package indexer
 import (
 	"context"
 	"fmt"
-
 	"github.com/figment-networks/indexing-engine/pipeline"
 	"github.com/figment-networks/polkadothub-indexer/client"
 	"github.com/figment-networks/polkadothub-indexer/config"
@@ -196,55 +195,30 @@ func (p *indexingPipeline) Backfill(ctx context.Context, backfillCfg BackfillCon
 		return err
 	}
 
+	if err := p.deleteReportsByForce(backfillCfg.Force); err != nil {
+		return err
+	}
+
 	indexVersion := p.configParser.GetCurrentVersionId()
-
-	source, err := NewBackfillSource(p.cfg, p.db, p.client, indexVersion)
-	if err != nil {
-		return err
-	}
-
 	sink := NewSink(p.db, indexVersion)
-
-	kind := model.ReportKindSequentialReindex
-	if backfillCfg.Parallel {
-		kind = model.ReportKindParallelReindex
-	}
-
-	if backfillCfg.Force {
-		if err := p.db.Reports.DeleteByKinds([]model.ReportKind{model.ReportKindParallelReindex, model.ReportKindSequentialReindex}); err != nil {
-			return err
-		}
-	}
-
-	reportCreator := &reportCreator{
-		kind:         kind,
-		indexVersion: indexVersion,
-		startHeight:  source.startHeight,
-		endHeight:    source.endHeight,
-		store:        p.db.Reports,
-	}
-
-	versionIds := p.status.missingVersionIds
-	pipelineOptionsCreator := &pipelineOptionsCreator{
-		configParser:      p.configParser,
-		desiredVersionIds: versionIds,
-	}
-	pipelineOptions, err := pipelineOptionsCreator.parse()
+	reportCreator, source, err := p.generateReportCreatureAndSource(indexVersion, backfillCfg.Parallel)
 	if err != nil {
 		return err
 	}
 
-	if err := reportCreator.createIfNotExists(model.ReportKindSequentialReindex, model.ReportKindParallelReindex); err != nil {
-		return err
-	}
-
+	// set for null processed_at column
 	if err := p.db.Syncables.SetProcessedAtForRange(reportCreator.report.ID, source.startHeight, source.endHeight); err != nil {
 		return err
 	}
 
 	ctxWithReport := context.WithValue(ctx, CtxReport, reportCreator.report)
 
-	logger.Info(fmt.Sprintf("starting pipeline backfill [start=%d] [end=%d] [kind=%s]", source.startHeight, source.endHeight, kind))
+	pipelineOptions, err := p.getPipelineOptions()
+	if err != nil {
+		return err
+	}
+
+	logger.Info(fmt.Sprintf("Preconditions are set without error, starting pipeline backfill [start=%d] [end=%d] [kind=%s]", source.startHeight, source.endHeight, reportCreator.kind))
 
 	if err := p.pipeline.Start(ctxWithReport, source, sink, pipelineOptions); err != nil {
 		return err
@@ -255,6 +229,51 @@ func (p *indexingPipeline) Backfill(ctx context.Context, backfillCfg BackfillCon
 	err = reportCreator.complete(source.Len(), sink.successCount, err)
 
 	return err
+}
+
+func (p *indexingPipeline) getPipelineOptions() (*pipeline.Options, error) {
+	versionIds := p.status.missingVersionIds
+	pipelineOptionsCreator := &pipelineOptionsCreator{
+		configParser:      p.configParser,
+		desiredVersionIds: versionIds,
+	}
+	return pipelineOptionsCreator.parse()
+}
+
+// generates report if not exists
+func (p *indexingPipeline) generateReportCreatureAndSource(indexVersion int64, isParallel bool) (*reportCreator, *backfillSource, error) {
+
+	source, err := NewBackfillSource(p.cfg, p.db, p.client, indexVersion)
+	if err != nil {
+		return nil,nil, err
+	}
+
+	kind := model.ReportKindSequentialReindex
+	if isParallel {
+		kind = model.ReportKindParallelReindex
+	}
+    reportCreator := &reportCreator{
+		kind:         kind,
+		indexVersion: indexVersion,
+		startHeight:  source.startHeight,
+		endHeight:    source.endHeight,
+		store:        p.db.Reports,
+	}
+	if err := reportCreator.createIfNotExists(model.ReportKindSequentialReindex, model.ReportKindParallelReindex); err != nil {
+		return nil, nil, err
+	}
+
+	return reportCreator, source, nil
+
+}
+
+func (p *indexingPipeline) deleteReportsByForce(forceDelete bool) error {
+	if forceDelete {
+		if err := p.db.Reports.DeleteByKinds([]model.ReportKind{model.ReportKindParallelReindex, model.ReportKindSequentialReindex}); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (p *indexingPipeline) canRunBackfill(isParallel bool) error {

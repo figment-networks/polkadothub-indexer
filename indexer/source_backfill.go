@@ -24,7 +24,7 @@ func NewBackfillSource(cfg *config.Config, db *store.Store, client *client.Clien
 		currentIndexVersion: indexVersion,
 	}
 
-	if err := src.init(); err != nil {
+	if err := src.setHeightValues(); err != nil {
 		return nil, err
 	}
 
@@ -64,7 +64,7 @@ func (s *backfillSource) Len() int64 {
 	return s.endHeight - s.startHeight + 1
 }
 
-func (s *backfillSource) init() error {
+func (s *backfillSource) setHeightValues() error {
 	if err := s.setStartHeight(); err != nil {
 		return err
 	}
