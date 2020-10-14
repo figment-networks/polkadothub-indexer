@@ -59,10 +59,6 @@ func (s *backfillSource) Err() error {
 	return s.err
 }
 
-func (s *backfillSource) Len() int64 {
-	return s.length
-}
-
 func (s *backfillSource) setHeightValues() error {
 	if err := s.setEndSyncsOfSessionsAndEras(); err != nil {
 		return err

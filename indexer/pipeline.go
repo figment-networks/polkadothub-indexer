@@ -226,7 +226,7 @@ func (p *indexingPipeline) Backfill(ctx context.Context, backfillCfg BackfillCon
 
 	logger.Info(fmt.Sprintf("pipeline completed [Err: %+v]", err))
 
-	err = reportCreator.complete(source.Len(), sink.successCount, err)
+	err = reportCreator.complete(source.length, sink.successCount, err)
 
 	return err
 }
@@ -255,6 +255,7 @@ func (p *indexingPipeline) generateReportCreatureAndSource(indexVersion int64, i
     reportCreator := &reportCreator{
 		kind:         kind,
 		indexVersion: indexVersion,
+		startHeight:  source.Current(), // index 0 at beginning so minimum
 		endHeight:    source.endHeight,
 		store:        p.db.Reports,
 	}
