@@ -201,7 +201,7 @@ func (p *indexingPipeline) Backfill(ctx context.Context, backfillCfg BackfillCon
 
 	indexVersion := p.configParser.GetCurrentVersionId()
 	sink := NewSink(p.db, indexVersion)
-	reportCreator, source, err := p.generateReportCreatureAndSource(indexVersion, backfillCfg.Parallel)
+	reportCreator, source, err := p.generateReportCreatorAndSource(indexVersion, backfillCfg.Parallel)
 	if err != nil {
 		return err
 	}
@@ -241,7 +241,7 @@ func (p *indexingPipeline) getPipelineOptions() (*pipeline.Options, error) {
 }
 
 // generates report if not exists
-func (p *indexingPipeline) generateReportCreatureAndSource(indexVersion int64, isParallel bool) (*reportCreator, *backfillSource, error) {
+func (p *indexingPipeline) generateReportCreatorAndSource(indexVersion int64, isParallel bool) (*reportCreator, *backfillSource, error) {
 
 	source, err := NewBackfillSource(p.cfg, p.db, p.client, indexVersion)
 	if err != nil {
