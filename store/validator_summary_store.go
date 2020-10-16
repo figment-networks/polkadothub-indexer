@@ -102,7 +102,7 @@ func (s *ValidatorSummaryStore) FindSummary(interval types.SummaryInterval, peri
 }
 
 // FindSummaryByStashAccount gets summary for given validator
-func (s *ValidatorSummaryStore) FindSummaryByStashAccount(stashAccount string, interval types.SummaryInterval, period string) ([]model.ValidatorSummary, error) {
+func (s *ValidatorSummaryStore) FindSummaryByStashAccount(stashAccount string, interval types.SummaryInterval, period string) ([]ValidatorSummaryRow, error) {
 	defer logQueryDuration(time.Now(), "ValidatorSummaryStore_FindSummaryByStashAccount")
 
 	rows, err := s.db.Raw(validatorSummaryForIntervalQuery, interval, period, stashAccount, interval).Rows()
@@ -111,9 +111,9 @@ func (s *ValidatorSummaryStore) FindSummaryByStashAccount(stashAccount string, i
 	}
 	defer rows.Close()
 
-	var res []model.ValidatorSummary
+	var res []ValidatorSummaryRow
 	for rows.Next() {
-		var row model.ValidatorSummary
+		var row ValidatorSummaryRow
 		if err := s.db.ScanRows(rows, &row); err != nil {
 			return nil, err
 		}
