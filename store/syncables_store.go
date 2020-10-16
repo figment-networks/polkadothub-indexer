@@ -133,3 +133,15 @@ func (s SyncablesStore) SetProcessedAtForRange(reportID types.ID, startHeight in
 
 	return checkErr(err)
 }
+
+// FindSpecificHeightsByLastInSessionsAndLastInSessionsEras returns end syncs of sessions and eras
+func (s SyncablesStore) FindSpecificHeightsByLastInSessionsAndLastInSessionsEras(indexVersion int64, isForLastOfSessions, isForLastOfEras bool) ([]model.Syncable, error) {
+	result := &[]model.Syncable{}
+
+	err := s.db.
+		Not("index_version = ?", indexVersion).
+		Where("last_in_session='?' and last_in_era='?'", isForLastOfSessions, isForLastOfEras).
+		Find(result).Error
+
+	return *result, checkErr(err)
+}

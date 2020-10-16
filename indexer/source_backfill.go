@@ -3,10 +3,10 @@ package indexer
 import (
 	"context"
 	"fmt"
-
 	"github.com/figment-networks/indexing-engine/pipeline"
 	"github.com/figment-networks/polkadothub-indexer/client"
 	"github.com/figment-networks/polkadothub-indexer/config"
+	"github.com/figment-networks/polkadothub-indexer/model"
 	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/pkg/errors"
 )
@@ -15,12 +15,13 @@ var (
 	_ pipeline.Source = (*backfillSource)(nil)
 )
 
-func NewBackfillSource(cfg *config.Config, db *store.Store, client *client.Client, indexVersion int64) (*backfillSource, error) {
+func NewBackfillSource(cfg *config.Config, db *store.Store, client *client.Client, indexVersion int64, isForLastOfSessions, isForLastOfEras bool) (*backfillSource, error) {
 	src := &backfillSource{
-		cfg:    cfg,
-		db:     db,
-		client: client,
-
+		cfg:                 cfg,
+		db:                  db,
+		client:              client,
+		isForLastOfSessions: isForLastOfSessions,
+		isForLastOfEras:     isForLastOfEras,
 		currentIndexVersion: indexVersion,
 	}
 
@@ -32,16 +33,17 @@ func NewBackfillSource(cfg *config.Config, db *store.Store, client *client.Clien
 }
 
 type backfillSource struct {
-	cfg    *config.Config
-	db     *store.Store
-	client *client.Client
-
+	cfg                 *config.Config
+	db                  *store.Store
+	client              *client.Client
+	isForLastOfSessions bool
+	isForLastOfEras     bool
+	specificHeightsMap  map[int64]int64
 	currentIndexVersion int64
-
-	currentHeight int64
-	startHeight   int64
-	endHeight     int64
-	err           error
+	currentHeight       int64
+	startHeight         int64
+	endHeight           int64
+	err                 error
 }
 
 func (s *backfillSource) Next(context.Context, pipeline.Payload) bool {
@@ -50,6 +52,10 @@ func (s *backfillSource) Next(context.Context, pipeline.Payload) bool {
 		return true
 	}
 	return false
+}
+
+func (s *backfillSource) HasOnlySpecificHeightsToRunStages() bool {
+	return s.isForLastOfSessions || s.isForLastOfEras
 }
 
 func (s *backfillSource) Current() int64 {
@@ -65,6 +71,9 @@ func (s *backfillSource) Len() int64 {
 }
 
 func (s *backfillSource) init() error {
+	if err := s.setSpecificHeights(); err != nil {
+		return err
+	}
 	if err := s.setStartHeight(); err != nil {
 		return err
 	}
@@ -99,4 +108,26 @@ func (s *backfillSource) setEndHeight() error {
 
 	s.endHeight = syncable.Height
 	return nil
+}
+
+func (s *backfillSource) setSpecificHeights() error {
+	if s.HasOnlySpecificHeightsToRunStages() {
+		syncables, err := s.db.Syncables.FindSpecificHeightsByLastInSessionsAndLastInSessionsEras(s.currentIndexVersion, s.isForLastOfSessions, s.isForLastOfEras)
+		if err != nil {
+			if err == store.ErrNotFound {
+				return errors.New(fmt.Sprintf("no specific heights to backfill [currentIndexVersion=%d]", s.currentIndexVersion))
+			}
+			return err
+		}
+		s.generateMapForSpecificHeights(syncables)
+	}
+	return nil
+}
+
+func (s *backfillSource) generateMapForSpecificHeights(syncables []model.Syncable) {
+	specificHeightsMap := make(map[int64]int64)
+	for i := 0; i < len(syncables); i++ {
+		specificHeightsMap[syncables[i].Height] = syncables[i].Height
+	}
+	s.specificHeightsMap = specificHeightsMap
 }
