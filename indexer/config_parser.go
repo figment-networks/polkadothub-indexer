@@ -23,8 +23,8 @@ var (
 
 type ConfigParser interface {
 	GetCurrentVersionId() int64
-	IsForLastOfSessionsByVersionId(versionId int64) bool
-	IsForLastOfErasByVersionId(versionId int64) bool
+	IsForLastOfSessionsByVersionId() bool
+	IsForLastOfErasByVersionId() bool
 	GetAllVersionedVersionIds() []int64
 	IsAnyVersionSequential(versionIds []int64) bool
 	GetAllAvailableTasks() []pipeline.TaskName
@@ -96,13 +96,13 @@ func (o *configParser) GetCurrentVersionId() int64 {
 }
 
 //IsForLastOfSessionsByVersionId check if this version is for last of sessions
-func (o *configParser) IsForLastOfSessionsByVersionId(versionId int64) bool {
+func (o *configParser) IsForLastOfSessionsByVersionId() bool {
 	lastVersion := o.targets.Versions[len(o.targets.Versions)-1]
 	return lastVersion.LastInSession
 }
 
 //IsForLastOfEraByVersionId check if this version is for last of eras
-func (o *configParser) IsForLastOfErasByVersionId(versionId int64) bool {
+func (o *configParser) IsForLastOfErasByVersionId() bool {
 	lastVersion := o.targets.Versions[len(o.targets.Versions)-1]
 	return lastVersion.LastInEra
 }
