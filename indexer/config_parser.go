@@ -97,13 +97,13 @@ func (o *configParser) GetCurrentVersionId() int64 {
 
 //IsForLastOfSessionsByVersionId check if this version is for last of sessions
 func (o *configParser) IsForLastOfSessionsByVersionId(versionId int64) bool {
-	lastVersion := o.targets.Versions[versionId]
+	lastVersion := o.targets.Versions[len(o.targets.Versions)-1]
 	return lastVersion.LastInSession
 }
 
 //IsForLastOfEraByVersionId check if this version is for last of eras
 func (o *configParser) IsForLastOfErasByVersionId(versionId int64) bool {
-	lastVersion := o.targets.Versions[versionId]
+	lastVersion := o.targets.Versions[len(o.targets.Versions)-1]
 	return lastVersion.LastInEra
 }
 
