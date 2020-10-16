@@ -140,7 +140,7 @@ func (s SyncablesStore) FindSpecificHeightsByLastInSessionsAndLastInSessionsEras
 
 	err := s.db.
 		Not("index_version = ?", indexVersion).
-		Where("last_in_session='?' and last_in_era='?'", isForLastOfSessions, isForLastOfEras).
+		Where("last_in_session=? and last_in_era=?", isForLastOfSessions, isForLastOfEras).
 		Find(result).Error
 
 	return *result, checkErr(err)
