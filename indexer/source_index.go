@@ -45,6 +45,7 @@ type indexSource struct {
 	startHeight   int64
 	endHeight     int64
 	err           error
+	skipRunningStagesForCurrentHeight bool
 }
 
 func (s *indexSource) Next(context.Context, pipeline.Payload) bool {
@@ -61,6 +62,10 @@ func (s *indexSource) Current() int64 {
 
 func (s *indexSource) Err() error {
 	return s.err
+}
+
+func (s *indexSource) SkipRunningStagesForCurrentHeight() bool {
+	return s.skipRunningStagesForCurrentHeight
 }
 
 func (s *indexSource) Len() int64 {

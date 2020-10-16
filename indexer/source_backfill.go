@@ -77,6 +77,10 @@ func (s *backfillSource) Err() error {
 	return s.err
 }
 
+func (s *backfillSource) SkipRunningStagesForCurrentHeight() bool {
+	return s.skipRunningStagesForCurrentHeight
+}
+
 func (s *backfillSource) Len() int64 {
 	return s.endHeight - s.startHeight + 1
 }

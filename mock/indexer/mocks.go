@@ -86,10 +86,38 @@ func (m *MockConfigParser) GetCurrentVersionId() int64 {
 	return ret0
 }
 
+// IsForLastOfSessionsByVersionId mocks base method
+func (m *MockConfigParser) IsForLastOfSessionsByVersionId() bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsForLastOfSessionsByVersionId")
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// IsForLastOfErasByVersionId mocks base method
+func (m *MockConfigParser) IsForLastOfErasByVersionId() bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsForLastOfErasByVersionId")
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
 // GetCurrentVersionId indicates an expected call of GetCurrentVersionId
 func (mr *MockConfigParserMockRecorder) GetCurrentVersionId() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCurrentVersionId", reflect.TypeOf((*MockConfigParser)(nil).GetCurrentVersionId))
+}
+
+// IsForLastOfSessionsByVersionId indicates an expected call of IsForLastOfSessionsByVersionId
+func (mr *MockConfigParserMockRecorder) IsForLastOfSessionsByVersionId() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsForLastOfSessionsByVersionId", reflect.TypeOf((*MockConfigParser)(nil).IsForLastOfSessionsByVersionId))
+}
+
+// IsForLastOfErasByVersionId indicates an expected call of IsForLastOfErasByVersionId
+func (mr *MockConfigParserMockRecorder) IsForLastOfErasByVersionId() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsForLastOfErasByVersionId", reflect.TypeOf((*MockConfigParser)(nil).IsForLastOfErasByVersionId))
 }
 
 // GetTasksByTargetIds mocks base method
