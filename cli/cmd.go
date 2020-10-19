@@ -11,7 +11,7 @@ import (
 )
 
 func runCmd(cfg *config.Config, flags Flags) error {
-	db, err := initStore(cfg)
+	db, err := initPostgres(cfg)
 	if err != nil {
 		return err
 	}
@@ -23,24 +23,7 @@ func runCmd(cfg *config.Config, flags Flags) error {
 	}
 	defer client.Close()
 
-	cmdHandlers, err := usecase.NewCmdHandlers(&usecase.CmdHandlerParams{
-		Config:                cfg,
-		Client:                client,
-		AccountEraSeqDb:       db.GetAccountEraSeq(),
-		BlockSeqDb:            db.GetBlockSeq(),
-		BlockSummaryDb:        db.GetBlockSummary(),
-		DatabaseDb:            db.GetDatabase(),
-		EventSeqDb:            db.GetEventSeq(),
-		ReportsDb:             db.GetReports(),
-		SyncablesDb:           db.GetSyncables(),
-		ValidatorAggDb:        db.GetValidatorAgg(),
-		ValidatorEraSeqDb:     db.GetValidatorEraSeq(),
-		ValidatorSessionSeqDb: db.GetValidatorSessionSeq(),
-		ValidatorSummaryDb:    db.GetValidatorSummary(),
-	})
-	if err != nil {
-		return err
-	}
+	cmdHandlers := usecase.NewCmdHandlers(cfg, client, db.GetAccounts(), db.GetBlocks(), db.GetDatabase(), db.GetEvents(), db.GetReports(), db.GetSyncables(), db.GetValidators())
 
 	logger.Info(fmt.Sprintf("executing cmd %s ...", flags.runCommand), logger.Field("app", "cli"))
 

@@ -5,13 +5,12 @@
 package mock_store
 
 import (
-	reflect "reflect"
-	time "time"
-
 	model "github.com/figment-networks/polkadothub-indexer/model"
 	store "github.com/figment-networks/polkadothub-indexer/store"
 	types "github.com/figment-networks/polkadothub-indexer/types"
 	gomock "github.com/golang/mock/gomock"
+	reflect "reflect"
+	time "time"
 )
 
 // MockAccountEraSeq is a mock of AccountEraSeq interface
@@ -237,78 +236,63 @@ func (m *MockBlockSeq) EXPECT() *MockBlockSeqMockRecorder {
 	return m.recorder
 }
 
-// Create mocks base method
-func (m *MockBlockSeq) Create(arg0 interface{}) error {
+// CreateSeq mocks base method
+func (m *MockBlockSeq) CreateSeq(arg0 *model.BlockSeq) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Create", arg0)
+	ret := m.ctrl.Call(m, "CreateSeq", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// Create indicates an expected call of Create
-func (mr *MockBlockSeqMockRecorder) Create(arg0 interface{}) *gomock.Call {
+// CreateSeq indicates an expected call of CreateSeq
+func (mr *MockBlockSeqMockRecorder) CreateSeq(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockBlockSeq)(nil).Create), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSeq", reflect.TypeOf((*MockBlockSeq)(nil).CreateSeq), arg0)
 }
 
-// DeleteOlderThan mocks base method
-func (m *MockBlockSeq) DeleteOlderThan(arg0 time.Time, arg1 []store.ActivityPeriodRow) (*int64, error) {
+// DeleteSeqOlderThan mocks base method
+func (m *MockBlockSeq) DeleteSeqOlderThan(arg0 time.Time, arg1 []store.ActivityPeriodRow) (*int64, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteOlderThan", arg0, arg1)
+	ret := m.ctrl.Call(m, "DeleteSeqOlderThan", arg0, arg1)
 	ret0, _ := ret[0].(*int64)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// DeleteOlderThan indicates an expected call of DeleteOlderThan
-func (mr *MockBlockSeqMockRecorder) DeleteOlderThan(arg0, arg1 interface{}) *gomock.Call {
+// DeleteSeqOlderThan indicates an expected call of DeleteSeqOlderThan
+func (mr *MockBlockSeqMockRecorder) DeleteSeqOlderThan(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteOlderThan", reflect.TypeOf((*MockBlockSeq)(nil).DeleteOlderThan), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSeqOlderThan", reflect.TypeOf((*MockBlockSeq)(nil).DeleteSeqOlderThan), arg0, arg1)
 }
 
-// FindByHeight mocks base method
-func (m *MockBlockSeq) FindByHeight(arg0 int64) (*model.BlockSeq, error) {
+// FindMostRecentSeq mocks base method
+func (m *MockBlockSeq) FindMostRecentSeq() (*model.BlockSeq, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindByHeight", arg0)
+	ret := m.ctrl.Call(m, "FindMostRecentSeq")
 	ret0, _ := ret[0].(*model.BlockSeq)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// FindByHeight indicates an expected call of FindByHeight
-func (mr *MockBlockSeqMockRecorder) FindByHeight(arg0 interface{}) *gomock.Call {
+// FindMostRecentSeq indicates an expected call of FindMostRecentSeq
+func (mr *MockBlockSeqMockRecorder) FindMostRecentSeq() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByHeight", reflect.TypeOf((*MockBlockSeq)(nil).FindByHeight), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindMostRecentSeq", reflect.TypeOf((*MockBlockSeq)(nil).FindMostRecentSeq))
 }
 
-// FindByID mocks base method
-func (m *MockBlockSeq) FindByID(arg0 int64) (*model.BlockSeq, error) {
+// FindSeqByHeight mocks base method
+func (m *MockBlockSeq) FindSeqByHeight(arg0 int64) (*model.BlockSeq, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindByID", arg0)
+	ret := m.ctrl.Call(m, "FindSeqByHeight", arg0)
 	ret0, _ := ret[0].(*model.BlockSeq)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// FindByID indicates an expected call of FindByID
-func (mr *MockBlockSeqMockRecorder) FindByID(arg0 interface{}) *gomock.Call {
+// FindSeqByHeight indicates an expected call of FindSeqByHeight
+func (mr *MockBlockSeqMockRecorder) FindSeqByHeight(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByID", reflect.TypeOf((*MockBlockSeq)(nil).FindByID), arg0)
-}
-
-// FindMostRecent mocks base method
-func (m *MockBlockSeq) FindMostRecent() (*model.BlockSeq, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindMostRecent")
-	ret0, _ := ret[0].(*model.BlockSeq)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// FindMostRecent indicates an expected call of FindMostRecent
-func (mr *MockBlockSeqMockRecorder) FindMostRecent() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindMostRecent", reflect.TypeOf((*MockBlockSeq)(nil).FindMostRecent))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindSeqByHeight", reflect.TypeOf((*MockBlockSeq)(nil).FindSeqByHeight), arg0)
 }
 
 // GetAvgRecentTimes mocks base method
@@ -325,18 +309,18 @@ func (mr *MockBlockSeqMockRecorder) GetAvgRecentTimes(arg0 interface{}) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAvgRecentTimes", reflect.TypeOf((*MockBlockSeq)(nil).GetAvgRecentTimes), arg0)
 }
 
-// Save mocks base method
-func (m *MockBlockSeq) Save(arg0 interface{}) error {
+// SaveSeq mocks base method
+func (m *MockBlockSeq) SaveSeq(arg0 *model.BlockSeq) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Save", arg0)
+	ret := m.ctrl.Call(m, "SaveSeq", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// Save indicates an expected call of Save
-func (mr *MockBlockSeqMockRecorder) Save(arg0 interface{}) *gomock.Call {
+// SaveSeq indicates an expected call of SaveSeq
+func (mr *MockBlockSeqMockRecorder) SaveSeq(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Save", reflect.TypeOf((*MockBlockSeq)(nil).Save), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveSeq", reflect.TypeOf((*MockBlockSeq)(nil).SaveSeq), arg0)
 }
 
 // Summarize mocks base method
@@ -352,20 +336,6 @@ func (m *MockBlockSeq) Summarize(arg0 types.SummaryInterval, arg1 []store.Activi
 func (mr *MockBlockSeqMockRecorder) Summarize(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Summarize", reflect.TypeOf((*MockBlockSeq)(nil).Summarize), arg0, arg1)
-}
-
-// Update mocks base method
-func (m *MockBlockSeq) Update(arg0 interface{}) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Update", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Update indicates an expected call of Update
-func (mr *MockBlockSeqMockRecorder) Update(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockBlockSeq)(nil).Update), arg0)
 }
 
 // MockBlockSummary is a mock of BlockSummary interface
@@ -391,18 +361,18 @@ func (m *MockBlockSummary) EXPECT() *MockBlockSummaryMockRecorder {
 	return m.recorder
 }
 
-// Create mocks base method
-func (m *MockBlockSummary) Create(arg0 interface{}) error {
+// CreateSummary mocks base method
+func (m *MockBlockSummary) CreateSummary(arg0 *model.BlockSummary) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Create", arg0)
+	ret := m.ctrl.Call(m, "CreateSummary", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// Create indicates an expected call of Create
-func (mr *MockBlockSummaryMockRecorder) Create(arg0 interface{}) *gomock.Call {
+// CreateSummary indicates an expected call of CreateSummary
+func (mr *MockBlockSummaryMockRecorder) CreateSummary(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockBlockSummary)(nil).Create), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSummary", reflect.TypeOf((*MockBlockSummary)(nil).CreateSummary), arg0)
 }
 
 // DeleteOlderThan mocks base method
@@ -420,21 +390,6 @@ func (mr *MockBlockSummaryMockRecorder) DeleteOlderThan(arg0, arg1 interface{}) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteOlderThan", reflect.TypeOf((*MockBlockSummary)(nil).DeleteOlderThan), arg0, arg1)
 }
 
-// Find mocks base method
-func (m *MockBlockSummary) Find(arg0 *model.BlockSummary) (*model.BlockSummary, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Find", arg0)
-	ret0, _ := ret[0].(*model.BlockSummary)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Find indicates an expected call of Find
-func (mr *MockBlockSummaryMockRecorder) Find(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Find", reflect.TypeOf((*MockBlockSummary)(nil).Find), arg0)
-}
-
 // FindActivityPeriods mocks base method
 func (m *MockBlockSummary) FindActivityPeriods(arg0 types.SummaryInterval, arg1 int64) ([]store.ActivityPeriodRow, error) {
 	m.ctrl.T.Helper()
@@ -448,21 +403,6 @@ func (m *MockBlockSummary) FindActivityPeriods(arg0 types.SummaryInterval, arg1 
 func (mr *MockBlockSummaryMockRecorder) FindActivityPeriods(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindActivityPeriods", reflect.TypeOf((*MockBlockSummary)(nil).FindActivityPeriods), arg0, arg1)
-}
-
-// FindMostRecent mocks base method
-func (m *MockBlockSummary) FindMostRecent() (*model.BlockSummary, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindMostRecent")
-	ret0, _ := ret[0].(*model.BlockSummary)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// FindMostRecent indicates an expected call of FindMostRecent
-func (mr *MockBlockSummaryMockRecorder) FindMostRecent() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindMostRecent", reflect.TypeOf((*MockBlockSummary)(nil).FindMostRecent))
 }
 
 // FindMostRecentByInterval mocks base method
@@ -480,47 +420,63 @@ func (mr *MockBlockSummaryMockRecorder) FindMostRecentByInterval(arg0 interface{
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindMostRecentByInterval", reflect.TypeOf((*MockBlockSummary)(nil).FindMostRecentByInterval), arg0)
 }
 
-// FindSummary mocks base method
-func (m *MockBlockSummary) FindSummary(arg0 types.SummaryInterval, arg1 string) ([]model.BlockSummary, error) {
+// FindMostRecentSummary mocks base method
+func (m *MockBlockSummary) FindMostRecentSummary() (*model.BlockSummary, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindSummary", arg0, arg1)
+	ret := m.ctrl.Call(m, "FindMostRecentSummary")
+	ret0, _ := ret[0].(*model.BlockSummary)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindMostRecentSummary indicates an expected call of FindMostRecentSummary
+func (mr *MockBlockSummaryMockRecorder) FindMostRecentSummary() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindMostRecentSummary", reflect.TypeOf((*MockBlockSummary)(nil).FindMostRecentSummary))
+}
+
+// FindSummaries mocks base method
+func (m *MockBlockSummary) FindSummaries(arg0 types.SummaryInterval, arg1 string) ([]model.BlockSummary, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindSummaries", arg0, arg1)
 	ret0, _ := ret[0].([]model.BlockSummary)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
+// FindSummaries indicates an expected call of FindSummaries
+func (mr *MockBlockSummaryMockRecorder) FindSummaries(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindSummaries", reflect.TypeOf((*MockBlockSummary)(nil).FindSummaries), arg0, arg1)
+}
+
+// FindSummary mocks base method
+func (m *MockBlockSummary) FindSummary(arg0 *model.BlockSummary) (*model.BlockSummary, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindSummary", arg0)
+	ret0, _ := ret[0].(*model.BlockSummary)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
 // FindSummary indicates an expected call of FindSummary
-func (mr *MockBlockSummaryMockRecorder) FindSummary(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockBlockSummaryMockRecorder) FindSummary(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindSummary", reflect.TypeOf((*MockBlockSummary)(nil).FindSummary), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindSummary", reflect.TypeOf((*MockBlockSummary)(nil).FindSummary), arg0)
 }
 
-// Save mocks base method
-func (m *MockBlockSummary) Save(arg0 interface{}) error {
+// SaveSummary mocks base method
+func (m *MockBlockSummary) SaveSummary(arg0 *model.BlockSummary) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Save", arg0)
+	ret := m.ctrl.Call(m, "SaveSummary", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// Save indicates an expected call of Save
-func (mr *MockBlockSummaryMockRecorder) Save(arg0 interface{}) *gomock.Call {
+// SaveSummary indicates an expected call of SaveSummary
+func (mr *MockBlockSummaryMockRecorder) SaveSummary(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Save", reflect.TypeOf((*MockBlockSummary)(nil).Save), arg0)
-}
-
-// Update mocks base method
-func (m *MockBlockSummary) Update(arg0 interface{}) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Update", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Update indicates an expected call of Update
-func (mr *MockBlockSummaryMockRecorder) Update(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockBlockSummary)(nil).Update), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveSummary", reflect.TypeOf((*MockBlockSummary)(nil).SaveSummary), arg0)
 }
 
 // MockDatabase is a mock of Database interface
@@ -872,20 +828,6 @@ func (m *MockSyncables) EXPECT() *MockSyncablesMockRecorder {
 	return m.recorder
 }
 
-// Create mocks base method
-func (m *MockSyncables) Create(arg0 interface{}) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Create", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Create indicates an expected call of Create
-func (mr *MockSyncablesMockRecorder) Create(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockSyncables)(nil).Create), arg0)
-}
-
 // CreateOrUpdate mocks base method
 func (m *MockSyncables) CreateOrUpdate(arg0 *model.Syncable) error {
 	m.ctrl.T.Helper()
@@ -1005,18 +947,18 @@ func (mr *MockSyncablesMockRecorder) FindSmallestIndexVersion() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindSmallestIndexVersion", reflect.TypeOf((*MockSyncables)(nil).FindSmallestIndexVersion))
 }
 
-// Save mocks base method
-func (m *MockSyncables) Save(arg0 interface{}) error {
+// SaveSyncable mocks base method
+func (m *MockSyncables) SaveSyncable(arg0 *model.Syncable) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Save", arg0)
+	ret := m.ctrl.Call(m, "SaveSyncable", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// Save indicates an expected call of Save
-func (mr *MockSyncablesMockRecorder) Save(arg0 interface{}) *gomock.Call {
+// SaveSyncable indicates an expected call of SaveSyncable
+func (mr *MockSyncablesMockRecorder) SaveSyncable(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Save", reflect.TypeOf((*MockSyncables)(nil).Save), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveSyncable", reflect.TypeOf((*MockSyncables)(nil).SaveSyncable), arg0)
 }
 
 // SetProcessedAtForRange mocks base method
@@ -1031,20 +973,6 @@ func (m *MockSyncables) SetProcessedAtForRange(arg0 types.ID, arg1, arg2 int64) 
 func (mr *MockSyncablesMockRecorder) SetProcessedAtForRange(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetProcessedAtForRange", reflect.TypeOf((*MockSyncables)(nil).SetProcessedAtForRange), arg0, arg1, arg2)
-}
-
-// Update mocks base method
-func (m *MockSyncables) Update(arg0 interface{}) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Update", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Update indicates an expected call of Update
-func (mr *MockSyncablesMockRecorder) Update(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockSyncables)(nil).Update), arg0)
 }
 
 // MockValidatorAgg is a mock of ValidatorAgg interface
@@ -1070,47 +998,33 @@ func (m *MockValidatorAgg) EXPECT() *MockValidatorAggMockRecorder {
 	return m.recorder
 }
 
-// All mocks base method
-func (m *MockValidatorAgg) All() ([]model.ValidatorAgg, error) {
+// CreateAgg mocks base method
+func (m *MockValidatorAgg) CreateAgg(arg0 *model.ValidatorAgg) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "All")
-	ret0, _ := ret[0].([]model.ValidatorAgg)
+	ret := m.ctrl.Call(m, "CreateAgg", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CreateAgg indicates an expected call of CreateAgg
+func (mr *MockValidatorAggMockRecorder) CreateAgg(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAgg", reflect.TypeOf((*MockValidatorAgg)(nil).CreateAgg), arg0)
+}
+
+// FindAggByStashAccount mocks base method
+func (m *MockValidatorAgg) FindAggByStashAccount(arg0 string) (*model.ValidatorAgg, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindAggByStashAccount", arg0)
+	ret0, _ := ret[0].(*model.ValidatorAgg)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// All indicates an expected call of All
-func (mr *MockValidatorAggMockRecorder) All() *gomock.Call {
+// FindAggByStashAccount indicates an expected call of FindAggByStashAccount
+func (mr *MockValidatorAggMockRecorder) FindAggByStashAccount(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "All", reflect.TypeOf((*MockValidatorAgg)(nil).All))
-}
-
-// Create mocks base method
-func (m *MockValidatorAgg) Create(arg0 interface{}) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Create", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Create indicates an expected call of Create
-func (mr *MockValidatorAggMockRecorder) Create(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockValidatorAgg)(nil).Create), arg0)
-}
-
-// CreateOrUpdate mocks base method
-func (m *MockValidatorAgg) CreateOrUpdate(arg0 *model.ValidatorAgg) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateOrUpdate", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// CreateOrUpdate indicates an expected call of CreateOrUpdate
-func (mr *MockValidatorAggMockRecorder) CreateOrUpdate(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOrUpdate", reflect.TypeOf((*MockValidatorAgg)(nil).CreateOrUpdate), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindAggByStashAccount", reflect.TypeOf((*MockValidatorAgg)(nil).FindAggByStashAccount), arg0)
 }
 
 // FindBy mocks base method
@@ -1143,21 +1057,6 @@ func (mr *MockValidatorAggMockRecorder) FindByID(arg0 interface{}) *gomock.Call 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByID", reflect.TypeOf((*MockValidatorAgg)(nil).FindByID), arg0)
 }
 
-// FindByStashAccount mocks base method
-func (m *MockValidatorAgg) FindByStashAccount(arg0 string) (*model.ValidatorAgg, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindByStashAccount", arg0)
-	ret0, _ := ret[0].(*model.ValidatorAgg)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// FindByStashAccount indicates an expected call of FindByStashAccount
-func (mr *MockValidatorAggMockRecorder) FindByStashAccount(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByStashAccount", reflect.TypeOf((*MockValidatorAgg)(nil).FindByStashAccount), arg0)
-}
-
 // GetAllForHeightGreaterThan mocks base method
 func (m *MockValidatorAgg) GetAllForHeightGreaterThan(arg0 int64) ([]model.ValidatorAgg, error) {
 	m.ctrl.T.Helper()
@@ -1173,32 +1072,18 @@ func (mr *MockValidatorAggMockRecorder) GetAllForHeightGreaterThan(arg0 interfac
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllForHeightGreaterThan", reflect.TypeOf((*MockValidatorAgg)(nil).GetAllForHeightGreaterThan), arg0)
 }
 
-// Save mocks base method
-func (m *MockValidatorAgg) Save(arg0 interface{}) error {
+// SaveAgg mocks base method
+func (m *MockValidatorAgg) SaveAgg(arg0 *model.ValidatorAgg) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Save", arg0)
+	ret := m.ctrl.Call(m, "SaveAgg", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// Save indicates an expected call of Save
-func (mr *MockValidatorAggMockRecorder) Save(arg0 interface{}) *gomock.Call {
+// SaveAgg indicates an expected call of SaveAgg
+func (mr *MockValidatorAggMockRecorder) SaveAgg(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Save", reflect.TypeOf((*MockValidatorAgg)(nil).Save), arg0)
-}
-
-// Update mocks base method
-func (m *MockValidatorAgg) Update(arg0 interface{}) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Update", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Update indicates an expected call of Update
-func (mr *MockValidatorAggMockRecorder) Update(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockValidatorAgg)(nil).Update), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveAgg", reflect.TypeOf((*MockValidatorAgg)(nil).SaveAgg), arg0)
 }
 
 // MockValidatorEraSeq is a mock of ValidatorEraSeq interface
@@ -1224,47 +1109,33 @@ func (m *MockValidatorEraSeq) EXPECT() *MockValidatorEraSeqMockRecorder {
 	return m.recorder
 }
 
-// Create mocks base method
-func (m *MockValidatorEraSeq) Create(arg0 interface{}) error {
+// CreateEraSeq mocks base method
+func (m *MockValidatorEraSeq) CreateEraSeq(arg0 *model.ValidatorEraSeq) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Create", arg0)
+	ret := m.ctrl.Call(m, "CreateEraSeq", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// Create indicates an expected call of Create
-func (mr *MockValidatorEraSeqMockRecorder) Create(arg0 interface{}) *gomock.Call {
+// CreateEraSeq indicates an expected call of CreateEraSeq
+func (mr *MockValidatorEraSeqMockRecorder) CreateEraSeq(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockValidatorEraSeq)(nil).Create), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateEraSeq", reflect.TypeOf((*MockValidatorEraSeq)(nil).CreateEraSeq), arg0)
 }
 
-// CreateIfNotExists mocks base method
-func (m *MockValidatorEraSeq) CreateIfNotExists(arg0 *model.ValidatorEraSeq) error {
+// DeleteEraSeqsOlderThan mocks base method
+func (m *MockValidatorEraSeq) DeleteEraSeqsOlderThan(arg0 time.Time) (*int64, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateIfNotExists", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// CreateIfNotExists indicates an expected call of CreateIfNotExists
-func (mr *MockValidatorEraSeqMockRecorder) CreateIfNotExists(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateIfNotExists", reflect.TypeOf((*MockValidatorEraSeq)(nil).CreateIfNotExists), arg0)
-}
-
-// DeleteOlderThan mocks base method
-func (m *MockValidatorEraSeq) DeleteOlderThan(arg0 time.Time) (*int64, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteOlderThan", arg0)
+	ret := m.ctrl.Call(m, "DeleteEraSeqsOlderThan", arg0)
 	ret0, _ := ret[0].(*int64)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// DeleteOlderThan indicates an expected call of DeleteOlderThan
-func (mr *MockValidatorEraSeqMockRecorder) DeleteOlderThan(arg0 interface{}) *gomock.Call {
+// DeleteEraSeqsOlderThan indicates an expected call of DeleteEraSeqsOlderThan
+func (mr *MockValidatorEraSeqMockRecorder) DeleteEraSeqsOlderThan(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteOlderThan", reflect.TypeOf((*MockValidatorEraSeq)(nil).DeleteOlderThan), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteEraSeqsOlderThan", reflect.TypeOf((*MockValidatorEraSeq)(nil).DeleteEraSeqsOlderThan), arg0)
 }
 
 // FindByEra mocks base method
@@ -1297,107 +1168,78 @@ func (mr *MockValidatorEraSeqMockRecorder) FindByEraAndStashAccount(arg0, arg1 i
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByEraAndStashAccount", reflect.TypeOf((*MockValidatorEraSeq)(nil).FindByEraAndStashAccount), arg0, arg1)
 }
 
-// FindByHeight mocks base method
-func (m *MockValidatorEraSeq) FindByHeight(arg0 int64) ([]model.ValidatorEraSeq, error) {
+// FindEraSeqsByHeight mocks base method
+func (m *MockValidatorEraSeq) FindEraSeqsByHeight(arg0 int64) ([]model.ValidatorEraSeq, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindByHeight", arg0)
+	ret := m.ctrl.Call(m, "FindEraSeqsByHeight", arg0)
 	ret0, _ := ret[0].([]model.ValidatorEraSeq)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// FindByHeight indicates an expected call of FindByHeight
-func (mr *MockValidatorEraSeqMockRecorder) FindByHeight(arg0 interface{}) *gomock.Call {
+// FindEraSeqsByHeight indicates an expected call of FindEraSeqsByHeight
+func (mr *MockValidatorEraSeqMockRecorder) FindEraSeqsByHeight(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByHeight", reflect.TypeOf((*MockValidatorEraSeq)(nil).FindByHeight), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindEraSeqsByHeight", reflect.TypeOf((*MockValidatorEraSeq)(nil).FindEraSeqsByHeight), arg0)
 }
 
-// FindByHeightAndStashAccount mocks base method
-func (m *MockValidatorEraSeq) FindByHeightAndStashAccount(arg0 int64, arg1 string) (*model.ValidatorEraSeq, error) {
+// FindLastEraSeqByStashAccount mocks base method
+func (m *MockValidatorEraSeq) FindLastEraSeqByStashAccount(arg0 string, arg1 int64) ([]model.ValidatorEraSeq, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindByHeightAndStashAccount", arg0, arg1)
-	ret0, _ := ret[0].(*model.ValidatorEraSeq)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// FindByHeightAndStashAccount indicates an expected call of FindByHeightAndStashAccount
-func (mr *MockValidatorEraSeqMockRecorder) FindByHeightAndStashAccount(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByHeightAndStashAccount", reflect.TypeOf((*MockValidatorEraSeq)(nil).FindByHeightAndStashAccount), arg0, arg1)
-}
-
-// FindLastByStashAccount mocks base method
-func (m *MockValidatorEraSeq) FindLastByStashAccount(arg0 string, arg1 int64) ([]model.ValidatorEraSeq, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindLastByStashAccount", arg0, arg1)
+	ret := m.ctrl.Call(m, "FindLastEraSeqByStashAccount", arg0, arg1)
 	ret0, _ := ret[0].([]model.ValidatorEraSeq)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// FindLastByStashAccount indicates an expected call of FindLastByStashAccount
-func (mr *MockValidatorEraSeqMockRecorder) FindLastByStashAccount(arg0, arg1 interface{}) *gomock.Call {
+// FindLastEraSeqByStashAccount indicates an expected call of FindLastEraSeqByStashAccount
+func (mr *MockValidatorEraSeqMockRecorder) FindLastEraSeqByStashAccount(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindLastByStashAccount", reflect.TypeOf((*MockValidatorEraSeq)(nil).FindLastByStashAccount), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindLastEraSeqByStashAccount", reflect.TypeOf((*MockValidatorEraSeq)(nil).FindLastEraSeqByStashAccount), arg0, arg1)
 }
 
-// FindMostRecent mocks base method
-func (m *MockValidatorEraSeq) FindMostRecent() (*model.ValidatorEraSeq, error) {
+// FindMostRecentEraSeq mocks base method
+func (m *MockValidatorEraSeq) FindMostRecentEraSeq() (*model.ValidatorEraSeq, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindMostRecent")
+	ret := m.ctrl.Call(m, "FindMostRecentEraSeq")
 	ret0, _ := ret[0].(*model.ValidatorEraSeq)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// FindMostRecent indicates an expected call of FindMostRecent
-func (mr *MockValidatorEraSeqMockRecorder) FindMostRecent() *gomock.Call {
+// FindMostRecentEraSeq indicates an expected call of FindMostRecentEraSeq
+func (mr *MockValidatorEraSeqMockRecorder) FindMostRecentEraSeq() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindMostRecent", reflect.TypeOf((*MockValidatorEraSeq)(nil).FindMostRecent))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindMostRecentEraSeq", reflect.TypeOf((*MockValidatorEraSeq)(nil).FindMostRecentEraSeq))
 }
 
-// Save mocks base method
-func (m *MockValidatorEraSeq) Save(arg0 interface{}) error {
+// SaveEraSeq mocks base method
+func (m *MockValidatorEraSeq) SaveEraSeq(arg0 *model.ValidatorEraSeq) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Save", arg0)
+	ret := m.ctrl.Call(m, "SaveEraSeq", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// Save indicates an expected call of Save
-func (mr *MockValidatorEraSeqMockRecorder) Save(arg0 interface{}) *gomock.Call {
+// SaveEraSeq indicates an expected call of SaveEraSeq
+func (mr *MockValidatorEraSeqMockRecorder) SaveEraSeq(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Save", reflect.TypeOf((*MockValidatorEraSeq)(nil).Save), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveEraSeq", reflect.TypeOf((*MockValidatorEraSeq)(nil).SaveEraSeq), arg0)
 }
 
-// Summarize mocks base method
-func (m *MockValidatorEraSeq) Summarize(arg0 types.SummaryInterval, arg1 []store.ActivityPeriodRow) ([]model.ValidatorEraSeqSummary, error) {
+// SummarizeEraSeqs mocks base method
+func (m *MockValidatorEraSeq) SummarizeEraSeqs(arg0 types.SummaryInterval, arg1 []store.ActivityPeriodRow) ([]model.ValidatorEraSeqSummary, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Summarize", arg0, arg1)
+	ret := m.ctrl.Call(m, "SummarizeEraSeqs", arg0, arg1)
 	ret0, _ := ret[0].([]model.ValidatorEraSeqSummary)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// Summarize indicates an expected call of Summarize
-func (mr *MockValidatorEraSeqMockRecorder) Summarize(arg0, arg1 interface{}) *gomock.Call {
+// SummarizeEraSeqs indicates an expected call of SummarizeEraSeqs
+func (mr *MockValidatorEraSeqMockRecorder) SummarizeEraSeqs(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Summarize", reflect.TypeOf((*MockValidatorEraSeq)(nil).Summarize), arg0, arg1)
-}
-
-// Update mocks base method
-func (m *MockValidatorEraSeq) Update(arg0 interface{}) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Update", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Update indicates an expected call of Update
-func (mr *MockValidatorEraSeqMockRecorder) Update(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockValidatorEraSeq)(nil).Update), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SummarizeEraSeqs", reflect.TypeOf((*MockValidatorEraSeq)(nil).SummarizeEraSeqs), arg0, arg1)
 }
 
 // MockValidatorSessionSeq is a mock of ValidatorSessionSeq interface
@@ -1423,48 +1265,33 @@ func (m *MockValidatorSessionSeq) EXPECT() *MockValidatorSessionSeqMockRecorder 
 	return m.recorder
 }
 
-// Create mocks base method
-func (m *MockValidatorSessionSeq) Create(arg0 interface{}) error {
+// CreateSessionSeq mocks base method
+func (m *MockValidatorSessionSeq) CreateSessionSeq(arg0 *model.ValidatorSessionSeq) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Create", arg0)
+	ret := m.ctrl.Call(m, "CreateSessionSeq", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// Create indicates an expected call of Create
-func (mr *MockValidatorSessionSeqMockRecorder) Create(arg0 interface{}) *gomock.Call {
+// CreateSessionSeq indicates an expected call of CreateSessionSeq
+func (mr *MockValidatorSessionSeqMockRecorder) CreateSessionSeq(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockValidatorSessionSeq)(nil).Create), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSessionSeq", reflect.TypeOf((*MockValidatorSessionSeq)(nil).CreateSessionSeq), arg0)
 }
 
-// DeleteOlderThan mocks base method
-func (m *MockValidatorSessionSeq) DeleteOlderThan(arg0 time.Time) (*int64, error) {
+// DeleteSessionSeqsOlderThan mocks base method
+func (m *MockValidatorSessionSeq) DeleteSessionSeqsOlderThan(arg0 time.Time) (*int64, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteOlderThan", arg0)
+	ret := m.ctrl.Call(m, "DeleteSessionSeqsOlderThan", arg0)
 	ret0, _ := ret[0].(*int64)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// DeleteOlderThan indicates an expected call of DeleteOlderThan
-func (mr *MockValidatorSessionSeqMockRecorder) DeleteOlderThan(arg0 interface{}) *gomock.Call {
+// DeleteSessionSeqsOlderThan indicates an expected call of DeleteSessionSeqsOlderThan
+func (mr *MockValidatorSessionSeqMockRecorder) DeleteSessionSeqsOlderThan(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteOlderThan", reflect.TypeOf((*MockValidatorSessionSeq)(nil).DeleteOlderThan), arg0)
-}
-
-// FindByHeight mocks base method
-func (m *MockValidatorSessionSeq) FindByHeight(arg0 int64) ([]model.ValidatorSessionSeq, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindByHeight", arg0)
-	ret0, _ := ret[0].([]model.ValidatorSessionSeq)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// FindByHeight indicates an expected call of FindByHeight
-func (mr *MockValidatorSessionSeqMockRecorder) FindByHeight(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByHeight", reflect.TypeOf((*MockValidatorSessionSeq)(nil).FindByHeight), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSessionSeqsOlderThan", reflect.TypeOf((*MockValidatorSessionSeq)(nil).DeleteSessionSeqsOlderThan), arg0)
 }
 
 // FindBySessionAndStashAccount mocks base method
@@ -1482,77 +1309,78 @@ func (mr *MockValidatorSessionSeqMockRecorder) FindBySessionAndStashAccount(arg0
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindBySessionAndStashAccount", reflect.TypeOf((*MockValidatorSessionSeq)(nil).FindBySessionAndStashAccount), arg0, arg1)
 }
 
-// FindLastByStashAccount mocks base method
-func (m *MockValidatorSessionSeq) FindLastByStashAccount(arg0 string, arg1 int64) ([]model.ValidatorSessionSeq, error) {
+// FindLastSessionSeqByStashAccount mocks base method
+func (m *MockValidatorSessionSeq) FindLastSessionSeqByStashAccount(arg0 string, arg1 int64) ([]model.ValidatorSessionSeq, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindLastByStashAccount", arg0, arg1)
+	ret := m.ctrl.Call(m, "FindLastSessionSeqByStashAccount", arg0, arg1)
 	ret0, _ := ret[0].([]model.ValidatorSessionSeq)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// FindLastByStashAccount indicates an expected call of FindLastByStashAccount
-func (mr *MockValidatorSessionSeqMockRecorder) FindLastByStashAccount(arg0, arg1 interface{}) *gomock.Call {
+// FindLastSessionSeqByStashAccount indicates an expected call of FindLastSessionSeqByStashAccount
+func (mr *MockValidatorSessionSeqMockRecorder) FindLastSessionSeqByStashAccount(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindLastByStashAccount", reflect.TypeOf((*MockValidatorSessionSeq)(nil).FindLastByStashAccount), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindLastSessionSeqByStashAccount", reflect.TypeOf((*MockValidatorSessionSeq)(nil).FindLastSessionSeqByStashAccount), arg0, arg1)
 }
 
-// FindMostRecent mocks base method
-func (m *MockValidatorSessionSeq) FindMostRecent() (*model.ValidatorSessionSeq, error) {
+// FindMostRecentSessionSeq mocks base method
+func (m *MockValidatorSessionSeq) FindMostRecentSessionSeq() (*model.ValidatorSessionSeq, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindMostRecent")
+	ret := m.ctrl.Call(m, "FindMostRecentSessionSeq")
 	ret0, _ := ret[0].(*model.ValidatorSessionSeq)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// FindMostRecent indicates an expected call of FindMostRecent
-func (mr *MockValidatorSessionSeqMockRecorder) FindMostRecent() *gomock.Call {
+// FindMostRecentSessionSeq indicates an expected call of FindMostRecentSessionSeq
+func (mr *MockValidatorSessionSeqMockRecorder) FindMostRecentSessionSeq() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindMostRecent", reflect.TypeOf((*MockValidatorSessionSeq)(nil).FindMostRecent))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindMostRecentSessionSeq", reflect.TypeOf((*MockValidatorSessionSeq)(nil).FindMostRecentSessionSeq))
 }
 
-// Save mocks base method
-func (m *MockValidatorSessionSeq) Save(arg0 interface{}) error {
+// FindSessionSeqsByHeight mocks base method
+func (m *MockValidatorSessionSeq) FindSessionSeqsByHeight(arg0 int64) ([]model.ValidatorSessionSeq, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Save", arg0)
+	ret := m.ctrl.Call(m, "FindSessionSeqsByHeight", arg0)
+	ret0, _ := ret[0].([]model.ValidatorSessionSeq)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindSessionSeqsByHeight indicates an expected call of FindSessionSeqsByHeight
+func (mr *MockValidatorSessionSeqMockRecorder) FindSessionSeqsByHeight(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindSessionSeqsByHeight", reflect.TypeOf((*MockValidatorSessionSeq)(nil).FindSessionSeqsByHeight), arg0)
+}
+
+// SaveSessionSeq mocks base method
+func (m *MockValidatorSessionSeq) SaveSessionSeq(arg0 *model.ValidatorSessionSeq) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SaveSessionSeq", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// Save indicates an expected call of Save
-func (mr *MockValidatorSessionSeqMockRecorder) Save(arg0 interface{}) *gomock.Call {
+// SaveSessionSeq indicates an expected call of SaveSessionSeq
+func (mr *MockValidatorSessionSeqMockRecorder) SaveSessionSeq(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Save", reflect.TypeOf((*MockValidatorSessionSeq)(nil).Save), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveSessionSeq", reflect.TypeOf((*MockValidatorSessionSeq)(nil).SaveSessionSeq), arg0)
 }
 
-// Summarize mocks base method
-func (m *MockValidatorSessionSeq) Summarize(arg0 types.SummaryInterval, arg1 []store.ActivityPeriodRow) ([]model.ValidatorSessionSeqSummary, error) {
+// SummarizeSessionSeqs mocks base method
+func (m *MockValidatorSessionSeq) SummarizeSessionSeqs(arg0 types.SummaryInterval, arg1 []store.ActivityPeriodRow) ([]model.ValidatorSessionSeqSummary, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Summarize", arg0, arg1)
+	ret := m.ctrl.Call(m, "SummarizeSessionSeqs", arg0, arg1)
 	ret0, _ := ret[0].([]model.ValidatorSessionSeqSummary)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// Summarize indicates an expected call of Summarize
-func (mr *MockValidatorSessionSeqMockRecorder) Summarize(arg0, arg1 interface{}) *gomock.Call {
+// SummarizeSessionSeqs indicates an expected call of SummarizeSessionSeqs
+func (mr *MockValidatorSessionSeqMockRecorder) SummarizeSessionSeqs(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Summarize", reflect.TypeOf((*MockValidatorSessionSeq)(nil).Summarize), arg0, arg1)
-}
-
-// Update mocks base method
-func (m *MockValidatorSessionSeq) Update(arg0 interface{}) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Update", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Update indicates an expected call of Update
-func (mr *MockValidatorSessionSeqMockRecorder) Update(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockValidatorSessionSeq)(nil).Update), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SummarizeSessionSeqs", reflect.TypeOf((*MockValidatorSessionSeq)(nil).SummarizeSessionSeqs), arg0, arg1)
 }
 
 // MockValidatorSummary is a mock of ValidatorSummary interface
@@ -1578,48 +1406,33 @@ func (m *MockValidatorSummary) EXPECT() *MockValidatorSummaryMockRecorder {
 	return m.recorder
 }
 
-// Create mocks base method
-func (m *MockValidatorSummary) Create(arg0 interface{}) error {
+// CreateSummary mocks base method
+func (m *MockValidatorSummary) CreateSummary(arg0 *model.ValidatorSummary) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Create", arg0)
+	ret := m.ctrl.Call(m, "CreateSummary", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// Create indicates an expected call of Create
-func (mr *MockValidatorSummaryMockRecorder) Create(arg0 interface{}) *gomock.Call {
+// CreateSummary indicates an expected call of CreateSummary
+func (mr *MockValidatorSummaryMockRecorder) CreateSummary(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockValidatorSummary)(nil).Create), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSummary", reflect.TypeOf((*MockValidatorSummary)(nil).CreateSummary), arg0)
 }
 
-// DeleteOlderThan mocks base method
-func (m *MockValidatorSummary) DeleteOlderThan(arg0 types.SummaryInterval, arg1 time.Time) (*int64, error) {
+// DeleteSummaryOlderThan mocks base method
+func (m *MockValidatorSummary) DeleteSummaryOlderThan(arg0 types.SummaryInterval, arg1 time.Time) (*int64, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteOlderThan", arg0, arg1)
+	ret := m.ctrl.Call(m, "DeleteSummaryOlderThan", arg0, arg1)
 	ret0, _ := ret[0].(*int64)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// DeleteOlderThan indicates an expected call of DeleteOlderThan
-func (mr *MockValidatorSummaryMockRecorder) DeleteOlderThan(arg0, arg1 interface{}) *gomock.Call {
+// DeleteSummaryOlderThan indicates an expected call of DeleteSummaryOlderThan
+func (mr *MockValidatorSummaryMockRecorder) DeleteSummaryOlderThan(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteOlderThan", reflect.TypeOf((*MockValidatorSummary)(nil).DeleteOlderThan), arg0, arg1)
-}
-
-// Find mocks base method
-func (m *MockValidatorSummary) Find(arg0 *model.ValidatorSummary) (*model.ValidatorSummary, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Find", arg0)
-	ret0, _ := ret[0].(*model.ValidatorSummary)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Find indicates an expected call of Find
-func (mr *MockValidatorSummaryMockRecorder) Find(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Find", reflect.TypeOf((*MockValidatorSummary)(nil).Find), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSummaryOlderThan", reflect.TypeOf((*MockValidatorSummary)(nil).DeleteSummaryOlderThan), arg0, arg1)
 }
 
 // FindActivityPeriods mocks base method
@@ -1637,21 +1450,6 @@ func (mr *MockValidatorSummaryMockRecorder) FindActivityPeriods(arg0, arg1 inter
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindActivityPeriods", reflect.TypeOf((*MockValidatorSummary)(nil).FindActivityPeriods), arg0, arg1)
 }
 
-// FindMostRecent mocks base method
-func (m *MockValidatorSummary) FindMostRecent() (*model.ValidatorSummary, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindMostRecent")
-	ret0, _ := ret[0].(*model.ValidatorSummary)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// FindMostRecent indicates an expected call of FindMostRecent
-func (mr *MockValidatorSummaryMockRecorder) FindMostRecent() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindMostRecent", reflect.TypeOf((*MockValidatorSummary)(nil).FindMostRecent))
-}
-
 // FindMostRecentByInterval mocks base method
 func (m *MockValidatorSummary) FindMostRecentByInterval(arg0 types.SummaryInterval) (*model.ValidatorSummary, error) {
 	m.ctrl.T.Helper()
@@ -1667,19 +1465,49 @@ func (mr *MockValidatorSummaryMockRecorder) FindMostRecentByInterval(arg0 interf
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindMostRecentByInterval", reflect.TypeOf((*MockValidatorSummary)(nil).FindMostRecentByInterval), arg0)
 }
 
-// FindSummary mocks base method
-func (m *MockValidatorSummary) FindSummary(arg0 types.SummaryInterval, arg1 string) ([]store.ValidatorSummaryRow, error) {
+// FindMostRecentSummary mocks base method
+func (m *MockValidatorSummary) FindMostRecentSummary() (*model.ValidatorSummary, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindSummary", arg0, arg1)
+	ret := m.ctrl.Call(m, "FindMostRecentSummary")
+	ret0, _ := ret[0].(*model.ValidatorSummary)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindMostRecentSummary indicates an expected call of FindMostRecentSummary
+func (mr *MockValidatorSummaryMockRecorder) FindMostRecentSummary() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindMostRecentSummary", reflect.TypeOf((*MockValidatorSummary)(nil).FindMostRecentSummary))
+}
+
+// FindSummaries mocks base method
+func (m *MockValidatorSummary) FindSummaries(arg0 types.SummaryInterval, arg1 string) ([]store.ValidatorSummaryRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindSummaries", arg0, arg1)
 	ret0, _ := ret[0].([]store.ValidatorSummaryRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// FindSummary indicates an expected call of FindSummary
-func (mr *MockValidatorSummaryMockRecorder) FindSummary(arg0, arg1 interface{}) *gomock.Call {
+// FindSummaries indicates an expected call of FindSummaries
+func (mr *MockValidatorSummaryMockRecorder) FindSummaries(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindSummary", reflect.TypeOf((*MockValidatorSummary)(nil).FindSummary), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindSummaries", reflect.TypeOf((*MockValidatorSummary)(nil).FindSummaries), arg0, arg1)
+}
+
+// FindSummary mocks base method
+func (m *MockValidatorSummary) FindSummary(arg0 *model.ValidatorSummary) (*model.ValidatorSummary, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindSummary", arg0)
+	ret0, _ := ret[0].(*model.ValidatorSummary)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindSummary indicates an expected call of FindSummary
+func (mr *MockValidatorSummaryMockRecorder) FindSummary(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindSummary", reflect.TypeOf((*MockValidatorSummary)(nil).FindSummary), arg0)
 }
 
 // FindSummaryByStashAccount mocks base method
@@ -1697,30 +1525,16 @@ func (mr *MockValidatorSummaryMockRecorder) FindSummaryByStashAccount(arg0, arg1
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindSummaryByStashAccount", reflect.TypeOf((*MockValidatorSummary)(nil).FindSummaryByStashAccount), arg0, arg1, arg2)
 }
 
-// Save mocks base method
-func (m *MockValidatorSummary) Save(arg0 interface{}) error {
+// SaveSummary mocks base method
+func (m *MockValidatorSummary) SaveSummary(arg0 *model.ValidatorSummary) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Save", arg0)
+	ret := m.ctrl.Call(m, "SaveSummary", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// Save indicates an expected call of Save
-func (mr *MockValidatorSummaryMockRecorder) Save(arg0 interface{}) *gomock.Call {
+// SaveSummary indicates an expected call of SaveSummary
+func (mr *MockValidatorSummaryMockRecorder) SaveSummary(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Save", reflect.TypeOf((*MockValidatorSummary)(nil).Save), arg0)
-}
-
-// Update mocks base method
-func (m *MockValidatorSummary) Update(arg0 interface{}) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Update", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Update indicates an expected call of Update
-func (mr *MockValidatorSummaryMockRecorder) Update(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockValidatorSummary)(nil).Update), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveSummary", reflect.TypeOf((*MockValidatorSummary)(nil).SaveSummary), arg0)
 }

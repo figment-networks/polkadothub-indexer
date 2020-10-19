@@ -23,7 +23,7 @@ func TestReportCreator_createIfNotExists(t *testing.T) {
 
 		creator := reportCreator{
 			kind:      model.ReportKindSequentialReindex,
-			reportsDb: reportStoreMock,
+			reportDb: reportStoreMock,
 		}
 
 		if err := creator.createIfNotExists(); err != nil {
@@ -46,7 +46,7 @@ func TestReportCreator_createIfNotExists(t *testing.T) {
 
 		creator := reportCreator{
 			kind:      model.ReportKindSequentialReindex,
-			reportsDb: reportStoreMock,
+			reportDb: reportStoreMock,
 		}
 
 		if err := creator.createIfNotExists(); err == nil {
@@ -68,7 +68,7 @@ func TestReportCreator_createIfNotExists(t *testing.T) {
 
 		creator := reportCreator{
 			kind:      model.ReportKindSequentialReindex,
-			reportsDb: reportStoreMock,
+			reportDb: reportStoreMock,
 		}
 
 		if err := creator.createIfNotExists(); err == nil {
@@ -92,7 +92,7 @@ func TestReportCreator_createIfNotExists(t *testing.T) {
 
 		creator := reportCreator{
 			kind:      model.ReportKindSequentialReindex,
-			reportsDb: reportStoreMock,
+			reportDb: reportStoreMock,
 		}
 
 		if err := creator.createIfNotExists(); err == nil {
@@ -115,7 +115,7 @@ func TestReportCreator_createIfNotExists(t *testing.T) {
 
 		creator := reportCreator{
 			kind:      model.ReportKindSequentialReindex,
-			reportsDb: reportStoreMock,
+			reportDb: reportStoreMock,
 		}
 
 		if err := creator.createIfNotExists(); err != nil {
@@ -140,7 +140,7 @@ func TestReportCreator_complete(t *testing.T) {
 
 		creator := reportCreator{
 			report:    getTestReport(model.ReportKindSequentialReindex),
-			reportsDb: reportStoreMock,
+			reportDb: reportStoreMock,
 		}
 
 		err := creator.complete(10, 10, nil)
@@ -160,7 +160,7 @@ func TestReportCreator_complete(t *testing.T) {
 
 		creator := reportCreator{
 			report:    getTestReport(model.ReportKindSequentialReindex),
-			reportsDb: reportStoreMock,
+			reportDb: reportStoreMock,
 		}
 
 		err := creator.complete(10, 10, nil)

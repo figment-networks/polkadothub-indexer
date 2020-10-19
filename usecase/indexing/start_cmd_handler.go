@@ -16,38 +16,27 @@ type StartCmdHandler struct {
 
 	useCase *startUseCase
 
-	accountEraSeqDb       store.AccountEraSeq
-	blockSeqDb            store.BlockSeq
-	blockSummaryDb        store.BlockSummary
-	databaseDb            store.Database
-	eventSeqDb            store.EventSeq
-	reportsDb             store.Reports
-	syncablesDb           store.Syncables
-	validatorAggDb        store.ValidatorAgg
-	validatorEraSeqDb     store.ValidatorEraSeq
-	validatorSessionSeqDb store.ValidatorSessionSeq
-	validatorSummaryDb    store.ValidatorSummary
+	accountDb   store.Accounts
+	blockDb     store.Blocks
+	databaseDb  store.Database
+	eventDb     store.Events
+	reportDb    store.Reports
+	syncableDb  store.Syncables
+	validatorDb store.Validators
 }
 
-func NewStartCmdHandler(cfg *config.Config, c *client.Client, accountEraSeqDb store.AccountEraSeq, blockSeqDb store.BlockSeq, blockSummaryDb store.BlockSummary,
-	databaseDb store.Database, eventSeqDb store.EventSeq, reportsDb store.Reports, syncablesDb store.Syncables, validatorAggDb store.ValidatorAgg,
-	validatorEraSeqDb store.ValidatorEraSeq, validatorSessionSeqDb store.ValidatorSessionSeq, validatorSummaryDb store.ValidatorSummary,
-) *StartCmdHandler {
+func NewStartCmdHandler(cfg *config.Config, cli *client.Client, accountDb store.Accounts, blockDb store.Blocks, databaseDb store.Database, eventDb store.Events, reportDb store.Reports, syncableDb store.Syncables, validatorDb store.Validators) *StartCmdHandler {
 	return &StartCmdHandler{
 		cfg:    cfg,
-		client: c,
+		client: cli,
 
-		accountEraSeqDb:       accountEraSeqDb,
-		blockSeqDb:            blockSeqDb,
-		blockSummaryDb:        blockSummaryDb,
-		databaseDb:            databaseDb,
-		eventSeqDb:            eventSeqDb,
-		reportsDb:             reportsDb,
-		syncablesDb:           syncablesDb,
-		validatorAggDb:        validatorAggDb,
-		validatorEraSeqDb:     validatorEraSeqDb,
-		validatorSessionSeqDb: validatorSessionSeqDb,
-		validatorSummaryDb:    validatorSummaryDb,
+		accountDb:   accountDb,
+		blockDb:     blockDb,
+		databaseDb:  databaseDb,
+		eventDb:     eventDb,
+		reportDb:    reportDb,
+		syncableDb:  syncableDb,
+		validatorDb: validatorDb,
 	}
 }
 
@@ -63,9 +52,7 @@ func (h *StartCmdHandler) Handle(ctx context.Context, batchSize int64) {
 
 func (h *StartCmdHandler) getUseCase() *startUseCase {
 	if h.useCase == nil {
-		return NewStartUseCase(h.cfg, h.client, h.accountEraSeqDb, h.blockSeqDb, h.blockSummaryDb, h.databaseDb, h.eventSeqDb, h.reportsDb,
-			h.syncablesDb, h.validatorAggDb, h.validatorEraSeqDb, h.validatorSessionSeqDb, h.validatorSummaryDb,
-		)
+		return NewStartUseCase(h.cfg, h.client, h.accountDb, h.blockDb, h.databaseDb, h.eventDb, h.reportDb, h.syncableDb, h.validatorDb)
 	}
 	return h.useCase
 }

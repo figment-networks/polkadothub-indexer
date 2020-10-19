@@ -135,10 +135,10 @@ func TestValidatorAggCreatorTask_Run(t *testing.T) {
 
 			for key := range tt.parsedValidators {
 				if tt.expectErr == dbErr {
-					dbMock.EXPECT().FindByStashAccount(key).Return(nil, dbErr).Times(1)
+					dbMock.EXPECT().FindAggByStashAccount(key).Return(nil, dbErr).Times(1)
 					break
 				}
-				dbMock.EXPECT().FindByStashAccount(key).Return(nil, store.ErrNotFound).Times(1)
+				dbMock.EXPECT().FindAggByStashAccount(key).Return(nil, store.ErrNotFound).Times(1)
 			}
 
 			task := NewValidatorAggCreatorTask(dbMock)
@@ -312,7 +312,7 @@ func TestValidatorAggCreatorTask_Run(t *testing.T) {
 
 			for _, validator := range tt.returnValidators {
 				expect := validator
-				dbMock.EXPECT().FindByStashAccount(validator.StashAccount).Return(&expect, nil).Times(1)
+				dbMock.EXPECT().FindAggByStashAccount(validator.StashAccount).Return(&expect, nil).Times(1)
 			}
 
 			task := NewValidatorAggCreatorTask(dbMock)

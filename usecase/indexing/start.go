@@ -19,38 +19,27 @@ type startUseCase struct {
 	cfg    *config.Config
 	client *client.Client
 
-	accountEraSeqDb       store.AccountEraSeq
-	blockSeqDb            store.BlockSeq
-	blockSummaryDb        store.BlockSummary
-	databaseDb            store.Database
-	eventSeqDb            store.EventSeq
-	reportsDb             store.Reports
-	syncablesDb           store.Syncables
-	validatorAggDb        store.ValidatorAgg
-	validatorEraSeqDb     store.ValidatorEraSeq
-	validatorSessionSeqDb store.ValidatorSessionSeq
-	validatorSummaryDb    store.ValidatorSummary
+	accountDb   store.Accounts
+	blockDb     store.Blocks
+	databaseDb  store.Database
+	eventDb     store.Events
+	reportDb    store.Reports
+	syncableDb  store.Syncables
+	validatorDb store.Validators
 }
 
-func NewStartUseCase(cfg *config.Config, c *client.Client, accountEraSeqDb store.AccountEraSeq, blockSeqDb store.BlockSeq, blockSummaryDb store.BlockSummary,
-	databaseDb store.Database, eventSeqDb store.EventSeq, reportsDb store.Reports, syncablesDb store.Syncables, validatorAggDb store.ValidatorAgg,
-	validatorEraSeqDb store.ValidatorEraSeq, validatorSessionSeqDb store.ValidatorSessionSeq, validatorSummaryDb store.ValidatorSummary,
-) *startUseCase {
+func NewStartUseCase(cfg *config.Config, cli *client.Client, accountDb store.Accounts, blockDb store.Blocks, databaseDb store.Database, eventDb store.Events, reportDb store.Reports, syncableDb store.Syncables, validatorDb store.Validators) *startUseCase {
 	return &startUseCase{
 		cfg:    cfg,
-		client: c,
+		client: cli,
 
-		accountEraSeqDb:       accountEraSeqDb,
-		blockSeqDb:            blockSeqDb,
-		blockSummaryDb:        blockSummaryDb,
-		databaseDb:            databaseDb,
-		eventSeqDb:            eventSeqDb,
-		reportsDb:             reportsDb,
-		syncablesDb:           syncablesDb,
-		validatorAggDb:        validatorAggDb,
-		validatorEraSeqDb:     validatorEraSeqDb,
-		validatorSessionSeqDb: validatorSessionSeqDb,
-		validatorSummaryDb:    validatorSummaryDb,
+		accountDb:   accountDb,
+		blockDb:     blockDb,
+		databaseDb:  databaseDb,
+		eventDb:     eventDb,
+		reportDb:    reportDb,
+		syncableDb:  syncableDb,
+		validatorDb: validatorDb,
 	}
 }
 
@@ -59,9 +48,7 @@ func (uc *startUseCase) Execute(ctx context.Context, batchSize int64) error {
 		return err
 	}
 
-	indexingPipeline, err := indexer.NewPipeline(uc.cfg, uc.client, uc.accountEraSeqDb, uc.blockSeqDb, uc.blockSummaryDb, uc.databaseDb, uc.eventSeqDb, uc.reportsDb,
-		uc.syncablesDb, uc.validatorAggDb, uc.validatorEraSeqDb, uc.validatorSessionSeqDb, uc.validatorSummaryDb,
-	)
+	indexingPipeline, err := indexer.NewPipeline(uc.cfg, uc.client, uc.accountDb, uc.blockDb, uc.databaseDb, uc.eventDb, uc.reportDb, uc.syncableDb, uc.validatorDb)
 	if err != nil {
 		return err
 	}
@@ -74,7 +61,7 @@ func (uc *startUseCase) Execute(ctx context.Context, batchSize int64) error {
 // canExecute checks if sequential reindex is already running
 // if is it running we skip indexing
 func (uc *startUseCase) canExecute() error {
-	if _, err := uc.reportsDb.FindNotCompletedByKind(model.ReportKindSequentialReindex); err != nil {
+	if _, err := uc.reportDb.FindNotCompletedByKind(model.ReportKindSequentialReindex); err != nil {
 		if err == store.ErrNotFound {
 			return nil
 		}

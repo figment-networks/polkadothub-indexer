@@ -13,22 +13,16 @@ type PurgeCmdHandler struct {
 
 	useCase *purgeUseCase
 
-	blockSeqDb            store.BlockSeq
-	blockSummaryDb        store.BlockSummary
-	validatorSessionSeqDb store.ValidatorSessionSeq
-	validatorSummaryDb    store.ValidatorSummary
+	blockDb     store.Blocks
+	validatorDb store.Validators
 }
 
-func NewPurgeCmdHandler(cfg *config.Config, blockSeqDb store.BlockSeq, blockSummaryDb store.BlockSummary,
-	validatorSessionSeqDb store.ValidatorSessionSeq, validatorSummaryDb store.ValidatorSummary,
-) *PurgeCmdHandler {
+func NewPurgeCmdHandler(cfg *config.Config, blockDb store.Blocks, validatorDb store.Validators) *PurgeCmdHandler {
 	return &PurgeCmdHandler{
 		cfg: cfg,
 
-		blockSeqDb:            blockSeqDb,
-		blockSummaryDb:        blockSummaryDb,
-		validatorSessionSeqDb: validatorSessionSeqDb,
-		validatorSummaryDb:    validatorSummaryDb,
+		blockDb:     blockDb,
+		validatorDb: validatorDb,
 	}
 }
 
@@ -44,7 +38,7 @@ func (h *PurgeCmdHandler) Handle(ctx context.Context) {
 
 func (h *PurgeCmdHandler) getUseCase() *purgeUseCase {
 	if h.useCase == nil {
-		return NewPurgeUseCase(h.cfg, h.blockSeqDb, h.blockSummaryDb, h.validatorSessionSeqDb, h.validatorSummaryDb)
+		return NewPurgeUseCase(h.cfg, h.blockDb, h.validatorDb)
 	}
 	return h.useCase
 }

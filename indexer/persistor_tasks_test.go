@@ -88,7 +88,7 @@ func TestBlockSeqPersistor_Run(t *testing.T) {
 				NewBlockSequence: seq,
 			}
 
-			dbMock.EXPECT().Create(seq).Return(tt.expectErr).Times(1)
+			dbMock.EXPECT().CreateSeq(seq).Return(tt.expectErr).Times(1)
 
 			if err := task.Run(ctx, pl); err != tt.expectErr {
 				t.Errorf("want %v; got %v", tt.expectErr, err)
@@ -110,7 +110,7 @@ func TestBlockSeqPersistor_Run(t *testing.T) {
 				UpdatedBlockSequence: seq,
 			}
 
-			dbMock.EXPECT().Save(seq).Return(tt.expectErr).Times(1)
+			dbMock.EXPECT().SaveSeq(seq).Return(tt.expectErr).Times(1)
 
 			if err := task.Run(ctx, pl); err != tt.expectErr {
 				t.Errorf("want %v; got %v", tt.expectErr, err)
@@ -156,7 +156,7 @@ func TestValidatorSessionSeqPersistor_Run(t *testing.T) {
 			if tt.lastInSession {
 				for _, s := range seqs {
 					createSeq := s
-					dbMock.EXPECT().Create(&createSeq).Return(tt.expectErr).Times(1)
+					dbMock.EXPECT().CreateSessionSeq(&createSeq).Return(tt.expectErr).Times(1)
 					if tt.expectErr != nil {
 						// don't expect any more calls
 						break
@@ -187,7 +187,7 @@ func TestValidatorSessionSeqPersistor_Run(t *testing.T) {
 			if tt.lastInSession {
 				for _, s := range seqs {
 					saveSeq := s
-					dbMock.EXPECT().Save(&saveSeq).Return(tt.expectErr).Times(1)
+					dbMock.EXPECT().SaveSessionSeq(&saveSeq).Return(tt.expectErr).Times(1)
 					if tt.expectErr != nil {
 						// don't expect any more calls
 						break
@@ -239,7 +239,7 @@ func TestValidatorEraSeqPersistor_Run(t *testing.T) {
 			if tt.lastInEra {
 				for _, s := range seqs {
 					createSeq := s
-					dbMock.EXPECT().Create(&createSeq).Return(tt.expectErr).Times(1)
+					dbMock.EXPECT().CreateEraSeq(&createSeq).Return(tt.expectErr).Times(1)
 					if tt.expectErr != nil {
 						// don't expect any more calls
 						break
@@ -270,7 +270,7 @@ func TestValidatorEraSeqPersistor_Run(t *testing.T) {
 			if tt.lastInEra {
 				for _, s := range seqs {
 					saveSeq := s
-					dbMock.EXPECT().Save(&saveSeq).Return(tt.expectErr).Times(1)
+					dbMock.EXPECT().SaveEraSeq(&saveSeq).Return(tt.expectErr).Times(1)
 					if tt.expectErr != nil {
 						// don't expect any more calls
 						break
@@ -318,7 +318,7 @@ func TestValidatorAggPersistor_Run(t *testing.T) {
 
 			for _, s := range aggs {
 				createAgg := s
-				dbMock.EXPECT().Create(&createAgg).Return(tt.expectErr).Times(1)
+				dbMock.EXPECT().CreateAgg(&createAgg).Return(tt.expectErr).Times(1)
 				if tt.expectErr != nil {
 					// don't expect any more calls
 					break
@@ -346,7 +346,7 @@ func TestValidatorAggPersistor_Run(t *testing.T) {
 
 			for _, s := range aggs {
 				saveAgg := s
-				dbMock.EXPECT().Save(&saveAgg).Return(tt.expectErr).Times(1)
+				dbMock.EXPECT().SaveAgg(&saveAgg).Return(tt.expectErr).Times(1)
 				if tt.expectErr != nil {
 					// don't expect any more calls
 					break

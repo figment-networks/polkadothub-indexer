@@ -12,7 +12,7 @@ import (
 	"github.com/figment-networks/polkadothub-indexer/usecase/validator"
 )
 
-func NewHttpHandlers(cli *client.Client, accountDb store.Accounts, blockDb store.Blocks, eventDb store.Events, syncableDb store.Syncables, validatorDb store.Validators) (*HttpHandlers, error) {
+func NewHttpHandlers(cli *client.Client, accountDb store.Accounts, blockDb store.Blocks, eventDb store.Events, syncableDb store.Syncables, validatorDb store.Validators) *HttpHandlers {
 	return &HttpHandlers{
 		Health:                     health.NewHealthHttpHandler(),
 		GetStatus:                  chain.NewGetStatusHttpHandler(cli, syncableDb),
@@ -26,7 +26,7 @@ func NewHttpHandlers(cli *client.Client, accountDb store.Accounts, blockDb store
 		GetValidatorByStashAccount: validator.NewGetByStashAccountHttpHandler(accountDb, validatorDb),
 		GetValidatorSummary:        validator.NewGetSummaryHttpHandler(validatorDb),
 		GetValidatorsForMinHeight:  validator.NewGetForMinHeightHttpHandler(syncableDb, validatorDb),
-	}, nil
+	}
 }
 
 type HttpHandlers struct {

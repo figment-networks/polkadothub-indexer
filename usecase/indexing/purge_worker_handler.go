@@ -18,22 +18,16 @@ type purgeWorkerHandler struct {
 
 	useCase *purgeUseCase
 
-	blockSeqDb            store.BlockSeq
-	blockSummaryDb        store.BlockSummary
-	validatorSessionSeqDb store.ValidatorSessionSeq
-	validatorSummaryDb    store.ValidatorSummary
+	blockDb     store.Blocks
+	validatorDb store.Validators
 }
 
-func NewPurgeWorkerHandler(cfg *config.Config, blockSeqDb store.BlockSeq, blockSummaryDb store.BlockSummary,
-	validatorSessionSeqDb store.ValidatorSessionSeq, validatorSummaryDb store.ValidatorSummary,
-) *purgeWorkerHandler {
+func NewPurgeWorkerHandler(cfg *config.Config, blockDb store.Blocks, validatorDb store.Validators) *purgeWorkerHandler {
 	return &purgeWorkerHandler{
 		cfg: cfg,
 
-		blockSeqDb:            blockSeqDb,
-		blockSummaryDb:        blockSummaryDb,
-		validatorSessionSeqDb: validatorSessionSeqDb,
-		validatorSummaryDb:    validatorSummaryDb,
+		blockDb:     blockDb,
+		validatorDb: validatorDb,
 	}
 }
 
@@ -51,7 +45,7 @@ func (h *purgeWorkerHandler) Handle() {
 
 func (h *purgeWorkerHandler) getUseCase() *purgeUseCase {
 	if h.useCase == nil {
-		return NewPurgeUseCase(h.cfg, h.blockSeqDb, h.blockSummaryDb, h.validatorSessionSeqDb, h.validatorSummaryDb)
+		return NewPurgeUseCase(h.cfg, h.blockDb, h.validatorDb)
 	}
 	return h.useCase
 }
