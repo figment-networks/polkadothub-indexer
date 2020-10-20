@@ -90,8 +90,8 @@ github.com/envoyproxy/go-control-plane v0.9.4/go.mod h1:6rpuAdCZL397s3pYoYcLgu1m
 github.com/envoyproxy/protoc-gen-validate v0.1.0/go.mod h1:iSmxcyjqTsJpI2R4NaDN7+kN2VEUnK/pcBlmesArF7c=
 github.com/erikstmartin/go-testdb v0.0.0-20160219214506-8d10e4a1bae5 h1:Yzb9+7DPaBjB8zlTR87/ElzFsnQfuHnVUVqpZZIcV5Y=
 github.com/erikstmartin/go-testdb v0.0.0-20160219214506-8d10e4a1bae5/go.mod h1:a2zkGnVExMxdzMo3M0Hi/3sEU+cWnZpSni0O6/Yb/P0=
-github.com/figment-networks/indexing-engine v0.1.13 h1:p1yVsRW30+0CltMT579DP+QQy0w1+jPHhOSpxgHIAAw=
-github.com/figment-networks/indexing-engine v0.1.13/go.mod h1:qNrfV0A+kpAprbHS/aK1CZU2OgmVr1xkug26DO2QbY8=
+github.com/figment-networks/indexing-engine v0.1.9 h1:NkIHP8EHQu/GannBWx8/pvev0c8pBbmIMIcd0gYJdhE=
+github.com/figment-networks/indexing-engine v0.1.9/go.mod h1:XJB7fw5aBp2SEbKvWahullz3I+D7IL77OhkhTtVYky4=
 github.com/figment-networks/polkadothub-proxy/grpc v0.0.0-20200827200529-18e1211da5fb h1:WjznGuY3xdP3fpzzeRbRMKAHkJ/i4WJ2wjMl3XEeHwY=
 github.com/figment-networks/polkadothub-proxy/grpc v0.0.0-20200827200529-18e1211da5fb/go.mod h1:mNnXE47MivMjqhhBagupimt4OBvVmna2LouCwzsPGUw=
 github.com/fsnotify/fsnotify v1.4.7 h1:IXs+QLmnXW2CcXuY+8Mzv/fWEsPGWxqefPtCP5CnV9I=
