@@ -33,28 +33,22 @@ func NewBackfillSource(cfg *config.Config, db *store.Store, client *client.Clien
 }
 
 type backfillSource struct {
-	cfg                               *config.Config
-	db                                *store.Store
-	client                            *client.Client
-	isForLastOfSessions               bool
-	isForLastOfEras                   bool
-	specificHeightsMap                map[int64]int64
-	currentIndexVersion               int64
-	currentHeight                     int64
-	skipRunningStagesForCurrentHeight bool
-	startHeight                       int64
-	endHeight                         int64
-	err                               error
+	cfg                 *config.Config
+	db                  *store.Store
+	client              *client.Client
+	isForLastOfSessions bool
+	isForLastOfEras     bool
+	specificHeightsMap  map[int64]int64
+	currentIndexVersion int64
+	currentHeight       int64
+	startHeight         int64
+	endHeight           int64
+	err                 error
 }
 
 func (s *backfillSource) Next(context.Context, pipeline.Payload) bool {
 	if s.err == nil && s.currentHeight < s.endHeight {
 		s.currentHeight = s.currentHeight + 1
-		if s.HasOnlySpecificHeightsToRunStages() && !s.isCurrentHeightInSpecificMap() {
-			s.skipRunningStagesForCurrentHeight = true
-		} else {
-			s.skipRunningStagesForCurrentHeight = false
-		}
 		return true
 	}
 	return false
@@ -78,7 +72,10 @@ func (s *backfillSource) Err() error {
 }
 
 func (s *backfillSource) SkipRunningStagesForCurrentHeight() bool {
-	return s.skipRunningStagesForCurrentHeight
+	if s.HasOnlySpecificHeightsToRunStages() && !s.isCurrentHeightInSpecificMap() {
+		return true
+	}
+	return false
 }
 
 func (s *backfillSource) Len() int64 {
