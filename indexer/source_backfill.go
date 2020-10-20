@@ -124,7 +124,7 @@ func (s *backfillSource) setEndHeight() error {
 
 func (s *backfillSource) setSpecificHeights() error {
 	if s.HasOnlySpecificHeightsToRunStages() {
-		syncables, err := s.db.Syncables.FindSpecificHeights(s.currentIndexVersion, s.isForLastOfSessions, s.isForLastOfEras)
+		syncables, err := s.db.Syncables.FindAllByLastInSessionOrEra(s.currentIndexVersion, s.isForLastOfSessions, s.isForLastOfEras)
 		if err != nil {
 			if err == store.ErrNotFound {
 				return errors.New(fmt.Sprintf("no specific heights to backfill [currentIndexVersion=%d]", s.currentIndexVersion))
