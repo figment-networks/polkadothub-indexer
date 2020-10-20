@@ -68,9 +68,12 @@ func (uc *purgeUseCase) purgeValidators(currentIndexVersion int64) error {
 	if err := uc.purgeValidatorSessionSequences(currentIndexVersion); uc.checkErr(err) {
 		return err
 	}
+
 	if err := uc.purgeValidatorSummaries(types.IntervalHourly, uc.cfg.PurgeHourlySummariesInterval); uc.checkErr(err) {
 		return err
 	}
+
+	// never purge validator era sequences because refetching data is very expensive
 	return nil
 }
 
@@ -167,14 +170,14 @@ func (uc *purgeUseCase) purgeValidatorSessionSequences(currentIndexVersion int64
 		purgeThreshold = lastSummaryTimeBucket
 	}
 
-	logger.Info(fmt.Sprintf("purging validator sequences... [older than=%s]", purgeThreshold))
+	logger.Info(fmt.Sprintf("purging validator session sequences... [older than=%s]", purgeThreshold))
 
 	deletedCount, err := uc.validatorDb.DeleteSessionSeqsOlderThan(purgeThreshold)
 	if err != nil {
 		return err
 	}
 
-	logger.Info(fmt.Sprintf("%d validator sequences purged", *deletedCount))
+	logger.Info(fmt.Sprintf("%d validator session sequences purged", *deletedCount))
 
 	return nil
 }

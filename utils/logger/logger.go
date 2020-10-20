@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/figment-networks/polkadothub-indexer/config"
+	"github.com/rollbar/rollbar-go"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -72,6 +73,7 @@ func Error(err error, tags ...zap.Field) {
 	msg := fmt.Sprintf("[ERROR: %v]", err)
 	Log.Error(msg, tags...)
 	Log.Sync()
+	rollbar.Error(msg)
 }
 
 func getLevel(level string) zapcore.Level {

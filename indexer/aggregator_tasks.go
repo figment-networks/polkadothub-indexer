@@ -50,6 +50,7 @@ func (t *validatorAggCreatorTask) Run(ctx context.Context, p pipeline.Payload) e
 		if err != nil {
 			if err == store.ErrNotFound {
 				// Create new
+
 				validator := model.ValidatorAgg{
 					Aggregate: &model.Aggregate{
 						StartedAtHeight: payload.Syncable.Height,
@@ -59,6 +60,7 @@ func (t *validatorAggCreatorTask) Run(ctx context.Context, p pipeline.Payload) e
 					},
 
 					StashAccount:            stashAccount,
+					DisplayName:             validatorData.DisplayName,
 					RecentAsValidatorHeight: payload.Syncable.Height,
 				}
 
@@ -84,6 +86,7 @@ func (t *validatorAggCreatorTask) Run(ctx context.Context, p pipeline.Payload) e
 				},
 
 				RecentAsValidatorHeight: payload.Syncable.Height,
+				DisplayName:             validatorData.DisplayName,
 			}
 
 			if payload.Syncable.LastInSession {

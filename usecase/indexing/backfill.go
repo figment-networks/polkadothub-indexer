@@ -74,7 +74,6 @@ func (uc *backfillUseCase) canExecute() error {
 			return nil
 		}
 		return err
-
 	}
 	return ErrBackfillRunning
 }

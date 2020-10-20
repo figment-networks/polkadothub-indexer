@@ -5,6 +5,7 @@ import (
 
 	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/types"
+	"github.com/figment-networks/polkadothub-indexer/usecase/http"
 	"github.com/figment-networks/polkadothub-indexer/utils/logger"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
@@ -38,25 +39,24 @@ func (h *getByStashAccountHttpHandler) Handle(c *gin.Context) {
 	var req GetByEntityUidRequest
 	if err := c.ShouldBindUri(&req); err != nil {
 		logger.Error(err)
-		err := errors.New("invalid stash account")
-		c.JSON(http.StatusBadRequest, err)
+		http.BadRequest(c, errors.New("invalid stash account"))
 		return
 	}
+
 	if err := c.ShouldBindQuery(&req); err != nil {
 		logger.Error(err)
-		err := errors.New("invalid sequences limit")
-		c.JSON(http.StatusBadRequest, err)
+		http.BadRequest(c, errors.New("invalid sequences limit"))
 		return
 	}
 
 	resp, err := h.getUseCase().Execute(req.StashAccount, req.SessionsLimit, req.ErasLimit)
 	if err != nil {
 		logger.Error(err)
-		c.JSON(http.StatusInternalServerError, err)
+		http.ServerError(c, err)
 		return
 	}
 
-	c.JSON(http.StatusOK, resp)
+	http.JsonOK(c, resp)
 }
 
 func (h *getByStashAccountHttpHandler) getUseCase() *getByStashAccountUseCase {

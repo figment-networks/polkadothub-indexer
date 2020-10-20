@@ -108,10 +108,10 @@ func (s *AccountEraSeqStore) FindMostRecent() (*model.AccountEraSeq, error) {
 	return accountSeq, nil
 }
 
-// FindLastByStashAccount finds last account era sequences for given stash account and era limit
-func (s AccountEraSeqStore) FindLastByStashAccount(stashAccount string, eraLimit int64) ([]model.AccountEraSeq, error) {
+// FindLastByStashAccount finds last account era sequences for given stash account
+func (s AccountEraSeqStore) FindLastByStashAccount(stashAccount string) ([]model.AccountEraSeq, error) {
 	rows, err := s.db.
-		Raw(findLastAccountEraSeqByStashQuery, stashAccount, stashAccount, eraLimit).
+		Raw(findLastAccountEraSeqByStashQuery, stashAccount, stashAccount).
 		Rows()
 
 	if err != nil {
@@ -130,10 +130,10 @@ func (s AccountEraSeqStore) FindLastByStashAccount(stashAccount string, eraLimit
 	return res, nil
 }
 
-// FindLastByValidatorStashAccount finds last account era sequences for given validator stash account and era limit
-func (s AccountEraSeqStore) FindLastByValidatorStashAccount(validatorStashAccount string, eraLimit int64) ([]model.AccountEraSeq, error) {
+// FindLastByValidatorStashAccount finds last account era sequences for given validator stash account
+func (s AccountEraSeqStore) FindLastByValidatorStashAccount(validatorStashAccount string) ([]model.AccountEraSeq, error) {
 	rows, err := s.db.
-		Raw(findLastAccountEraSeqByValidatorStashQuery, validatorStashAccount, validatorStashAccount, eraLimit).
+		Raw(findLastAccountEraSeqByValidatorStashQuery, validatorStashAccount, validatorStashAccount).
 		Rows()
 
 	if err != nil {

@@ -26,7 +26,7 @@ func NewGetStatusCmdHandler(c *client.Client, syncablesDb store.Syncables) *GetS
 func (h *GetStatusCmdHandler) Handle(ctx context.Context) {
 	logger.Info("chain get status use case [handler=cmd]")
 
-	details, err := h.getUseCase().Execute(ctx)
+	details, err := h.getUseCase().Execute(true)
 	if err != nil {
 		logger.Error(err)
 		return

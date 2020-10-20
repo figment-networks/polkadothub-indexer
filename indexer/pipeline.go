@@ -59,7 +59,7 @@ func NewPipeline(cfg *config.Config, cli *client.Client, accountDb store.Account
 		pipeline.NewAsyncStageWithTasks(
 			pipeline.StageParser,
 			NewBlockParserTask(),
-			NewValidatorsParserTask(),
+			NewValidatorsParserTask(client.Account),
 		),
 	)
 
@@ -236,6 +236,10 @@ func (p *indexingPipeline) Backfill(ctx context.Context, backfillCfg BackfillCon
 	}
 	pipelineOptions, err := pipelineOptionsCreator.parse()
 	if err != nil {
+		return err
+	}
+
+	if err := reportCreator.createIfNotExists(model.ReportKindSequentialReindex, model.ReportKindParallelReindex); err != nil {
 		return err
 	}
 

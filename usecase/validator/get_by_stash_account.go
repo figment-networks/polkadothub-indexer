@@ -33,8 +33,7 @@ func (uc *getByStashAccountUseCase) Execute(stashAccount string, sessionsLimit i
 		return nil, err
 	}
 
-	eraLimit := int64(1)
-	accountEraSeqs, err := uc.accountEraSeqDb.FindLastByValidatorStashAccount(stashAccount, eraLimit)
+	accountEraSeqs, err := uc.accountEraSeqDb.FindLastByValidatorStashAccount(stashAccount)
 	if err != nil {
 		return nil, err
 	}

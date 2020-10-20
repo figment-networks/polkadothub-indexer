@@ -51,6 +51,19 @@ func (s SyncablesStore) FindMostRecent() (*model.Syncable, error) {
 	return result, checkErr(err)
 }
 
+// FindLastInSessionForHeight finds last_in_session syncable for given height
+func (s SyncablesStore) FindLastInSessionForHeight(height int64) (syncable *model.Syncable, err error) {
+	result := &model.Syncable{}
+
+	err = s.db.
+		Where("height >= ? AND last_in_session = ?", height, true).
+		Order("height DESC").
+		First(result).
+		Error
+
+	return result, checkErr(err)
+}
+
 // FindLastInSession finds last syncable in given session
 func (s SyncablesStore) FindLastInSession(session int64) (syncable *model.Syncable, err error) {
 	result := &model.Syncable{}

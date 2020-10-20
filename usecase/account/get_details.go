@@ -27,8 +27,7 @@ func (uc *getDetailsUseCase) Execute(address string) (*DetailsView, error) {
 		return nil, err
 	}
 
-	eraLimit := int64(1)
-	accountEraSeqs, err := uc.accountEraSeqDb.FindLastByStashAccount(address, eraLimit)
+	accountEraSeqs, err := uc.db.AccountEraSeq.FindLastByStashAccount(address)
 	if err != nil {
 		return nil, err
 	}

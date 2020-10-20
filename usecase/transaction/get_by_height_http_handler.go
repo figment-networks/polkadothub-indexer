@@ -6,6 +6,7 @@ import (
 	"github.com/figment-networks/polkadothub-indexer/client"
 	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/types"
+	"github.com/figment-networks/polkadothub-indexer/usecase/http"
 	"github.com/figment-networks/polkadothub-indexer/utils/logger"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
@@ -38,19 +39,18 @@ func (h *getByHeightHttpHandler) Handle(c *gin.Context) {
 	var req Request
 	if err := c.ShouldBindQuery(&req); err != nil {
 		logger.Error(err)
-		err := errors.New("invalid height")
-		c.JSON(http.StatusBadRequest, err)
+		http.BadRequest(c, errors.New("invalid height"))
 		return
 	}
 
 	ds, err := h.getUseCase().Execute(req.Height)
 	if err != nil {
 		logger.Error(err)
-		c.JSON(http.StatusInternalServerError, err)
+		http.ServerError(c, err)
 		return
 	}
 
-	c.JSON(http.StatusOK, ds)
+	http.JsonOK(c, ds)
 }
 
 func (h *getByHeightHttpHandler) getUseCase() *getByHeightUseCase {

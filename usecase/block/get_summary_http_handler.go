@@ -5,6 +5,7 @@ import (
 
 	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/types"
+	"github.com/figment-networks/polkadothub-indexer/usecase/http"
 	"github.com/figment-networks/polkadothub-indexer/utils/logger"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
@@ -37,18 +38,18 @@ func (h *getBlockSummaryHttpHandler) Handle(c *gin.Context) {
 	req, err := h.validateParams(c)
 	if err != nil {
 		logger.Error(err)
-		c.JSON(http.StatusBadRequest, err)
+		http.BadRequest(c, err)
 		return
 	}
 
 	resp, err := h.getUseCase().Execute(req.Interval, req.Period)
 	if err != nil {
 		logger.Error(err)
-		c.JSON(http.StatusInternalServerError, err)
+		http.ServerError(c, err)
 		return
 	}
 
-	c.JSON(http.StatusOK, resp)
+	http.JsonOK(c, resp)
 }
 
 func (h *getBlockSummaryHttpHandler) validateParams(c *gin.Context) (*GetBlockTimesForIntervalRequest, error) {
