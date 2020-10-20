@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"github.com/figment-networks/polkadothub-indexer/client"
+	"github.com/figment-networks/polkadothub-indexer/config"
 	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/types"
 	"github.com/figment-networks/polkadothub-indexer/usecase/account"
@@ -12,7 +13,7 @@ import (
 	"github.com/figment-networks/polkadothub-indexer/usecase/validator"
 )
 
-func NewHttpHandlers(cli *client.Client, accountDb store.Accounts, blockDb store.Blocks, eventDb store.Events, syncableDb store.Syncables, validatorDb store.Validators) *HttpHandlers {
+func NewHttpHandlers(cfg *config.Config, cli *client.Client, accountDb store.Accounts, blockDb store.Blocks, databaseDb store.Database, eventDb store.Events, reportDb store.Reports, syncableDb store.Syncables, validatorDb store.Validators) *HttpHandlers {
 	return &HttpHandlers{
 		Health:                     health.NewHealthHttpHandler(),
 		GetStatus:                  chain.NewGetStatusHttpHandler(cli, syncableDb),
@@ -22,7 +23,7 @@ func NewHttpHandlers(cli *client.Client, accountDb store.Accounts, blockDb store
 		GetTransactionsByHeight:    transaction.NewGetByHeightHttpHandler(cli, syncableDb),
 		GetAccountByHeight:         account.NewGetByHeightHttpHandler(cli, syncableDb),
 		GetAccountDetails:          account.NewGetDetailsHttpHandler(cli, accountDb, eventDb),
-		GetValidatorsByHeight:      validator.NewGetByHeightHttpHandler(syncableDb, validatorDb),
+		GetValidatorsByHeight:      validator.NewGetByHeightHttpHandler(cfg, cli, accountDb, blockDb, databaseDb, eventDb, reportDb, syncableDb, validatorDb),
 		GetValidatorByStashAccount: validator.NewGetByStashAccountHttpHandler(accountDb, validatorDb),
 		GetValidatorSummary:        validator.NewGetSummaryHttpHandler(validatorDb),
 		GetValidatorsForMinHeight:  validator.NewGetForMinHeightHttpHandler(syncableDb, validatorDb),

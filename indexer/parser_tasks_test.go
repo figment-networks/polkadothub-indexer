@@ -4,9 +4,13 @@ import (
 	"context"
 	"testing"
 
+	mock "github.com/figment-networks/polkadothub-indexer/mock/client"
+	"github.com/figment-networks/polkadothub-proxy/grpc/account/accountpb"
 	"github.com/figment-networks/polkadothub-proxy/grpc/block/blockpb"
 	"github.com/figment-networks/polkadothub-proxy/grpc/staking/stakingpb"
 	"github.com/figment-networks/polkadothub-proxy/grpc/validatorperformance/validatorperformancepb"
+
+	"github.com/golang/mock/gomock"
 )
 
 func TestBlockParserTask_Run(t *testing.T) {
@@ -122,9 +126,15 @@ func TestValidatorParserTask_Run(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.description, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
 			ctx := context.Background()
 
-			task := NewValidatorsParserTask()
+			mockClient := mock.NewMockAccountClient(ctrl)
+			for _, validator := range tt.rawStakingState.GetValidators() {
+				mockClient.EXPECT().GetIdentity(validator.StashAccount).Return(&accountpb.GetIdentityResponse{Identity: &accountpb.AccountIdentity{DisplayName: ""}}, nil)
+			}
+
+			task := NewValidatorsParserTask(mockClient)
 
 			pl := &payload{
 				RawStaking:              tt.rawStakingState,

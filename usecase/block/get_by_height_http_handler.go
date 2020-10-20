@@ -1,8 +1,6 @@
 package block
 
 import (
-	"net/http"
-
 	"github.com/figment-networks/polkadothub-indexer/client"
 	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/types"

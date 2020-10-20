@@ -1,8 +1,6 @@
 package validator
 
 import (
-	"net/http"
-
 	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/types"
 	"github.com/figment-networks/polkadothub-indexer/usecase/http"

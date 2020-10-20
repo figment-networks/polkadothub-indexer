@@ -59,7 +59,7 @@ func NewPipeline(cfg *config.Config, cli *client.Client, accountDb store.Account
 		pipeline.NewAsyncStageWithTasks(
 			pipeline.StageParser,
 			NewBlockParserTask(),
-			NewValidatorsParserTask(client.Account),
+			NewValidatorsParserTask(cli.Account),
 		),
 	)
 

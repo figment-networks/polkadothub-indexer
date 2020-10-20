@@ -1,8 +1,8 @@
 package validator
 
 import (
-	"net/http"
-
+	"github.com/figment-networks/polkadothub-indexer/client"
+	"github.com/figment-networks/polkadothub-indexer/config"
 	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/types"
 	"github.com/figment-networks/polkadothub-indexer/usecase/http"
@@ -16,15 +16,31 @@ var (
 )
 
 type getByHeightHttpHandler struct {
+	cfg    *config.Config
+	client *client.Client
+
 	useCase *getByHeightUseCase
 
-	syncablesDb store.Syncables
+	accountDb   store.Accounts
+	blockDb     store.Blocks
+	databaseDb  store.Database
+	eventDb     store.Events
+	reportDb    store.Reports
+	syncableDb  store.Syncables
 	validatorDb store.Validators
 }
 
-func NewGetByHeightHttpHandler(syncablesDb store.Syncables, validatorDb store.Validators) *getByHeightHttpHandler {
+func NewGetByHeightHttpHandler(cfg *config.Config, cli *client.Client, accountDb store.Accounts, blockDb store.Blocks, databaseDb store.Database, eventDb store.Events, reportDb store.Reports, syncableDb store.Syncables, validatorDb store.Validators) *getByHeightHttpHandler {
 	return &getByHeightHttpHandler{
-		syncablesDb: syncablesDb,
+		cfg:    cfg,
+		client: cli,
+
+		accountDb:   accountDb,
+		blockDb:     blockDb,
+		databaseDb:  databaseDb,
+		eventDb:     eventDb,
+		reportDb:    reportDb,
+		syncableDb:  syncableDb,
 		validatorDb: validatorDb,
 	}
 }
@@ -53,7 +69,7 @@ func (h *getByHeightHttpHandler) Handle(c *gin.Context) {
 
 func (h *getByHeightHttpHandler) getUseCase() *getByHeightUseCase {
 	if h.useCase == nil {
-		return NewGetByHeightUseCase(h.syncablesDb, h.validatorDb)
+		return NewGetByHeightUseCase(h.cfg, h.client, h.accountDb, h.blockDb, h.databaseDb, h.eventDb, h.reportDb, h.syncableDb, h.validatorDb)
 	}
 	return h.useCase
 }

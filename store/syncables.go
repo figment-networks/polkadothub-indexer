@@ -11,6 +11,7 @@ type syncables interface {
 	FindFirstByDifferentIndexVersion(indexVersion int64) (*model.Syncable, error)
 	FindLastInEra(era int64) (syncable *model.Syncable, err error)
 	FindLastInSession(session int64) (syncable *model.Syncable, err error)
+	FindLastInSessionForHeight(height int64) (syncable *model.Syncable, err error)
 	FindMostRecentByDifferentIndexVersion(indexVersion int64) (*model.Syncable, error)
 	FindSmallestIndexVersion() (*int64, error)
 	SaveSyncable(*model.Syncable) error

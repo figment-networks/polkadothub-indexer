@@ -14,7 +14,7 @@ type AccountEraSeq interface {
 	FindByEraAndStashAccounts(era int64, stash string, validatorStash string) (*model.AccountEraSeq, error)
 	FindByHeight(h int64) ([]model.AccountEraSeq, error)
 	FindByHeightAndStashAccounts(height int64, stash string, validatorStash string) (*model.AccountEraSeq, error)
-	FindLastByStashAccount(stashAccount string, eraLimit int64) ([]model.AccountEraSeq, error)
-	FindLastByValidatorStashAccount(validatorStashAccount string, eraLimit int64) ([]model.AccountEraSeq, error)
+	FindLastByStashAccount(stashAccount string) ([]model.AccountEraSeq, error)
+	FindLastByValidatorStashAccount(validatorStashAccount string) ([]model.AccountEraSeq, error)
 	FindMostRecent() (*model.AccountEraSeq, error)
 }

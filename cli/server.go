@@ -19,7 +19,7 @@ func startServer(cfg *config.Config) error {
 	}
 	defer db.Close()
 
-	httpHandlers := usecase.NewHttpHandlers(client, db.GetAccounts(), db.GetBlocks(), db.GetEvents(), db.GetSyncables(), db.GetValidators())
+	httpHandlers := usecase.NewHttpHandlers(cfg, client, db.GetAccounts(), db.GetBlocks(), db.GetDatabase(), db.GetEvents(), db.GetReports(), db.GetSyncables(), db.GetValidators())
 
 	a := server.New(cfg, httpHandlers)
 	if err := a.Start(cfg.ListenAddr()); err != nil {

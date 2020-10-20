@@ -3,6 +3,8 @@ package validator
 import (
 	"context"
 
+	"github.com/figment-networks/polkadothub-indexer/client"
+	"github.com/figment-networks/polkadothub-indexer/config"
 	"github.com/figment-networks/polkadothub-indexer/indexer"
 	"github.com/figment-networks/polkadothub-indexer/store"
 
@@ -10,20 +12,36 @@ import (
 )
 
 type getByHeightUseCase struct {
-	syncablesDb store.Syncables
+	cfg    *config.Config
+	client *client.Client
+
+	accountDb   store.Accounts
+	blockDb     store.Blocks
+	databaseDb  store.Database
+	eventDb     store.Events
+	reportDb    store.Reports
+	syncableDb  store.Syncables
 	validatorDb store.Validators
 }
 
-func NewGetByHeightUseCase(syncablesDb store.Syncables, validatorDb store.Validators) *getByHeightUseCase {
+func NewGetByHeightUseCase(cfg *config.Config, cli *client.Client, accountDb store.Accounts, blockDb store.Blocks, databaseDb store.Database, eventDb store.Events, reportDb store.Reports, syncableDb store.Syncables, validatorDb store.Validators) *getByHeightUseCase {
 	return &getByHeightUseCase{
-		syncablesDb: syncablesDb,
+		cfg:    cfg,
+		client: cli,
+
+		accountDb:   accountDb,
+		blockDb:     blockDb,
+		databaseDb:  databaseDb,
+		eventDb:     eventDb,
+		reportDb:    reportDb,
+		syncableDb:  syncableDb,
 		validatorDb: validatorDb,
 	}
 }
 
 func (uc *getByHeightUseCase) Execute(height *int64) (SeqListView, error) {
 	// Get last indexed height
-	mostRecentSynced, err := uc.syncablesDb.FindMostRecent()
+	mostRecentSynced, err := uc.syncableDb.FindMostRecent()
 	if err != nil {
 		return SeqListView{}, err
 	}
@@ -40,12 +58,12 @@ func (uc *getByHeightUseCase) Execute(height *int64) (SeqListView, error) {
 
 	sessionSeqs, err := uc.validatorDb.FindSessionSeqsByHeight(*height)
 	if len(sessionSeqs) == 0 || err != nil {
-		syncable, err := uc.syncablesDb.FindLastInSessionForHeight(*height)
+		syncable, err := uc.syncableDb.FindLastInSessionForHeight(*height)
 		if err != nil {
 			return SeqListView{}, err
 		}
 
-		indexingPipeline, err := indexer.NewPipeline(uc.cfg, uc.db, uc.client)
+		indexingPipeline, err := indexer.NewPipeline(uc.cfg, uc.client, uc.accountDb, uc.blockDb, uc.databaseDb, uc.eventDb, uc.reportDb, uc.syncableDb, uc.validatorDb)
 		if err != nil {
 			return SeqListView{}, err
 		}

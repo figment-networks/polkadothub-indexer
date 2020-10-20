@@ -141,33 +141,33 @@ func (mr *MockAccountEraSeqMockRecorder) FindByHeightAndStashAccounts(arg0, arg1
 }
 
 // FindLastByStashAccount mocks base method
-func (m *MockAccountEraSeq) FindLastByStashAccount(arg0 string, arg1 int64) ([]model.AccountEraSeq, error) {
+func (m *MockAccountEraSeq) FindLastByStashAccount(arg0 string) ([]model.AccountEraSeq, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindLastByStashAccount", arg0, arg1)
+	ret := m.ctrl.Call(m, "FindLastByStashAccount", arg0)
 	ret0, _ := ret[0].([]model.AccountEraSeq)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // FindLastByStashAccount indicates an expected call of FindLastByStashAccount
-func (mr *MockAccountEraSeqMockRecorder) FindLastByStashAccount(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockAccountEraSeqMockRecorder) FindLastByStashAccount(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindLastByStashAccount", reflect.TypeOf((*MockAccountEraSeq)(nil).FindLastByStashAccount), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindLastByStashAccount", reflect.TypeOf((*MockAccountEraSeq)(nil).FindLastByStashAccount), arg0)
 }
 
 // FindLastByValidatorStashAccount mocks base method
-func (m *MockAccountEraSeq) FindLastByValidatorStashAccount(arg0 string, arg1 int64) ([]model.AccountEraSeq, error) {
+func (m *MockAccountEraSeq) FindLastByValidatorStashAccount(arg0 string) ([]model.AccountEraSeq, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindLastByValidatorStashAccount", arg0, arg1)
+	ret := m.ctrl.Call(m, "FindLastByValidatorStashAccount", arg0)
 	ret0, _ := ret[0].([]model.AccountEraSeq)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // FindLastByValidatorStashAccount indicates an expected call of FindLastByValidatorStashAccount
-func (mr *MockAccountEraSeqMockRecorder) FindLastByValidatorStashAccount(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockAccountEraSeqMockRecorder) FindLastByValidatorStashAccount(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindLastByValidatorStashAccount", reflect.TypeOf((*MockAccountEraSeq)(nil).FindLastByValidatorStashAccount), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindLastByValidatorStashAccount", reflect.TypeOf((*MockAccountEraSeq)(nil).FindLastByValidatorStashAccount), arg0)
 }
 
 // FindMostRecent mocks base method
@@ -900,6 +900,21 @@ func (m *MockSyncables) FindLastInSession(arg0 int64) (*model.Syncable, error) {
 func (mr *MockSyncablesMockRecorder) FindLastInSession(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindLastInSession", reflect.TypeOf((*MockSyncables)(nil).FindLastInSession), arg0)
+}
+
+// FindLastInSessionForHeight mocks base method
+func (m *MockSyncables) FindLastInSessionForHeight(arg0 int64) (*model.Syncable, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindLastInSessionForHeight", arg0)
+	ret0, _ := ret[0].(*model.Syncable)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindLastInSessionForHeight indicates an expected call of FindLastInSessionForHeight
+func (mr *MockSyncablesMockRecorder) FindLastInSessionForHeight(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindLastInSessionForHeight", reflect.TypeOf((*MockSyncables)(nil).FindLastInSessionForHeight), arg0)
 }
 
 // FindMostRecent mocks base method
