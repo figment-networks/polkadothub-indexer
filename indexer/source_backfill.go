@@ -20,12 +20,10 @@ func NewBackfillSource(cfg *config.Config, db *store.Store, client *client.Clien
 		cfg:                 cfg,
 		db:                  db,
 		client:              client,
-		isLastInSession:     isLastInSession,
-		isLastInEra:         isLastInEra,
 		currentIndexVersion: indexVersion,
 	}
 
-	if err := src.init(); err != nil {
+	if err := src.init(isLastInSession, isLastInEra); err != nil {
 		return nil, err
 	}
 
@@ -36,8 +34,7 @@ type backfillSource struct {
 	cfg                 *config.Config
 	db                  *store.Store
 	client              *client.Client
-	isLastInSession     bool
-	isLastInEra         bool
+	useWhiteList        bool
 	heightsWhitelist    map[int64]int64
 	currentIndexVersion int64
 	currentHeight       int64
@@ -59,8 +56,8 @@ func (s *backfillSource) isCurrentHeightInWhitelist() bool {
 	return found
 }
 
-func (s *backfillSource) HasHeightWhiteListToRunStages() bool {
-	return s.isLastInSession || s.isLastInEra
+func (s *backfillSource) UseWhiteList() bool {
+	return s.useWhiteList
 }
 
 func (s *backfillSource) Current() int64 {
@@ -72,7 +69,7 @@ func (s *backfillSource) Err() error {
 }
 
 func (s *backfillSource) Skip() bool {
-	if s.HasHeightWhiteListToRunStages() && !s.isCurrentHeightInWhitelist() {
+	if s.UseWhiteList() && !s.isCurrentHeightInWhitelist() {
 		return true
 	}
 	return false
@@ -82,8 +79,8 @@ func (s *backfillSource) Len() int64 {
 	return s.endHeight - s.startHeight + 1
 }
 
-func (s *backfillSource) init() error {
-	if err := s.setHeightsWhitelist(); err != nil {
+func (s *backfillSource) init(isLastInSession, isLastInEra bool) error {
+	if err := s.setHeightsWhitelist(isLastInSession, isLastInEra); err != nil {
 		return err
 	}
 	if err := s.setStartHeight(); err != nil {
@@ -122,9 +119,10 @@ func (s *backfillSource) setEndHeight() error {
 	return nil
 }
 
-func (s *backfillSource) setHeightsWhitelist() error {
-	if s.HasHeightWhiteListToRunStages() {
-		syncables, err := s.db.Syncables.FindAllByLastInSessionOrEra(s.currentIndexVersion, s.isLastInSession, s.isLastInEra)
+func (s *backfillSource) setHeightsWhitelist(isLastInSession, isLastInEra bool) error {
+	s.useWhiteList = isLastInSession || isLastInEra
+	if s.UseWhiteList() {
+		syncables, err := s.db.Syncables.FindAllByLastInSessionOrEra(s.currentIndexVersion, isLastInSession, isLastInEra)
 		if err != nil {
 			if err == store.ErrNotFound {
 				return errors.New(fmt.Sprintf("no heights for whitelist to backfill [currentIndexVersion=%d]", s.currentIndexVersion))
