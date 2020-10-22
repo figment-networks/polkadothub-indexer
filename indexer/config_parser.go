@@ -23,8 +23,8 @@ var (
 
 type ConfigParser interface {
 	GetCurrentVersionId() int64
-	IsForLastOfSessionsByVersionId() bool
-	IsForLastOfErasByVersionId() bool
+	IsLastInSession() bool
+	IsLastInEra() bool
 	GetAllVersionedVersionIds() []int64
 	IsAnyVersionSequential(versionIds []int64) bool
 	GetAllAvailableTasks() []pipeline.TaskName
@@ -89,22 +89,23 @@ func (o *configParser) Parse() (*indexerConfig, error) {
 	return &tgs, nil
 }
 
+func (o *configParser) getCurrentVersion() version {
+	return o.targets.Versions[len(o.targets.Versions)-1]
+}
+
 //GetCurrentVersionId gets the most recent version id
 func (o *configParser) GetCurrentVersionId() int64 {
-	lastVersion := o.targets.Versions[len(o.targets.Versions)-1]
-	return lastVersion.ID
+	return o.getCurrentVersion().ID
 }
 
-//IsForLastOfSessionsByVersionId check if this version is for last of sessions
-func (o *configParser) IsForLastOfSessionsByVersionId() bool {
-	lastVersion := o.targets.Versions[len(o.targets.Versions)-1]
-	return lastVersion.LastInSession
+//IsLastInSession check if this version is for last of sessions
+func (o *configParser) IsLastInSession() bool {
+	return o.getCurrentVersion().LastInSession
 }
 
-//IsForLastOfEraByVersionId check if this version is for last of eras
-func (o *configParser) IsForLastOfErasByVersionId() bool {
-	lastVersion := o.targets.Versions[len(o.targets.Versions)-1]
-	return lastVersion.LastInEra
+//IsLastInEra check if this version is for last of eras
+func (o *configParser) IsLastInEra() bool {
+	return o.getCurrentVersion().LastInEra
 }
 
 // GetAllAvailableTasks get lists of tasks for all available targets

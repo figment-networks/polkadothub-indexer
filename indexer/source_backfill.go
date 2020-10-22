@@ -15,13 +15,13 @@ var (
 	_ pipeline.Source = (*backfillSource)(nil)
 )
 
-func NewBackfillSource(cfg *config.Config, db *store.Store, client *client.Client, indexVersion int64, isForLastOfSessions, isForLastOfEras bool) (*backfillSource, error) {
+func NewBackfillSource(cfg *config.Config, db *store.Store, client *client.Client, indexVersion int64, isLastInSession, isLastInEra bool) (*backfillSource, error) {
 	src := &backfillSource{
 		cfg:                 cfg,
 		db:                  db,
 		client:              client,
-		isForLastOfSessions: isForLastOfSessions,
-		isForLastOfEras:     isForLastOfEras,
+		isLastInSession:     isLastInSession,
+		isLastInEra:         isLastInEra,
 		currentIndexVersion: indexVersion,
 	}
 
@@ -36,9 +36,9 @@ type backfillSource struct {
 	cfg                 *config.Config
 	db                  *store.Store
 	client              *client.Client
-	isForLastOfSessions bool
-	isForLastOfEras     bool
-	specificHeightsMap  map[int64]int64
+	isLastInSession     bool
+	isLastInEra         bool
+	heightsWhitelist    map[int64]int64
 	currentIndexVersion int64
 	currentHeight       int64
 	startHeight         int64
@@ -54,13 +54,13 @@ func (s *backfillSource) Next(context.Context, pipeline.Payload) bool {
 	return false
 }
 
-func (s *backfillSource) isCurrentHeightInSpecificMap() bool {
-	_, found := s.specificHeightsMap[s.currentHeight]
+func (s *backfillSource) isCurrentHeightInWhitelist() bool {
+	_, found := s.heightsWhitelist[s.currentHeight]
 	return found
 }
 
-func (s *backfillSource) HasOnlySpecificHeightsToRunStages() bool {
-	return s.isForLastOfSessions || s.isForLastOfEras
+func (s *backfillSource) HasHeightWhiteListToRunStages() bool {
+	return s.isLastInSession || s.isLastInEra
 }
 
 func (s *backfillSource) Current() int64 {
@@ -72,7 +72,7 @@ func (s *backfillSource) Err() error {
 }
 
 func (s *backfillSource) SkipRunningStagesForCurrentHeight() bool {
-	if s.HasOnlySpecificHeightsToRunStages() && !s.isCurrentHeightInSpecificMap() {
+	if s.HasHeightWhiteListToRunStages() && !s.isCurrentHeightInWhitelist() {
 		return true
 	}
 	return false
@@ -83,7 +83,7 @@ func (s *backfillSource) Len() int64 {
 }
 
 func (s *backfillSource) init() error {
-	if err := s.setSpecificHeights(); err != nil {
+	if err := s.setHeightsWhitelist(); err != nil {
 		return err
 	}
 	if err := s.setStartHeight(); err != nil {
@@ -122,24 +122,24 @@ func (s *backfillSource) setEndHeight() error {
 	return nil
 }
 
-func (s *backfillSource) setSpecificHeights() error {
-	if s.HasOnlySpecificHeightsToRunStages() {
-		syncables, err := s.db.Syncables.FindAllByLastInSessionOrEra(s.currentIndexVersion, s.isForLastOfSessions, s.isForLastOfEras)
+func (s *backfillSource) setHeightsWhitelist() error {
+	if s.HasHeightWhiteListToRunStages() {
+		syncables, err := s.db.Syncables.FindAllByLastInSessionOrEra(s.currentIndexVersion, s.isLastInSession, s.isLastInEra)
 		if err != nil {
 			if err == store.ErrNotFound {
-				return errors.New(fmt.Sprintf("no specific heights to backfill [currentIndexVersion=%d]", s.currentIndexVersion))
+				return errors.New(fmt.Sprintf("no heights for whitelist to backfill [currentIndexVersion=%d]", s.currentIndexVersion))
 			}
 			return err
 		}
-		s.generateMapForSpecificHeights(syncables)
+		s.generateMapForWhiteList(syncables)
 	}
 	return nil
 }
 
-func (s *backfillSource) generateMapForSpecificHeights(syncables []model.Syncable) {
-	specificHeightsMap := make(map[int64]int64)
+func (s *backfillSource) generateMapForWhiteList(syncables []model.Syncable) {
+	heightsWhitelist := make(map[int64]int64)
 	for i := 0; i < len(syncables); i++ {
-		specificHeightsMap[syncables[i].Height] = syncables[i].Height
+		heightsWhitelist[syncables[i].Height] = syncables[i].Height
 	}
-	s.specificHeightsMap = specificHeightsMap
+	s.heightsWhitelist = heightsWhitelist
 }
