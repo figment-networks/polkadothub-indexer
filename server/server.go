@@ -7,8 +7,6 @@ import (
 	"github.com/figment-networks/polkadothub-indexer/usecase"
 	"github.com/figment-networks/polkadothub-indexer/utils/logger"
 	"github.com/gin-gonic/gin"
-	"github.com/rollbar/rollbar-go"
-	"go.uber.org/zap"
 )
 
 // Server handles HTTP requests
@@ -20,22 +18,14 @@ type Server struct {
 }
 
 type Writer struct {
-	logger *zap.Logger
 }
 
 // New returns a new server instance
 func New(cfg *config.Config, handlers *usecase.HttpHandlers) (*Server, error) {
-	config := zap.NewDevelopmentConfig()
-	logger, error := config.Build()
-	if error != nil {
-		return nil, error
-	}
-
 	app := &Server{
 		cfg:      cfg,
 		engine:   gin.Default(),
 		handlers: handlers,
-		writer:   &Writer{logger: logger},
 	}
 	return app.init(), nil
 }
@@ -65,7 +55,6 @@ func (s *Server) startMetricsServer() error {
 
 func (s *Writer) Write(p []byte) (n int, err error) {
 	err = errors.New(string(p))
-	s.logger.Error(err.Error())
-	rollbar.LogPanic(err, true)
+	logger.Error(err)
 	return len(p), nil
 }
