@@ -71,7 +71,7 @@ func (s *backfillSource) Err() error {
 	return s.err
 }
 
-func (s *backfillSource) SkipRunningStagesForCurrentHeight() bool {
+func (s *backfillSource) Skip() bool {
 	if s.HasHeightWhiteListToRunStages() && !s.isCurrentHeightInWhitelist() {
 		return true
 	}

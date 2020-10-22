@@ -16,8 +16,8 @@ var (
 )
 
 type IndexSourceConfig struct {
-	BatchSize      int64
-	StartHeight    int64
+	BatchSize   int64
+	StartHeight int64
 }
 
 func NewIndexSource(cfg *config.Config, db *store.Store, client *client.Client, sourceCfg *IndexSourceConfig) (*indexSource, error) {
@@ -35,9 +35,9 @@ func NewIndexSource(cfg *config.Config, db *store.Store, client *client.Client, 
 }
 
 type indexSource struct {
-	cfg           *config.Config
-	db            *store.Store
-	client        *client.Client
+	cfg    *config.Config
+	db     *store.Store
+	client *client.Client
 
 	sourceCfg *IndexSourceConfig
 
@@ -45,7 +45,7 @@ type indexSource struct {
 	startHeight   int64
 	endHeight     int64
 	err           error
-	skipRunningStagesForCurrentHeight bool
+	skip          bool
 }
 
 func (s *indexSource) Next(context.Context, pipeline.Payload) bool {
@@ -64,8 +64,8 @@ func (s *indexSource) Err() error {
 	return s.err
 }
 
-func (s *indexSource) SkipRunningStagesForCurrentHeight() bool {
-	return s.skipRunningStagesForCurrentHeight
+func (s *indexSource) Skip() bool {
+	return s.skip
 }
 
 func (s *indexSource) Len() int64 {
