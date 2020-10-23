@@ -125,7 +125,7 @@ func (s SyncablesStore) CreateOrUpdate(val *model.Syncable) error {
 	return s.Update(existing)
 }
 
-// CreateOrUpdate creates a new syncable or updates an existing one
+// SetProcessedAtForRange creates a new syncable or updates an existing one
 func (s SyncablesStore) SetProcessedAtForRange(reportID types.ID, startHeight int64, endHeight int64) error {
 	err := s.db.
 		Exec("UPDATE syncables SET report_id = ?, processed_at = NULL WHERE height >= ? AND height <= ?", reportID, startHeight, endHeight).
@@ -144,4 +144,12 @@ func (s SyncablesStore) FindAllByLastInSessionOrEra(indexVersion int64, isForLas
 		Find(result).Error
 
 	return *result, checkErr(err)
+}
+
+func (s SyncablesStore) UpdateSkippedHeightForBackfill(indexVersion int64, height int64) error {
+	err := s.db.
+		Exec("UPDATE syncables SET started_at = NOW(), processed_at = NOW(), updated_at = NOW(), duration = 0, index_version = ? WHERE height = ? ", indexVersion, height).
+		Error
+
+	return checkErr(err)
 }

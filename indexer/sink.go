@@ -28,7 +28,7 @@ type sink struct {
 	successCount int64
 }
 
-func (s *sink) Consume(ctx context.Context, p pipeline.Payload) error {
+func (s *sink) Consume(ctx context.Context, p pipeline.Payload, isForOnlyVersion bool) error {
 	payload := p.(*payload)
 
 	logger.DebugJSON(payload,
@@ -37,13 +37,18 @@ func (s *sink) Consume(ctx context.Context, p pipeline.Payload) error {
 		logger.Field("height", payload.CurrentHeight),
 	)
 
-	if err := s.setProcessed(payload); err != nil {
-		return err
+	if !isForOnlyVersion {
+		if err := s.setProcessed(payload); err != nil {
+			return err
+		}
 
-	}
-
-	if err := s.addMetrics(payload); err != nil {
-		return err
+		if err := s.addMetrics(payload); err != nil {
+			return err
+		}
+	} else {
+		if err := s.db.Syncables.UpdateSkippedHeightForBackfill(s.versionNumber, payload.CurrentHeight); err != nil {
+			return err
+		}
 	}
 
 	s.successCount += 1
