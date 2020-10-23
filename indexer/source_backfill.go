@@ -124,11 +124,12 @@ func (s *backfillSource) setHeightsWhitelist(isLastInSession, isLastInEra bool) 
 	if s.UseWhiteList() {
 		syncables, err := s.db.Syncables.FindAllByLastInSessionOrEra(s.currentIndexVersion, isLastInSession, isLastInEra)
 		if err != nil {
-			if err == store.ErrNotFound {
-				return errors.New(fmt.Sprintf("no heights for whitelist to backfill [currentIndexVersion=%d]", s.currentIndexVersion))
-			}
 			return err
 		}
+		if len(syncables) == 0 {
+			return errors.New(fmt.Sprintf("no heights for whitelist to backfill [currentIndexVersion=%d]", s.currentIndexVersion))
+		}
+
 		s.generateMapForWhiteList(syncables)
 	}
 	return nil
