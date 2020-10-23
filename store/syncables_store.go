@@ -89,6 +89,32 @@ func (s SyncablesStore) FindLastInEra(era int64) (syncable *model.Syncable, err 
 	return result, checkErr(err)
 }
 
+// FindLastEndOfSession finds last end of session syncable
+func (s SyncablesStore) FindLastEndOfSession() (syncable *model.Syncable, err error) {
+	result := &model.Syncable{}
+
+	err = s.db.
+		Where("last_in_session = ?", true).
+		Order("height DESC").
+		First(result).
+		Error
+
+	return result, checkErr(err)
+}
+
+// FindLastEndOfEra finds last end of era syncable
+func (s SyncablesStore) FindLastEndOfEra() (syncable *model.Syncable, err error) {
+	result := &model.Syncable{}
+
+	err = s.db.
+		Where("last_in_era = ?", true).
+		Order("height DESC").
+		First(result).
+		Error
+
+	return result, checkErr(err)
+}
+
 // FindFirstByDifferentIndexVersion returns first syncable with different index version
 func (s SyncablesStore) FindFirstByDifferentIndexVersion(indexVersion int64) (*model.Syncable, error) {
 	result := &model.Syncable{}
