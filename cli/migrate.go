@@ -15,7 +15,7 @@ import (
 	"github.com/figment-networks/polkadothub-indexer/config"
 )
 
-func startMigrations(cfg *config.Config) error {
+func startMigrations(cfg *config.Config, version uint) error {
 	log.Println("getting current directory")
 	dir, err := os.Getwd()
 	if err != nil {
@@ -30,6 +30,11 @@ func startMigrations(cfg *config.Config) error {
 		return err
 	}
 
-	log.Println("running migrations")
+	if version > 0 {
+		log.Println("running migrations to version ", version)
+		return migrations.Migrate(version)
+	}
+
+	log.Println("running migrations up")
 	return migrations.Up()
 }
