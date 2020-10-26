@@ -145,11 +145,3 @@ func (s SyncablesStore) FindAllByLastInSessionOrEra(indexVersion int64, isForLas
 
 	return *result, checkErr(err)
 }
-
-func (s SyncablesStore) UpdateSkippedHeightForBackfill(indexVersion int64, height int64) error {
-	err := s.db.
-		Exec("UPDATE syncables SET started_at = NOW(), processed_at = NOW(), updated_at = NOW(), duration = 0, index_version = ? WHERE height = ? ", indexVersion, height).
-		Error
-
-	return checkErr(err)
-}

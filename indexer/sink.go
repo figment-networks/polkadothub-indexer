@@ -5,9 +5,12 @@ import (
 	"fmt"
 	"github.com/figment-networks/indexing-engine/pipeline"
 	"github.com/figment-networks/polkadothub-indexer/metric"
+	"github.com/figment-networks/polkadothub-indexer/model"
 	"github.com/figment-networks/polkadothub-indexer/store"
+	"github.com/figment-networks/polkadothub-indexer/types"
 	"github.com/figment-networks/polkadothub-indexer/utils/logger"
 	"github.com/pkg/errors"
+	"time"
 )
 
 var (
@@ -38,7 +41,7 @@ func (s *sink) Consume(ctx context.Context, p pipeline.Payload, isForOnlyVersion
 	)
 
 	if !isForOnlyVersion {
-		if err := s.setProcessed(payload); err != nil {
+		if err := s.setProcessed(payload.Syncable); err != nil {
 			return err
 		}
 
@@ -46,7 +49,12 @@ func (s *sink) Consume(ctx context.Context, p pipeline.Payload, isForOnlyVersion
 			return err
 		}
 	} else {
-		if err := s.db.Syncables.UpdateSkippedHeightForBackfill(s.versionNumber, payload.CurrentHeight); err != nil {
+		syncable, err := s.db.Syncables.FindByHeight(payload.CurrentHeight)
+		if err != nil {
+			return err
+		}
+		syncable.StartedAt = *types.NewTimeFromTime(time.Now())
+		if err := s.setProcessed(syncable); err != nil {
 			return err
 		}
 	}
@@ -58,9 +66,9 @@ func (s *sink) Consume(ctx context.Context, p pipeline.Payload, isForOnlyVersion
 	return nil
 }
 
-func (s *sink) setProcessed(payload *payload) error {
-	payload.Syncable.MarkProcessed(s.versionNumber)
-	if err := s.db.Syncables.Save(payload.Syncable); err != nil {
+func (s *sink) setProcessed(syncable *model.Syncable) error {
+	syncable.MarkProcessed(s.versionNumber)
+	if err := s.db.Syncables.Save(syncable); err != nil {
 		return errors.Wrap(err, "failed saving syncable in sink")
 	}
 	return nil
