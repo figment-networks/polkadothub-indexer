@@ -31,7 +31,7 @@ type sink struct {
 	successCount int64
 }
 
-func (s *sink) Consume(ctx context.Context, p pipeline.Payload, isForOnlyVersion bool) error {
+func (s *sink) Consume(ctx context.Context, p pipeline.Payload, skipCurrentHeight bool) error {
 	payload := p.(*payload)
 
 	logger.DebugJSON(payload,
@@ -40,23 +40,23 @@ func (s *sink) Consume(ctx context.Context, p pipeline.Payload, isForOnlyVersion
 		logger.Field("height", payload.CurrentHeight),
 	)
 
-	if !isForOnlyVersion {
-		if err := s.setProcessed(payload.Syncable); err != nil {
-			return err
-		}
-
-		if err := s.addMetrics(payload); err != nil {
-			return err
-		}
+	var syncable *model.Syncable
+	var err error
+	if !skipCurrentHeight {
+		syncable = payload.Syncable
 	} else {
-		syncable, err := s.db.Syncables.FindByHeight(payload.CurrentHeight)
+		syncable, err = s.prepareSyncableToProcess(payload.CurrentHeight)
 		if err != nil {
 			return err
 		}
-		syncable.StartedAt = *types.NewTimeFromTime(time.Now())
-		if err := s.setProcessed(syncable); err != nil {
-			return err
-		}
+	}
+
+	if err := s.setProcessed(syncable); err != nil {
+		return err
+	}
+
+	if err := s.addMetrics(syncable); err != nil {
+		return err
 	}
 
 	s.successCount += 1
@@ -74,14 +74,23 @@ func (s *sink) setProcessed(syncable *model.Syncable) error {
 	return nil
 }
 
-func (s *sink) addMetrics(payload *payload) error {
+func (s *sink) addMetrics(syncable *model.Syncable) error {
 	res, err := s.db.Database.GetTotalSize()
 	if err != nil {
 		return err
 	}
 
 	metric.IndexerHeightSuccess.Inc()
-	metric.IndexerHeightDuration.Set(payload.Syncable.Duration.Seconds())
+	metric.IndexerHeightDuration.Set(syncable.Duration.Seconds())
 	metric.IndexerDbSizeAfterHeight.Set(res.Size)
 	return nil
+}
+
+func (s *sink) prepareSyncableToProcess(currentHeight int64) (*model.Syncable, error) {
+	syncable, err := s.db.Syncables.FindByHeight(currentHeight)
+	if err != nil {
+		return nil, err
+	}
+	syncable.StartedAt = *types.NewTimeFromTime(time.Now())
+	return syncable, nil
 }
