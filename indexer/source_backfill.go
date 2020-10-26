@@ -80,8 +80,11 @@ func (s *backfillSource) Len() int64 {
 }
 
 func (s *backfillSource) init(isLastInSession, isLastInEra bool) error {
-	if err := s.setHeightsWhitelist(isLastInSession, isLastInEra); err != nil {
-		return err
+	s.useWhiteList = isLastInSession || isLastInEra
+	if s.UseWhiteList() {
+		if err := s.setHeightsWhitelist(isLastInSession, isLastInEra); err != nil {
+			return err
+		}
 	}
 	if err := s.setStartHeight(); err != nil {
 		return err
@@ -120,18 +123,15 @@ func (s *backfillSource) setEndHeight() error {
 }
 
 func (s *backfillSource) setHeightsWhitelist(isLastInSession, isLastInEra bool) error {
-	s.useWhiteList = isLastInSession || isLastInEra
-	if s.UseWhiteList() {
-		syncables, err := s.db.Syncables.FindAllByLastInSessionOrEra(s.currentIndexVersion, isLastInSession, isLastInEra)
-		if err != nil {
-			return err
-		}
-		if len(syncables) == 0 {
-			return errors.New(fmt.Sprintf("no heights for whitelist to backfill [currentIndexVersion=%d]", s.currentIndexVersion))
-		}
-
-		s.generateMapForWhiteList(syncables)
+	syncables, err := s.db.Syncables.FindAllByLastInSessionOrEra(s.currentIndexVersion, isLastInSession, isLastInEra)
+	if err != nil {
+		return err
 	}
+	if len(syncables) == 0 {
+		return errors.New(fmt.Sprintf("no heights for whitelist to backfill [currentIndexVersion=%d]", s.currentIndexVersion))
+	}
+
+	s.generateMapForWhiteList(syncables)
 	return nil
 }
 
