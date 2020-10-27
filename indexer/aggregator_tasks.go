@@ -48,63 +48,60 @@ func (t *validatorAggCreatorTask) Run(ctx context.Context, p pipeline.Payload) e
 	for stashAccount, validatorData := range parsedValidators {
 		existing, err := t.validatorAggDb.FindAggByStashAccount(stashAccount)
 		if err != nil {
-			if err == store.ErrNotFound {
-				// Create new
-
-				validator := model.ValidatorAgg{
-					Aggregate: &model.Aggregate{
-						StartedAtHeight: payload.Syncable.Height,
-						StartedAt:       payload.Syncable.Time,
-						RecentAtHeight:  payload.Syncable.Height,
-						RecentAt:        payload.Syncable.Time,
-					},
-
-					StashAccount:            stashAccount,
-					DisplayName:             validatorData.DisplayName,
-					RecentAsValidatorHeight: payload.Syncable.Height,
-				}
-
-				if payload.Syncable.LastInSession {
-					if validatorData.Performance.GetOnline() {
-						validator.AccumulatedUptime = 1
-					} else {
-						validator.AccumulatedUptime = 0
-					}
-					validator.AccumulatedUptimeCount = 1
-				}
-
-				newValidatorAggs = append(newValidatorAggs, validator)
-			} else {
+			if err != store.ErrNotFound {
 				return err
 			}
-		} else {
-			// Update
-			validator := &model.ValidatorAgg{
+			// Create new
+
+			validator := model.ValidatorAgg{
 				Aggregate: &model.Aggregate{
-					RecentAtHeight: payload.Syncable.Height,
-					RecentAt:       payload.Syncable.Time,
+					StartedAtHeight: payload.Syncable.Height,
+					StartedAt:       payload.Syncable.Time,
+					RecentAtHeight:  payload.Syncable.Height,
+					RecentAt:        payload.Syncable.Time,
 				},
 
-				RecentAsValidatorHeight: payload.Syncable.Height,
+				StashAccount:            stashAccount,
 				DisplayName:             validatorData.DisplayName,
+				RecentAsValidatorHeight: payload.Syncable.Height,
 			}
 
 			if payload.Syncable.LastInSession {
 				if validatorData.Performance.GetOnline() {
-					validator.AccumulatedUptime = existing.AccumulatedUptime + 1
+					validator.AccumulatedUptime = 1
 				} else {
-					validator.AccumulatedUptime = existing.AccumulatedUptime
+					validator.AccumulatedUptime = 0
 				}
-				validator.AccumulatedUptimeCount = existing.AccumulatedUptimeCount + 1
-			} else {
-				validator.AccumulatedUptime = existing.AccumulatedUptime
-				validator.AccumulatedUptimeCount = existing.AccumulatedUptimeCount
+				validator.AccumulatedUptimeCount = 1
 			}
 
-			existing.Update(validator)
-
-			updatedValidatorAggs = append(updatedValidatorAggs, *existing)
+			newValidatorAggs = append(newValidatorAggs, validator)
+			continue
 		}
+		// Update
+		validator := &model.ValidatorAgg{
+			Aggregate: &model.Aggregate{
+				RecentAtHeight: payload.Syncable.Height,
+				RecentAt:       payload.Syncable.Time,
+			},
+
+			RecentAsValidatorHeight: payload.Syncable.Height,
+			AccumulatedUptime:       existing.AccumulatedUptime,
+			AccumulatedUptimeCount:  existing.AccumulatedUptimeCount,
+			DisplayName:             validatorData.DisplayName,
+		}
+
+		if payload.Syncable.LastInSession {
+			if validatorData.Performance.GetOnline() {
+				validator.AccumulatedUptime++
+			}
+			validator.AccumulatedUptimeCount++
+		}
+
+		existing.Update(validator)
+
+		updatedValidatorAggs = append(updatedValidatorAggs, *existing)
+
 	}
 	payload.NewValidatorAggregates = newValidatorAggs
 	payload.UpdatedValidatorAggregates = updatedValidatorAggs
