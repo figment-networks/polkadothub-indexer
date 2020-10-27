@@ -31,7 +31,7 @@ type sink struct {
 	successCount int64
 }
 
-func (s *sink) Consume(ctx context.Context, p pipeline.Payload, skipCurrentHeight bool) error {
+func (s *sink) Consume(ctx context.Context, p pipeline.Payload) error {
 	payload := p.(*payload)
 
 	logger.DebugJSON(payload,
@@ -42,7 +42,7 @@ func (s *sink) Consume(ctx context.Context, p pipeline.Payload, skipCurrentHeigh
 
 	var syncable *model.Syncable
 	var err error
-	if !skipCurrentHeight {
+	if payload.Syncable != nil {
 		syncable = payload.Syncable
 	} else {
 		syncable, err = s.prepareSyncableToProcess(payload.CurrentHeight)
