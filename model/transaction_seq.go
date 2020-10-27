@@ -18,13 +18,16 @@ func (TransactionSeq) TableName() string {
 	return "transaction_sequences"
 }
 
-func (b *TransactionSeq) Valid() bool {
-	return b.Sequence.Valid()
+func (t *TransactionSeq) Valid() bool {
+	if t.Hash == "" || t.Method == "" || t.Section == "" || !t.Sequence.Valid() {
+		return false
+	}
+	return true
 }
 
-func (b *TransactionSeq) Update(m TransactionSeq) {
-	b.Index = m.Index
-	b.Hash = m.Hash
-	b.Method = m.Method
-	b.Section = m.Section
+func (t *TransactionSeq) Update(m TransactionSeq) {
+	t.Index = m.Index
+	t.Hash = m.Hash
+	t.Method = m.Method
+	t.Section = m.Section
 }
