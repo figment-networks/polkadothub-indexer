@@ -54,143 +54,27 @@ func (s EventSeqStore) FindByHeight(height int64) ([]model.EventSeq, error) {
 
 // FindBalanceTransfers finds balance transfers event sequences for given address
 func (s EventSeqStore) FindBalanceTransfers(address string) ([]model.EventSeqWithTxHash, error) {
-	var result []model.EventSeqWithTxHash
-
-	rows, err := s.db.
-		Table(model.EventSeq{}.TableName()).
-		Select(eventSeqWithTxHashQuerySelect).
-		Joins("INNER JOIN transaction_sequences ON transaction_sequences.height = event_sequences.height AND transaction_sequences.index = event_sequences.extrinsic_index ").
-		Where("event_sequences.section='balances' AND event_sequences.method='Transfer'").
-		Where("event_sequences.data->0->>'value' = ?", address).
-		Or("event_sequences.data->1->>'value' = ?", address).
-		Rows()
-
-	if err != nil {
-		return result, checkErr(err)
-	}
-
-	defer rows.Close()
-	for rows.Next() {
-		tmp := model.EventSeqWithTxHash{}
-		rows.Scan(&tmp.Height, &tmp.Method, &tmp.Section, &tmp.Data, &tmp.TxHash)
-		result = append(result, tmp)
-	}
-
-	return result, nil
+	return s.findForEventSeqWithTxHashQuery("balances", "Transfer", address)
 }
-
-const (
-	eventSeqWithTxHashQuerySelect = `
-	event_sequences.height,
-	event_sequences.method,
-	event_sequences.section,
-	event_sequences.data,
-	transaction_sequences.hash
-`
-)
 
 // FindBalanceDeposits finds balance deposits event sequences for given address
 func (s EventSeqStore) FindBalanceDeposits(address string) ([]model.EventSeqWithTxHash, error) {
-	var result []model.EventSeqWithTxHash
-
-	rows, err := s.db.
-		Table(model.EventSeq{}.TableName()).
-		Select(eventSeqWithTxHashQuerySelect).
-		Joins("INNER JOIN transaction_sequences ON transaction_sequences.height = event_sequences.height AND transaction_sequences.index = event_sequences.extrinsic_index ").
-		Where("event_sequences.section='balances' AND event_sequences.method='Deposit'").
-		Where("event_sequences.data->0->>'value' = ?", address).
-		Rows()
-
-	if err != nil {
-		return result, checkErr(err)
-	}
-
-	defer rows.Close()
-	for rows.Next() {
-		tmp := model.EventSeqWithTxHash{}
-		rows.Scan(&tmp.Height, &tmp.Method, &tmp.Section, &tmp.Data, &tmp.TxHash)
-		result = append(result, tmp)
-	}
-
-	return result, nil
+	return s.findForEventSeqWithTxHashQuery("balances", "Deposit", address)
 }
 
 // FindBonded finds bonded event sequences for given address
 func (s EventSeqStore) FindBonded(address string) ([]model.EventSeqWithTxHash, error) {
-	var result []model.EventSeqWithTxHash
-
-	rows, err := s.db.
-		Table(model.EventSeq{}.TableName()).
-		Select(eventSeqWithTxHashQuerySelect).
-		Joins("INNER JOIN transaction_sequences ON transaction_sequences.height = event_sequences.height AND transaction_sequences.index = event_sequences.extrinsic_index ").
-		Where("event_sequences.section='staking' AND event_sequences.method='Bonded'").
-		Where("event_sequences.data->0->>'value' = ?", address).
-		Rows()
-
-	if err != nil {
-		return result, checkErr(err)
-	}
-
-	defer rows.Close()
-	for rows.Next() {
-		tmp := model.EventSeqWithTxHash{}
-		rows.Scan(&tmp.Height, &tmp.Method, &tmp.Section, &tmp.Data, &tmp.TxHash)
-		result = append(result, tmp)
-	}
-
-	return result, nil
+	return s.findForEventSeqWithTxHashQuery("staking", "Bonded", address)
 }
 
 // FindUnbonded finds unbonded event sequences for given address
 func (s EventSeqStore) FindUnbonded(address string) ([]model.EventSeqWithTxHash, error) {
-	var result []model.EventSeqWithTxHash
-
-	rows, err := s.db.
-		Table(model.EventSeq{}.TableName()).
-		Select(eventSeqWithTxHashQuerySelect).
-		Joins("INNER JOIN transaction_sequences ON transaction_sequences.height = event_sequences.height AND transaction_sequences.index = event_sequences.extrinsic_index ").
-		Where("event_sequences.section='staking' AND event_sequences.method='Unbonded'").
-		Where("event_sequences.data->0->>'value' = ?", address).
-		Rows()
-
-	if err != nil {
-		return result, checkErr(err)
-	}
-
-	defer rows.Close()
-	for rows.Next() {
-		tmp := model.EventSeqWithTxHash{}
-		rows.Scan(&tmp.Height, &tmp.Method, &tmp.Section, &tmp.Data, &tmp.TxHash)
-		result = append(result, tmp)
-	}
-
-	return result, nil
+	return s.findForEventSeqWithTxHashQuery("staking", "Unbonded", address)
 }
 
 // FindWithdrawn finds withdrawn event sequences for given address
 func (s EventSeqStore) FindWithdrawn(address string) ([]model.EventSeqWithTxHash, error) {
-	var result []model.EventSeqWithTxHash
-
-	rows, err := s.db.
-		Table(model.EventSeq{}.TableName()).
-		Select(eventSeqWithTxHashQuerySelect).
-		Joins("INNER JOIN transaction_sequences ON transaction_sequences.height = event_sequences.height AND transaction_sequences.index = event_sequences.extrinsic_index ").
-		Where("event_sequences.section='staking' AND event_sequences.method='Withdrawn'").
-		Where("event_sequences.data->0->>'value' = ?", address).
-		Rows()
-
-	if err != nil {
-		return result, checkErr(err)
-	}
-
-	defer rows.Close()
-	for rows.Next() {
-		tmp := model.EventSeqWithTxHash{}
-		rows.Scan(&tmp.Height, &tmp.Method, &tmp.Section, &tmp.Data, &tmp.TxHash)
-		result = append(result, tmp)
-	}
-
-	return result, nil
+	return s.findForEventSeqWithTxHashQuery("staking", "Withdrawn", address)
 }
 
 // FindMostRecent finds most recent event session sequence
@@ -214,4 +98,34 @@ func (s *EventSeqStore) DeleteOlderThan(purgeThreshold time.Time) (*int64, error
 	}
 
 	return &tx.RowsAffected, nil
+}
+
+func (s EventSeqStore) findForEventSeqWithTxHashQuery(section, method, address string) ([]model.EventSeqWithTxHash, error) {
+	var result []model.EventSeqWithTxHash
+
+	tx := s.db
+	if method == "Transfer" {
+		tx = s.db.
+			Raw(eventSeqWithTxHashForSrcAndTargetQuery, section, method, address, address)
+	} else {
+		tx = s.db.
+			Raw(eventSeqWithTxHashForSrcQuery, section, method, address)
+	}
+
+	rows, err := tx.Rows()
+
+	if err != nil {
+		return result, checkErr(err)
+	}
+
+	defer rows.Close()
+	for rows.Next() {
+		event := model.EventSeqWithTxHash{}
+		if err := rows.Scan(&event.Height, &event.Method, &event.Section, &event.Data, &event.TxHash); err != nil {
+			return nil, err
+		}
+		result = append(result, event)
+	}
+
+	return result, nil
 }
