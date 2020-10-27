@@ -6,6 +6,14 @@ import (
 	"github.com/figment-networks/polkadothub-indexer/model"
 )
 
+const (
+	txSeqFindAllByHeightAndIndexQuery = `
+	SELECT *
+	FROM transaction_sequences as t
+	WHERE t.height = ? AND t.index IN (?)
+`
+)
+
 func NewTransactionSeqStore(db *gorm.DB) *TransactionSeqStore {
 	return &TransactionSeqStore{scoped(db, model.TransactionSeq{})}
 }
@@ -15,20 +23,18 @@ type TransactionSeqStore struct {
 	baseStore
 }
 
-// FindByHeightAndIndex finds event by height and index
-func (s TransactionSeqStore) FindByHeightAndIndex(height int64, index int64) (*model.TransactionSeq, error) {
-	q := model.TransactionSeq{
-		Sequence: &model.Sequence{
-			Height: height,
-		},
-		Index: index,
-	}
-	var result model.TransactionSeq
+func (s TransactionSeqStore) FindAllByHeightAndIndex(height int64, indexes []int64) (map[int64]*model.TransactionSeq, error) {
+	var results []*model.TransactionSeq
 
 	err := s.db.
-		Where(&q).
-		First(&result).
+		Raw(txSeqFindAllByHeightAndIndexQuery, height, indexes).
+		Find(&results).
 		Error
 
-	return &result, checkErr(err)
+	resultMap := make(map[int64]*model.TransactionSeq, len(results))
+	for _, result := range results {
+		resultMap[result.Index] = result
+	}
+
+	return resultMap, checkErr(err)
 }

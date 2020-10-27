@@ -357,15 +357,22 @@ func (t *transactionSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload)
 
 	var newTxSeqs []model.TransactionSeq
 	var updatedTxSeqs []model.TransactionSeq
+
+	txIndexes := make([]int64, len(mappedTxSeqs))
+	for i, seq := range mappedTxSeqs {
+		txIndexes[i] = seq.Index
+	}
+
+	seqLookup, err := t.db.TransactionSeq.FindAllByHeightAndIndex(payload.CurrentHeight, txIndexes)
+	if err != nil {
+		return err
+	}
+
 	for _, rawSeq := range mappedTxSeqs {
-		seq, err := t.db.TransactionSeq.FindByHeightAndIndex(payload.CurrentHeight, rawSeq.Index)
-		if err != nil {
-			if err == store.ErrNotFound {
-				newTxSeqs = append(newTxSeqs, rawSeq)
-				continue
-			} else {
-				return err
-			}
+		seq, exists := seqLookup[rawSeq.Index]
+		if !exists {
+			newTxSeqs = append(newTxSeqs, rawSeq)
+			continue
 		}
 
 		seq.Update(rawSeq)
