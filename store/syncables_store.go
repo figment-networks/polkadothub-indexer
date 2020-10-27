@@ -135,12 +135,12 @@ func (s SyncablesStore) SetProcessedAtForRange(reportID types.ID, startHeight in
 }
 
 // FindAllByLastInSessionOrEra returns end syncs of sessions and eras
-func (s SyncablesStore) FindAllByLastInSessionOrEra(indexVersion int64, isForLastOfSessions, isForLastOfEras bool) ([]model.Syncable, error) {
+func (s SyncablesStore) FindAllByLastInSessionOrEra(indexVersion int64, isLastInSession, isLastInEra bool) ([]model.Syncable, error) {
 	result := &[]model.Syncable{}
 
 	err := s.db.
 		Not("index_version = ?", indexVersion).
-		Where("last_in_session=? and last_in_era=?", isForLastOfSessions, isForLastOfEras).
+		Where("last_in_session=? and last_in_era=?", isLastInSession, isLastInEra).
 		Find(result).Error
 
 	return *result, checkErr(err)
