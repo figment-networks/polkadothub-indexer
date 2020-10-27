@@ -182,7 +182,7 @@ func ToTransactionSequence(syncable *model.Syncable, rawTransactions []*transact
 	var transactions []model.TransactionSeq
 
 	for _, rawTx := range rawTransactions {
-		if !rawTx.GetIsSigned() {
+		if !rawTx.GetIsSigned() && rawTx.GetSection() != "sudo" {
 			continue
 		}
 
