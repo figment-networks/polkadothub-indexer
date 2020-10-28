@@ -3,20 +3,22 @@ package cli
 import (
 	"flag"
 	"fmt"
+	"strconv"
+	"strings"
+
 	"github.com/figment-networks/polkadothub-indexer/client"
 	"github.com/figment-networks/polkadothub-indexer/config"
 	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/utils/logger"
 	"github.com/figment-networks/polkadothub-indexer/utils/reporting"
 	"github.com/pkg/errors"
-	"strconv"
-	"strings"
 )
 
 type Flags struct {
-	configPath string
-	runCommand string
-	showVersion bool
+	configPath     string
+	runCommand     string
+	migrateVersion uint
+	showVersion    bool
 
 	batchSize int64
 	parallel  bool
@@ -48,6 +50,7 @@ func (c *Flags) Setup() {
 	flag.BoolVar(&c.showVersion, "v", false, "Show application version")
 	flag.StringVar(&c.configPath, "config", "", "Path to config")
 	flag.StringVar(&c.runCommand, "cmd", "", "Command to run")
+	flag.UintVar(&c.migrateVersion, "migrate_to", 0, "Migration version parameter sets db changes to specified version")
 
 	flag.Int64Var(&c.batchSize, "batch_size", 0, "pipeline batch size")
 	flag.BoolVar(&c.parallel, "parallel", false, "should backfill be run in parallel with indexing")
@@ -92,7 +95,7 @@ func Run() {
 func startCommand(cfg *config.Config, flags Flags) error {
 	switch flags.runCommand {
 	case "migrate":
-		return startMigrations(cfg)
+		return startMigrations(cfg, flags.migrateVersion)
 	case "server":
 		return startServer(cfg)
 	case "worker":

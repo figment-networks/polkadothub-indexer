@@ -1,12 +1,13 @@
 package store
 
 import (
+	"reflect"
+	"time"
+
 	"github.com/figment-networks/polkadothub-indexer/metric"
 	"github.com/figment-networks/polkadothub-indexer/types"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
-	"reflect"
-	"time"
 )
 
 // NewIndexerMetric returns a new store from the connection string
@@ -30,6 +31,7 @@ func New(connStr string) (*Store, error) {
 		ValidatorEraSeq:     NewValidatorEraSeqStore(conn),
 		AccountEraSeq:       NewAccountEraSeqStore(conn),
 		EventSeq:            NewEventSeqStore(conn),
+		TransactionSeq:      NewTransactionSeqStore(conn),
 
 		ValidatorAgg: NewValidatorAggStore(conn),
 
@@ -51,6 +53,7 @@ type Store struct {
 	ValidatorEraSeq     *ValidatorEraSeqStore
 	EventSeq            *EventSeqStore
 	AccountEraSeq       *AccountEraSeqStore
+	TransactionSeq      *TransactionSeqStore
 
 	ValidatorAgg *ValidatorAggStore
 

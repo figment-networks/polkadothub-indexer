@@ -69,6 +69,7 @@ func (t *FetcherTask) Run(ctx context.Context, p pipeline.Payload) error {
 	payload.RawValidatorPerformance = resp.GetValidatorPerformance().GetValidators()
 	payload.RawStaking = resp.GetStaking().GetStaking()
 	payload.RawEvents = resp.GetEvent().GetEvents()
+	payload.RawTransactions = resp.GetTransaction().GetTransactions()
 
 	meta := resp.GetChain()
 	payload.HeightMeta = HeightMeta{
