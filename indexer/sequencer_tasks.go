@@ -235,21 +235,27 @@ func (t *eventSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) error
 		return err
 	}
 
+	txIndexes := make([]int64, len(mappedEventSeqs))
+	for i, seq := range mappedEventSeqs {
+		txIndexes[i] = seq.Index
+	}
+
+	seqLookup, err := t.db.EventSeq.FindAllByHeightAndIndex(payload.CurrentHeight, txIndexes)
+	if err != nil {
+		return err
+	}
+
 	var newEventSeqs []model.EventSeq
 	var updatedEventSeqs []model.EventSeq
 	for _, rawEventSeq := range mappedEventSeqs {
-		eventSeq, err := t.db.EventSeq.FindByHeightAndIndex(payload.CurrentHeight, rawEventSeq.Index)
-		if err != nil {
-			if err == store.ErrNotFound {
-				newEventSeqs = append(newEventSeqs, rawEventSeq)
-				continue
-			} else {
-				return err
-			}
+		seq, exists := seqLookup[rawEventSeq.Index]
+		if !exists {
+			newEventSeqs = append(newEventSeqs, rawEventSeq)
+			continue
 		}
 
-		eventSeq.Update(rawEventSeq)
-		updatedEventSeqs = append(updatedEventSeqs, *eventSeq)
+		seq.Update(rawEventSeq)
+		updatedEventSeqs = append(updatedEventSeqs, *seq)
 	}
 
 	payload.NewEventSequences = newEventSeqs
@@ -355,9 +361,6 @@ func (t *transactionSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload)
 		return err
 	}
 
-	var newTxSeqs []model.TransactionSeq
-	var updatedTxSeqs []model.TransactionSeq
-
 	txIndexes := make([]int64, len(mappedTxSeqs))
 	for i, seq := range mappedTxSeqs {
 		txIndexes[i] = seq.Index
@@ -368,6 +371,8 @@ func (t *transactionSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload)
 		return err
 	}
 
+	var newTxSeqs []model.TransactionSeq
+	var updatedTxSeqs []model.TransactionSeq
 	for _, rawSeq := range mappedTxSeqs {
 		seq, exists := seqLookup[rawSeq.Index]
 		if !exists {

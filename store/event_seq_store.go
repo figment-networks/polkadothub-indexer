@@ -35,6 +35,24 @@ func (s EventSeqStore) FindByHeightAndIndex(height int64, index int64) (*model.E
 	return &result, checkErr(err)
 }
 
+// FindAllByHeightAndIndex finds all found sequences for indexes at given height, it returns map with all found sequences with indexes as keys
+func (s EventSeqStore) FindAllByHeightAndIndex(height int64, indexes []int64) (map[int64]*model.EventSeq, error) {
+	var results []*model.EventSeq
+	query := getFindAllByHeightAndIndexQuery(model.EventSeq{}.TableName())
+
+	err := s.db.
+		Raw(query, height, indexes).
+		Find(&results).
+		Error
+
+	resultMap := make(map[int64]*model.EventSeq, len(results))
+	for _, result := range results {
+		resultMap[result.Index] = result
+	}
+
+	return resultMap, checkErr(err)
+}
+
 // FindByHeight finds event sequences by height
 func (s EventSeqStore) FindByHeight(height int64) ([]model.EventSeq, error) {
 	q := model.EventSeq{
