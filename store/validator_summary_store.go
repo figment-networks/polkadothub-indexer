@@ -75,51 +75,29 @@ type ValidatorSummaryRow struct {
 	StakersCountAvg float64        `json:"stakers_count_avg"`
 	StakersCountMin int64          `json:"stakers_count_min"`
 	StakersCountMax int64          `json:"stakers_count_max"`
+	UptimeAvg       float64        `json:"uptime_avg"`
 }
 
 // FindSummary gets summary for validator summary
 func (s *ValidatorSummaryStore) FindSummary(interval types.SummaryInterval, period string) ([]ValidatorSummaryRow, error) {
 	defer logQueryDuration(time.Now(), "ValidatorSummaryStore_FindSummary")
-
-	rows, err := s.db.
-		Raw(allValidatorsSummaryForIntervalQuery, interval, period, interval).
-		Rows()
-
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
 	var res []ValidatorSummaryRow
-	for rows.Next() {
-		var row ValidatorSummaryRow
-		if err := s.db.ScanRows(rows, &row); err != nil {
-			return nil, err
-		}
-		res = append(res, row)
-	}
-	return res, nil
+
+	err := s.db.
+		Raw(allValidatorsSummaryForIntervalQuery, interval, period, interval).
+		Scan(&res).Error
+	return res, err
 }
 
 // FindSummaryByStashAccount gets summary for given validator
 func (s *ValidatorSummaryStore) FindSummaryByStashAccount(stashAccount string, interval types.SummaryInterval, period string) ([]ValidatorSummaryRow, error) {
 	defer logQueryDuration(time.Now(), "ValidatorSummaryStore_FindSummaryByStashAccount")
-
-	rows, err := s.db.Raw(validatorSummaryForIntervalQuery, interval, period, stashAccount, interval).Rows()
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
 	var res []ValidatorSummaryRow
-	for rows.Next() {
-		var row ValidatorSummaryRow
-		if err := s.db.ScanRows(rows, &row); err != nil {
-			return nil, err
-		}
-		res = append(res, row)
-	}
-	return res, nil
+
+	err := s.db.
+		Raw(validatorSummaryForIntervalQuery, interval, period, stashAccount, interval).
+		Scan(&res).Error
+	return res, err
 }
 
 // FindMostRecent finds most recent validator summary
