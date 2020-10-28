@@ -297,7 +297,10 @@ func (t *transactionSeqPersistorTask) GetName() string {
 func (t *transactionSeqPersistorTask) Run(ctx context.Context, p pipeline.Payload) error {
 	defer metric.LogIndexerTaskDuration(time.Now(), t.GetName())
 
-	payload := p.(*payload)
+	payload, ok := p.(*payload)
+	if !ok {
+	    return fmt.Errorf("Interface is not a  *payload type (%T)", p)
+	} 
 
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
 
