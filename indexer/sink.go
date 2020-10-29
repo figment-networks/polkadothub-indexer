@@ -40,22 +40,11 @@ func (s *sink) Consume(ctx context.Context, p pipeline.Payload) error {
 		logger.Field("height", payload.CurrentHeight),
 	)
 
-	var syncable *model.Syncable
-	var err error
-	if payload.Syncable != nil {
-		syncable = payload.Syncable
-	} else {
-		syncable, err = s.prepareSyncableToProcess(payload.CurrentHeight)
-		if err != nil {
-			return err
-		}
-	}
-
-	if err := s.setProcessed(syncable); err != nil {
+	if err := s.setProcessed(payload.Syncable); err != nil {
 		return err
 	}
 
-	if err := s.addMetrics(syncable); err != nil {
+	if err := s.addMetrics(payload.Syncable); err != nil {
 		return err
 	}
 

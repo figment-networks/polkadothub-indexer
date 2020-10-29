@@ -199,8 +199,7 @@ func (p *indexingPipeline) Backfill(ctx context.Context, backfillCfg BackfillCon
 	indexVersion := p.configParser.GetCurrentVersionId()
 	isLastInSession := p.configParser.IsLastInSession()
 	isLastInEra := p.configParser.IsLastInEra()
-	whiteListStages := p.configParser.GetWhiteListStages()
-	source, err := NewBackfillSource(p.cfg, p.db, p.client, indexVersion, isLastInSession, isLastInEra, whiteListStages)
+	source, err := NewBackfillSource(p.cfg, p.db, p.client, indexVersion, isLastInSession, isLastInEra)
 	if err != nil {
 		return err
 	}
