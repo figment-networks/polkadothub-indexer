@@ -7,14 +7,15 @@ import (
 )
 
 type getStatusUseCase struct {
-	db     *store.Store
 	client *client.Client
+
+	syncablesDb store.Syncables
 }
 
-func NewGetStatusUseCase(db *store.Store, c *client.Client) *getStatusUseCase {
+func NewGetStatusUseCase(c *client.Client, syncablesDb store.Syncables) *getStatusUseCase {
 	return &getStatusUseCase{
-		db:     db,
-		client: c,
+		syncablesDb: syncablesDb,
+		client:      c,
 	}
 }
 
@@ -23,13 +24,13 @@ func (uc *getStatusUseCase) Execute(includeChainStatus bool) (*DetailsView, erro
 	var getHeadRes *chainpb.GetHeadResponse
 	var getStatusRes *chainpb.GetStatusResponse
 
-	mostRecentSyncable, err := uc.db.Syncables.FindMostRecent()
+	mostRecentSyncable, err := uc.syncablesDb.FindMostRecent()
 	if err != nil && err != store.ErrNotFound {
 		return nil, err
 	}
 
 	if mostRecentSyncable != nil {
-		lastSessionSyncable, err := uc.db.Syncables.FindLastInSession(mostRecentSyncable.Session - 1)
+		lastSessionSyncable, err := uc.syncablesDb.FindLastInSession(mostRecentSyncable.Session - 1)
 		if err != nil && err != store.ErrNotFound {
 			return nil, err
 		}
@@ -37,7 +38,7 @@ func (uc *getStatusUseCase) Execute(includeChainStatus bool) (*DetailsView, erro
 			lastSessionHeight = lastSessionSyncable.Height
 		}
 
-		lastEraSyncable, err := uc.db.Syncables.FindLastInEra(mostRecentSyncable.Era - 1)
+		lastEraSyncable, err := uc.syncablesDb.FindLastInEra(mostRecentSyncable.Era - 1)
 		if err != nil && err != store.ErrNotFound {
 			return nil, err
 		}

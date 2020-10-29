@@ -1,7 +1,8 @@
-package store
+package psql
 
 import (
 	"github.com/figment-networks/polkadothub-indexer/model"
+	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/types"
 	"github.com/jinzhu/gorm"
 )
@@ -143,7 +144,7 @@ func (s SyncablesStore) FindMostRecentByDifferentIndexVersion(indexVersion int64
 func (s SyncablesStore) CreateOrUpdate(val *model.Syncable) error {
 	existing, err := s.FindByHeight(val.Height)
 	if err != nil {
-		if err == ErrNotFound {
+		if err == store.ErrNotFound {
 			return s.Create(val)
 		}
 		return err
@@ -151,7 +152,11 @@ func (s SyncablesStore) CreateOrUpdate(val *model.Syncable) error {
 	return s.Update(existing)
 }
 
-// CreateOrUpdate creates a new syncable or updates an existing one
+func (s SyncablesStore) SaveSyncable(val *model.Syncable) error {
+	return s.Save(val)
+}
+
+// SetProcessedAtForRange creates a new syncable or updates an existing one
 func (s SyncablesStore) SetProcessedAtForRange(reportID types.ID, startHeight int64, endHeight int64) error {
 	err := s.db.
 		Exec("UPDATE syncables SET report_id = ?, processed_at = NULL WHERE height >= ? AND height <= ?", reportID, startHeight, endHeight).

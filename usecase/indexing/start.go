@@ -17,15 +17,33 @@ var (
 
 type startUseCase struct {
 	cfg    *config.Config
-	db     *store.Store
 	client *client.Client
+
+	accountDb     store.Accounts
+	blockDb       store.Blocks
+	databaseDb    store.Database
+	eventDb       store.Events
+	reportDb      store.Reports
+	syncableDb    store.Syncables
+	transactionDb store.Transactions
+	validatorDb   store.Validators
 }
 
-func NewStartUseCase(cfg *config.Config, db *store.Store, c *client.Client) *startUseCase {
+func NewStartUseCase(cfg *config.Config, cli *client.Client, accountDb store.Accounts, blockDb store.Blocks, databaseDb store.Database, eventDb store.Events, reportDb store.Reports,
+	syncableDb store.Syncables, transactionDb store.Transactions, validatorDb store.Validators,
+) *startUseCase {
 	return &startUseCase{
 		cfg:    cfg,
-		db:     db,
-		client: c,
+		client: cli,
+
+		accountDb:     accountDb,
+		blockDb:       blockDb,
+		databaseDb:    databaseDb,
+		eventDb:       eventDb,
+		reportDb:      reportDb,
+		syncableDb:    syncableDb,
+		transactionDb: transactionDb,
+		validatorDb:   validatorDb,
 	}
 }
 
@@ -34,7 +52,7 @@ func (uc *startUseCase) Execute(ctx context.Context, batchSize int64) error {
 		return err
 	}
 
-	indexingPipeline, err := indexer.NewPipeline(uc.cfg, uc.db, uc.client)
+	indexingPipeline, err := indexer.NewPipeline(uc.cfg, uc.client, uc.accountDb, uc.blockDb, uc.databaseDb, uc.eventDb, uc.reportDb, uc.syncableDb, uc.transactionDb, uc.validatorDb)
 	if err != nil {
 		return err
 	}
@@ -47,7 +65,7 @@ func (uc *startUseCase) Execute(ctx context.Context, batchSize int64) error {
 // canExecute checks if sequential reindex is already running
 // if is it running we skip indexing
 func (uc *startUseCase) canExecute() error {
-	if _, err := uc.db.Reports.FindNotCompletedByKind(model.ReportKindSequentialReindex); err != nil {
+	if _, err := uc.reportDb.FindNotCompletedByKind(model.ReportKindSequentialReindex); err != nil {
 		if err == store.ErrNotFound {
 			return nil
 		}

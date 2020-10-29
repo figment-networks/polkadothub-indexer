@@ -3,6 +3,7 @@ package indexer
 import (
 	"context"
 	"fmt"
+
 	"github.com/figment-networks/indexing-engine/pipeline"
 	"github.com/figment-networks/polkadothub-indexer/metric"
 	"github.com/figment-networks/polkadothub-indexer/store"
@@ -14,15 +15,17 @@ var (
 	_ pipeline.Sink = (*sink)(nil)
 )
 
-func NewSink(db *store.Store, versionNumber int64) *sink {
+func NewSink(databaseDb store.Database, syncablesDb store.Syncables, versionNumber int64) *sink {
 	return &sink{
-		db:            db,
+		databaseDb:    databaseDb,
+		syncablesDb:   syncablesDb,
 		versionNumber: versionNumber,
 	}
 }
 
 type sink struct {
-	db            *store.Store
+	databaseDb    store.Database
+	syncablesDb   store.Syncables
 	versionNumber int64
 
 	successCount int64
@@ -55,14 +58,14 @@ func (s *sink) Consume(ctx context.Context, p pipeline.Payload) error {
 
 func (s *sink) setProcessed(payload *payload) error {
 	payload.Syncable.MarkProcessed(s.versionNumber)
-	if err := s.db.Syncables.Save(payload.Syncable); err != nil {
+	if err := s.syncablesDb.SaveSyncable(payload.Syncable); err != nil {
 		return errors.Wrap(err, "failed saving syncable in sink")
 	}
 	return nil
 }
 
 func (s *sink) addMetrics(payload *payload) error {
-	res, err := s.db.Database.GetTotalSize()
+	res, err := s.databaseDb.GetTotalSize()
 	if err != nil {
 		return err
 	}

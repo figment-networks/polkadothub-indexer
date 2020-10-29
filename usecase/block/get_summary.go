@@ -7,15 +7,15 @@ import (
 )
 
 type getBlockSummaryUseCase struct {
-	db *store.Store
+	blockSummaryDb store.BlockSummary
 }
 
-func NewGetBlockSummaryUseCase(db *store.Store) *getBlockSummaryUseCase {
+func NewGetBlockSummaryUseCase(blockSummaryDb store.BlockSummary) *getBlockSummaryUseCase {
 	return &getBlockSummaryUseCase{
-		db: db,
+		blockSummaryDb: blockSummaryDb,
 	}
 }
 
 func (uc *getBlockSummaryUseCase) Execute(interval types.SummaryInterval, period string) ([]model.BlockSummary, error) {
-	return uc.db.BlockSummary.FindSummary(interval, period)
+	return uc.blockSummaryDb.FindSummaries(interval, period)
 }

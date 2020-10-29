@@ -1,7 +1,6 @@
 package block
 
 import (
-	"github.com/figment-networks/polkadothub-indexer/client"
 	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/types"
 	"github.com/figment-networks/polkadothub-indexer/usecase/http"
@@ -15,16 +14,14 @@ var (
 )
 
 type getBlockTimesHttpHandler struct {
-	db     *store.Store
-	client *client.Client
-
 	useCase *getBlockTimesUseCase
+
+	blockSeqDb store.BlockSeq
 }
 
-func NewGetBlockTimesHttpHandler(db *store.Store, client *client.Client) *getBlockTimesHttpHandler {
+func NewGetBlockTimesHttpHandler(blockSeqDb store.BlockSeq) *getBlockTimesHttpHandler {
 	return &getBlockTimesHttpHandler{
-		db:     db,
-		client: client,
+		blockSeqDb: blockSeqDb,
 	}
 }
 
@@ -46,7 +43,7 @@ func (h *getBlockTimesHttpHandler) Handle(c *gin.Context) {
 
 func (h *getBlockTimesHttpHandler) getUseCase() *getBlockTimesUseCase {
 	if h.useCase == nil {
-		return NewGetBlockTimesUseCase(h.db)
+		return NewGetBlockTimesUseCase(h.blockSeqDb)
 	}
 	return h.useCase
 }

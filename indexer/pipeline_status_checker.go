@@ -9,12 +9,8 @@ import (
 
 // pipelineStatusChecker checks if index version is up to date and what index versions are missing (are not up to date)
 type pipelineStatusChecker struct {
-	store               PipelineSyncableStore
+	syncablesDb         store.Syncables
 	currentIndexVersion int64
-}
-
-type PipelineSyncableStore interface {
-	FindSmallestIndexVersion() (*int64, error)
 }
 
 type pipelineStatus struct {
@@ -30,7 +26,7 @@ func (o *pipelineStatusChecker) getStatus() (*pipelineStatus, error) {
 	var isUpToDate bool
 	var isPristine bool
 
-	smallestIndexVersion, err := o.store.FindSmallestIndexVersion()
+	smallestIndexVersion, err := o.syncablesDb.FindSmallestIndexVersion()
 	if err != nil {
 		if err == store.ErrNotFound {
 			// When syncables not found in databases, set start version to first

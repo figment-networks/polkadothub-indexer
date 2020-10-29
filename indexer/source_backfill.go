@@ -15,11 +15,11 @@ var (
 	_ pipeline.Source = (*backfillSource)(nil)
 )
 
-func NewBackfillSource(cfg *config.Config, db *store.Store, client *client.Client, indexVersion int64) (*backfillSource, error) {
+func NewBackfillSource(cfg *config.Config, syncablesDb store.Syncables, client *client.Client, indexVersion int64) (*backfillSource, error) {
 	src := &backfillSource{
-		cfg:    cfg,
-		db:     db,
-		client: client,
+		cfg:         cfg,
+		syncablesDb: syncablesDb,
+		client:      client,
 
 		currentIndexVersion: indexVersion,
 	}
@@ -32,9 +32,9 @@ func NewBackfillSource(cfg *config.Config, db *store.Store, client *client.Clien
 }
 
 type backfillSource struct {
-	cfg    *config.Config
-	db     *store.Store
-	client *client.Client
+	cfg         *config.Config
+	syncablesDb store.Syncables
+	client      *client.Client
 
 	currentIndexVersion int64
 
@@ -75,7 +75,7 @@ func (s *backfillSource) init() error {
 }
 
 func (s *backfillSource) setStartHeight() error {
-	syncable, err := s.db.Syncables.FindFirstByDifferentIndexVersion(s.currentIndexVersion)
+	syncable, err := s.syncablesDb.FindFirstByDifferentIndexVersion(s.currentIndexVersion)
 	if err != nil {
 		if err == store.ErrNotFound {
 			return errors.New(fmt.Sprintf("nothing to backfill [currentIndexVersion=%d]", s.currentIndexVersion))
@@ -89,7 +89,7 @@ func (s *backfillSource) setStartHeight() error {
 }
 
 func (s *backfillSource) setEndHeight() error {
-	syncable, err := s.db.Syncables.FindMostRecentByDifferentIndexVersion(s.currentIndexVersion)
+	syncable, err := s.syncablesDb.FindMostRecentByDifferentIndexVersion(s.currentIndexVersion)
 	if err != nil {
 		if err == store.ErrNotFound {
 			return errors.New(fmt.Sprintf("nothing to backfill [currentIndexVersion=%d]", s.currentIndexVersion))

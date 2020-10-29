@@ -8,7 +8,7 @@ import (
 
 	"github.com/figment-networks/polkadothub-indexer/client"
 	"github.com/figment-networks/polkadothub-indexer/config"
-	"github.com/figment-networks/polkadothub-indexer/store"
+	"github.com/figment-networks/polkadothub-indexer/store/psql"
 	"github.com/figment-networks/polkadothub-indexer/utils/logger"
 	"github.com/figment-networks/polkadothub-indexer/utils/reporting"
 	"github.com/pkg/errors"
@@ -132,16 +132,15 @@ func initConfig(path string) (*config.Config, error) {
 }
 
 func initLogger(cfg *config.Config) error {
-	_, err := logger.Init(cfg)
-	return err
+	return logger.Init(cfg)
 }
 
 func initClient(cfg *config.Config) (*client.Client, error) {
 	return client.New(cfg.ProxyUrl)
 }
 
-func initStore(cfg *config.Config) (*store.Store, error) {
-	db, err := store.New(cfg.DatabaseDSN)
+func initPostgres(cfg *config.Config) (*psql.Store, error) {
+	db, err := psql.New(cfg.DatabaseDSN)
 	if err != nil {
 		return nil, err
 	}

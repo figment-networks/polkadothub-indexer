@@ -1,9 +1,10 @@
-package store
+package psql
 
 import (
 	"time"
 
 	"github.com/figment-networks/polkadothub-indexer/model"
+	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/types"
 	"github.com/jinzhu/gorm"
 )
@@ -17,13 +18,14 @@ type ValidatorEraSeqStore struct {
 	baseStore
 }
 
-// CreateIfNotExists creates the validator if it does not exist
-func (s ValidatorEraSeqStore) CreateIfNotExists(validator *model.ValidatorEraSeq) error {
-	_, err := s.FindByHeight(validator.Era)
-	if isNotFound(err) {
-		return s.Create(validator)
-	}
-	return nil
+// CreateEraSeq creates the validator aggregate
+func (s ValidatorEraSeqStore) CreateEraSeq(val *model.ValidatorEraSeq) error {
+	return s.Create(val)
+}
+
+// SaveEraSeq creates the validator aggregate
+func (s ValidatorEraSeqStore) SaveEraSeq(val *model.ValidatorEraSeq) error {
+	return s.Save(val)
 }
 
 // FindByHeightAndStashAccount finds validator by height and stash account
@@ -60,8 +62,8 @@ func (s ValidatorEraSeqStore) FindByEraAndStashAccount(era int64, stash string) 
 	return &result, checkErr(err)
 }
 
-// FindByHeight finds validator era sequences by height
-func (s ValidatorEraSeqStore) FindByHeight(h int64) ([]model.ValidatorEraSeq, error) {
+// FindEraSeqsByHeight finds validator era sequences by height
+func (s ValidatorEraSeqStore) FindEraSeqsByHeight(h int64) ([]model.ValidatorEraSeq, error) {
 	var result []model.ValidatorEraSeq
 
 	err := s.db.
@@ -72,7 +74,7 @@ func (s ValidatorEraSeqStore) FindByHeight(h int64) ([]model.ValidatorEraSeq, er
 	return result, checkErr(err)
 }
 
-// FindByHeight finds validator era sequences by era
+// FindByEra finds validator era sequences by era
 func (s ValidatorEraSeqStore) FindByEra(era int64) ([]model.ValidatorEraSeq, error) {
 	q := model.ValidatorEraSeq{
 		EraSequence: &model.EraSequence{
@@ -89,8 +91,8 @@ func (s ValidatorEraSeqStore) FindByEra(era int64) ([]model.ValidatorEraSeq, err
 	return result, checkErr(err)
 }
 
-// FindMostRecent finds most recent validator era sequence
-func (s *ValidatorEraSeqStore) FindMostRecent() (*model.ValidatorEraSeq, error) {
+// FindMostRecentEraSeq finds most recent validator era sequence
+func (s *ValidatorEraSeqStore) FindMostRecentEraSeq() (*model.ValidatorEraSeq, error) {
 	validatorSeq := &model.ValidatorEraSeq{}
 	if err := findMostRecent(s.db, "time", validatorSeq); err != nil {
 		return nil, err
@@ -98,8 +100,8 @@ func (s *ValidatorEraSeqStore) FindMostRecent() (*model.ValidatorEraSeq, error) 
 	return validatorSeq, nil
 }
 
-// FindLastByStashAccount finds last validator era sequences for given stash account
-func (s ValidatorEraSeqStore) FindLastByStashAccount(stashAccount string, limit int64) ([]model.ValidatorEraSeq, error) {
+// FindLastEraSeqByStashAccount finds last validator era sequences for given stash account
+func (s ValidatorEraSeqStore) FindLastEraSeqByStashAccount(stashAccount string, limit int64) ([]model.ValidatorEraSeq, error) {
 	q := model.ValidatorEraSeq{
 		StashAccount: stashAccount,
 	}
@@ -115,8 +117,8 @@ func (s ValidatorEraSeqStore) FindLastByStashAccount(stashAccount string, limit 
 	return result, checkErr(err)
 }
 
-// DeleteOlderThan deletes validator sequence older than given threshold
-func (s *ValidatorEraSeqStore) DeleteOlderThan(purgeThreshold time.Time) (*int64, error) {
+// DeleteEraSeqsOlderThan deletes validator sequence older than given threshold
+func (s *ValidatorEraSeqStore) DeleteEraSeqsOlderThan(purgeThreshold time.Time) (*int64, error) {
 	tx := s.db.
 		Unscoped().
 		Where("time < ?", purgeThreshold).
@@ -129,31 +131,8 @@ func (s *ValidatorEraSeqStore) DeleteOlderThan(purgeThreshold time.Time) (*int64
 	return &tx.RowsAffected, nil
 }
 
-type ValidatorEraSeqSummary struct {
-	StashAccount    string         `json:"stash_account"`
-	TimeBucket      types.Time     `json:"time_bucket"`
-	TotalStakeAvg   types.Quantity `json:"total_stake_avg"`
-	TotalStakeMin   types.Quantity `json:"total_stake_min"`
-	TotalStakeMax   types.Quantity `json:"total_stake_max"`
-	OwnStakeAvg     types.Quantity `json:"own_stake_avg"`
-	OwnStakeMin     types.Quantity `json:"own_stake_min"`
-	OwnStakeMax     types.Quantity `json:"own_stake_max"`
-	StakersStakeAvg types.Quantity `json:"stakers_stake_avg"`
-	StakersStakeMin types.Quantity `json:"stakers_stake_min"`
-	StakersStakeMax types.Quantity `json:"stakers_stake_max"`
-	RewardPointsAvg float64        `json:"reward_points_avg"`
-	RewardPointsMin int64          `json:"reward_points_min"`
-	RewardPointsMax int64          `json:"reward_points_max"`
-	CommissionAvg   float64        `json:"commission_avg"`
-	CommissionMin   int64          `json:"commission_min"`
-	CommissionMax   int64          `json:"commission_max"`
-	StakersCountAvg float64        `json:"stakers_count_avg"`
-	StakersCountMin int64          `json:"stakers_count_min"`
-	StakersCountMax int64          `json:"stakers_count_max"`
-}
-
-// Summarize gets the summarized version of validator sequences
-func (s *ValidatorEraSeqStore) Summarize(interval types.SummaryInterval, activityPeriods []ActivityPeriodRow) ([]ValidatorEraSeqSummary, error) {
+// SummarizeEraSeqs gets the summarized version of validator sequences
+func (s *ValidatorEraSeqStore) SummarizeEraSeqs(interval types.SummaryInterval, activityPeriods []store.ActivityPeriodRow) ([]model.ValidatorEraSeqSummary, error) {
 	defer logQueryDuration(time.Now(), "ValidatorEraSeqStore_Summarize")
 
 	tx := s.db.
@@ -187,9 +166,9 @@ func (s *ValidatorEraSeqStore) Summarize(interval types.SummaryInterval, activit
 	}
 	defer rows.Close()
 
-	var models []ValidatorEraSeqSummary
+	var models []model.ValidatorEraSeqSummary
 	for rows.Next() {
-		var summary ValidatorEraSeqSummary
+		var summary model.ValidatorEraSeqSummary
 		if err := s.db.ScanRows(rows, &summary); err != nil {
 			return nil, err
 		}

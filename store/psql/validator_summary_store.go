@@ -1,10 +1,11 @@
-package store
+package psql
 
 import (
 	"fmt"
 	"time"
 
 	"github.com/figment-networks/polkadothub-indexer/model"
+	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/types"
 	"github.com/jinzhu/gorm"
 )
@@ -18,8 +19,18 @@ type ValidatorSummaryStore struct {
 	baseStore
 }
 
-// Find find validator summary by query
-func (s ValidatorSummaryStore) Find(query *model.ValidatorSummary) (*model.ValidatorSummary, error) {
+// CreateSummary creates the validator aggregate
+func (s ValidatorSummaryStore) CreateSummary(val *model.ValidatorSummary) error {
+	return s.Create(val)
+}
+
+// SaveSummary creates the validator aggregate
+func (s ValidatorSummaryStore) SaveSummary(val *model.ValidatorSummary) error {
+	return s.Save(val)
+}
+
+// FindSummary find validator summary by query
+func (s ValidatorSummaryStore) FindSummary(query *model.ValidatorSummary) (*model.ValidatorSummary, error) {
 	var result model.ValidatorSummary
 
 	err := s.db.
@@ -31,7 +42,7 @@ func (s ValidatorSummaryStore) Find(query *model.ValidatorSummary) (*model.Valid
 }
 
 // FindActivityPeriods Finds activity periods
-func (s *ValidatorSummaryStore) FindActivityPeriods(interval types.SummaryInterval, indexVersion int64) ([]ActivityPeriodRow, error) {
+func (s *ValidatorSummaryStore) FindActivityPeriods(interval types.SummaryInterval, indexVersion int64) ([]store.ActivityPeriodRow, error) {
 	defer logQueryDuration(time.Now(), "ValidatorSummaryStore_FindActivityPeriods")
 
 	rows, err := s.db.
@@ -43,9 +54,9 @@ func (s *ValidatorSummaryStore) FindActivityPeriods(interval types.SummaryInterv
 	}
 	defer rows.Close()
 
-	var res []ActivityPeriodRow
+	var res []store.ActivityPeriodRow
 	for rows.Next() {
-		var row ActivityPeriodRow
+		var row store.ActivityPeriodRow
 		if err := s.db.ScanRows(rows, &row); err != nil {
 			return nil, err
 		}
@@ -54,34 +65,10 @@ func (s *ValidatorSummaryStore) FindActivityPeriods(interval types.SummaryInterv
 	return res, nil
 }
 
-type ValidatorSummaryRow struct {
-	TimeBucket      string         `json:"time_bucket"`
-	TimeInterval    string         `json:"time_interval"`
-	TotalStakeAvg   types.Quantity `json:"total_stake_avg"`
-	TotalStakeMin   types.Quantity `json:"total_stake_min"`
-	TotalStakeMax   types.Quantity `json:"total_stake_max"`
-	OwnStakeAvg     types.Quantity `json:"own_stake_avg"`
-	OwnStakeMin     types.Quantity `json:"own_stake_min"`
-	OwnStakeMax     types.Quantity `json:"own_stake_max"`
-	StakersStakeAvg types.Quantity `json:"stakers_stake_avg"`
-	StakersStakeMin types.Quantity `json:"stakers_stake_min"`
-	StakersStakeMax types.Quantity `json:"stakers_stake_max"`
-	RewardPointsAvg float64        `json:"reward_points_avg"`
-	RewardPointsMin int64          `json:"reward_points_min"`
-	RewardPointsMax int64          `json:"reward_points_max"`
-	CommissionAvg   float64        `json:"commission_avg"`
-	CommissionMin   int64          `json:"commission_min"`
-	CommissionMax   int64          `json:"commission_max"`
-	StakersCountAvg float64        `json:"stakers_count_avg"`
-	StakersCountMin int64          `json:"stakers_count_min"`
-	StakersCountMax int64          `json:"stakers_count_max"`
-	UptimeAvg       float64        `json:"uptime_avg"`
-}
-
-// FindSummary gets summary for validator summary
-func (s *ValidatorSummaryStore) FindSummary(interval types.SummaryInterval, period string) ([]ValidatorSummaryRow, error) {
+// FindSummaries gets summary for validator summary
+func (s *ValidatorSummaryStore) FindSummaries(interval types.SummaryInterval, period string) ([]store.ValidatorSummaryRow, error) {
 	defer logQueryDuration(time.Now(), "ValidatorSummaryStore_FindSummary")
-	var res []ValidatorSummaryRow
+	var res []store.ValidatorSummaryRow
 
 	err := s.db.
 		Raw(allValidatorsSummaryForIntervalQuery, interval, period, interval).
@@ -90,9 +77,9 @@ func (s *ValidatorSummaryStore) FindSummary(interval types.SummaryInterval, peri
 }
 
 // FindSummaryByStashAccount gets summary for given validator
-func (s *ValidatorSummaryStore) FindSummaryByStashAccount(stashAccount string, interval types.SummaryInterval, period string) ([]ValidatorSummaryRow, error) {
+func (s *ValidatorSummaryStore) FindSummaryByStashAccount(stashAccount string, interval types.SummaryInterval, period string) ([]store.ValidatorSummaryRow, error) {
 	defer logQueryDuration(time.Now(), "ValidatorSummaryStore_FindSummaryByStashAccount")
-	var res []ValidatorSummaryRow
+	var res []store.ValidatorSummaryRow
 
 	err := s.db.
 		Raw(validatorSummaryForIntervalQuery, interval, period, stashAccount, interval).
@@ -100,8 +87,8 @@ func (s *ValidatorSummaryStore) FindSummaryByStashAccount(stashAccount string, i
 	return res, err
 }
 
-// FindMostRecent finds most recent validator summary
-func (s *ValidatorSummaryStore) FindMostRecent() (*model.ValidatorSummary, error) {
+// FindMostRecentSummary finds most recent validator summary
+func (s *ValidatorSummaryStore) FindMostRecentSummary() (*model.ValidatorSummary, error) {
 	validatorSummary := &model.ValidatorSummary{}
 	err := findMostRecent(s.db, "time_bucket", validatorSummary)
 	return validatorSummary, checkErr(err)
@@ -123,8 +110,8 @@ func (s *ValidatorSummaryStore) FindMostRecentByInterval(interval types.SummaryI
 	return &result, checkErr(err)
 }
 
-// DeleteOlderThan deleted validator summary records older than given threshold
-func (s *ValidatorSummaryStore) DeleteOlderThan(interval types.SummaryInterval, purgeThreshold time.Time) (*int64, error) {
+// DeleteSummaryOlderThan deleted validator summary records older than given threshold
+func (s *ValidatorSummaryStore) DeleteSummaryOlderThan(interval types.SummaryInterval, purgeThreshold time.Time) (*int64, error) {
 	statement := s.db.
 		Unscoped().
 		Where("time_interval = ? AND time_bucket < ?", interval, purgeThreshold).

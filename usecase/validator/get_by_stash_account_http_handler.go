@@ -1,7 +1,6 @@
 package validator
 
 import (
-	"github.com/figment-networks/polkadothub-indexer/client"
 	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/types"
 	"github.com/figment-networks/polkadothub-indexer/usecase/http"
@@ -15,16 +14,16 @@ var (
 )
 
 type getByStashAccountHttpHandler struct {
-	db     *store.Store
-	client *client.Client
-
 	useCase *getByStashAccountUseCase
+
+	accountEraSeqDb store.AccountEraSeq
+	validatorDb     store.Validators
 }
 
-func NewGetByStashAccountHttpHandler(db *store.Store, c *client.Client) *getByStashAccountHttpHandler {
+func NewGetByStashAccountHttpHandler(accountEraSeqDb store.AccountEraSeq, validatorDb store.Validators) *getByStashAccountHttpHandler {
 	return &getByStashAccountHttpHandler{
-		db:     db,
-		client: c,
+		accountEraSeqDb: accountEraSeqDb,
+		validatorDb:     validatorDb,
 	}
 }
 
@@ -60,7 +59,8 @@ func (h *getByStashAccountHttpHandler) Handle(c *gin.Context) {
 
 func (h *getByStashAccountHttpHandler) getUseCase() *getByStashAccountUseCase {
 	if h.useCase == nil {
-		return NewGetByStashAccountUseCase(h.db)
+		return NewGetByStashAccountUseCase(h.accountEraSeqDb, h.validatorDb)
+
 	}
 	return h.useCase
 }

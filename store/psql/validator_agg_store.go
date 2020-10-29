@@ -1,4 +1,4 @@
-package store
+package psql
 
 import (
 	"github.com/figment-networks/polkadothub-indexer/model"
@@ -14,16 +14,14 @@ type ValidatorAggStore struct {
 	baseStore
 }
 
-// CreateOrUpdate creates a new validator or updates an existing one
-func (s ValidatorAggStore) CreateOrUpdate(val *model.ValidatorAgg) error {
-	existing, err := s.FindByStashAccount(val.StashAccount)
-	if err != nil {
-		if err == ErrNotFound {
-			return s.Create(val)
-		}
-		return err
-	}
-	return s.Update(existing)
+// CreateAgg creates the validator aggregate
+func (s ValidatorAggStore) CreateAgg(val *model.ValidatorAgg) error {
+	return s.Create(val)
+}
+
+// SaveAgg creates the validator aggregate
+func (s ValidatorAggStore) SaveAgg(val *model.ValidatorAgg) error {
+	return s.Save(val)
 }
 
 // FindBy returns an validator for a matching attribute
@@ -38,8 +36,8 @@ func (s ValidatorAggStore) FindByID(id int64) (*model.ValidatorAgg, error) {
 	return s.FindBy("id", id)
 }
 
-// FindByStashAccount return validator by stash account
-func (s *ValidatorAggStore) FindByStashAccount(key string) (*model.ValidatorAgg, error) {
+// FindAggByStashAccount return validator by stash account
+func (s *ValidatorAggStore) FindAggByStashAccount(key string) (*model.ValidatorAgg, error) {
 	return s.FindBy("stash_account", key)
 }
 

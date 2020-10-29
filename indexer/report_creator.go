@@ -15,19 +15,13 @@ type reportCreator struct {
 	startHeight  int64
 	endHeight    int64
 
-	store ReportStore
+	reportDb store.Reports
 
 	report *model.Report
 }
 
-type ReportStore interface {
-	FindNotCompletedByIndexVersion(int64, ...model.ReportKind) (*model.Report, error)
-	Create(interface{}) error
-	Save(interface{}) error
-}
-
 func (o *reportCreator) createIfNotExists(kinds ...model.ReportKind) error {
-	report, err := o.store.FindNotCompletedByIndexVersion(o.indexVersion, kinds...)
+	report, err := o.reportDb.FindNotCompletedByIndexVersion(o.indexVersion, kinds...)
 	if err != nil {
 		if err == store.ErrNotFound {
 			if err = o.create(); err != nil {
@@ -53,7 +47,7 @@ func (o *reportCreator) create() error {
 		EndHeight:    o.endHeight,
 	}
 
-	if err := o.store.Create(report); err != nil {
+	if err := o.reportDb.Create(report); err != nil {
 		return err
 	}
 
@@ -65,5 +59,5 @@ func (o *reportCreator) create() error {
 func (o *reportCreator) complete(totalCount int64, successCount int64, err error) error {
 	o.report.Complete(successCount, totalCount-successCount, err)
 
-	return o.store.Save(o.report)
+	return o.reportDb.Save(o.report)
 }
