@@ -12,15 +12,17 @@ import (
 )
 
 var (
-	_ pipeline.Source = (*backfillSource)(nil)
+	_                           pipeline.Source = (*backfillSource)(nil)
+	ErrAtLeastOneWhiteListStage                 = errors.New("at least one white list stage should be defined for skipped heights")
 )
 
-func NewBackfillSource(cfg *config.Config, db *store.Store, client *client.Client, indexVersion int64, isLastInSession, isLastInEra bool) (*backfillSource, error) {
+func NewBackfillSource(cfg *config.Config, db *store.Store, client *client.Client, indexVersion int64, isLastInSession, isLastInEra bool, whiteListStages []pipeline.StageName) (*backfillSource, error) {
 	src := &backfillSource{
 		cfg:                 cfg,
 		db:                  db,
 		client:              client,
 		currentIndexVersion: indexVersion,
+		whiteListStages:     whiteListStages,
 	}
 
 	if err := src.init(isLastInSession, isLastInEra); err != nil {
@@ -36,6 +38,7 @@ type backfillSource struct {
 	client              *client.Client
 	useWhiteList        bool
 	heightsWhitelist    map[int64]int64
+	whiteListStages     []pipeline.StageName
 	currentIndexVersion int64
 	currentHeight       int64
 	startHeight         int64
@@ -68,10 +71,15 @@ func (s *backfillSource) Err() error {
 	return s.err
 }
 
-func (s *backfillSource) Skip() bool {
-	if s.UseWhiteList() && !s.isCurrentHeightInWhitelist() {
-		return true
+func (s *backfillSource) Skip(stageName pipeline.StageName) bool {
+	if s.UseWhiteList() {
+		if !s.isCurrentHeightInWhitelist() {
+			return !s.isStageInWhiteList(stageName)
+		} else {
+			return false
+		}
 	}
+
 	return false
 }
 
@@ -90,6 +98,9 @@ func (s *backfillSource) init(isLastInSession, isLastInEra bool) error {
 		return err
 	}
 	if err := s.setEndHeight(); err != nil {
+		return err
+	}
+	if err := s.validate(); err != nil {
 		return err
 	}
 	return nil
@@ -141,4 +152,20 @@ func (s *backfillSource) generateMapForWhiteList(syncables []model.Syncable) {
 		heightsWhitelist[syncables[i].Height] = syncables[i].Height
 	}
 	s.heightsWhitelist = heightsWhitelist
+}
+
+func (s *backfillSource) isStageInWhiteList(stageName pipeline.StageName) bool {
+	for _, s := range s.whiteListStages {
+		if s == stageName {
+			return true
+		}
+	}
+	return false
+}
+
+func (s *backfillSource) validate() error {
+	if s.useWhiteList && len(s.whiteListStages) == 0 {
+		return ErrAtLeastOneWhiteListStage
+	}
+	return nil
 }

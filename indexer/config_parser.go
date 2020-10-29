@@ -25,6 +25,7 @@ type ConfigParser interface {
 	GetCurrentVersionId() int64
 	IsLastInSession() bool
 	IsLastInEra() bool
+	GetWhiteListStages() []pipeline.StageName
 	GetAllVersionedVersionIds() []int64
 	IsAnyVersionSequential(versionIds []int64) bool
 	GetAllAvailableTasks() []pipeline.TaskName
@@ -40,11 +41,12 @@ type indexerConfig struct {
 }
 
 type version struct {
-	ID            int64   `json:"id"`
-	Targets       []int64 `json:"targets"`
-	Parallel      bool    `json:"parallel"`
-	LastInSession bool    `json:"last_in_session"`
-	LastInEra     bool    `json:"last_in_era"`
+	ID              int64                `json:"id"`
+	Targets         []int64              `json:"targets"`
+	Parallel        bool                 `json:"parallel"`
+	LastInSession   bool                 `json:"last_in_session"`
+	LastInEra       bool                 `json:"last_in_era"`
+	WhiteListStages []pipeline.StageName `json:"white_list_stages"`
 }
 
 type target struct {
@@ -106,6 +108,11 @@ func (o *configParser) IsLastInSession() bool {
 //IsLastInEra check if this version is for last of eras
 func (o *configParser) IsLastInEra() bool {
 	return o.getCurrentVersion().LastInEra
+}
+
+//GetWhiteListStages get lists of white list stages
+func (o *configParser) GetWhiteListStages() []pipeline.StageName {
+	return o.getCurrentVersion().WhiteListStages
 }
 
 // GetAllAvailableTasks get lists of tasks for all available targets

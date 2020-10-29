@@ -64,7 +64,7 @@ func (s *indexSource) Err() error {
 	return s.err
 }
 
-func (s *indexSource) Skip() bool {
+func (s *indexSource) Skip(stageName pipeline.StageName) bool {
 	return s.skip
 }
 

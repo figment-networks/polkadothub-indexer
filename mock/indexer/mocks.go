@@ -102,6 +102,13 @@ func (m *MockConfigParser) IsLastInEra() bool {
 	return ret0
 }
 
+// GetWhiteListStages mocks base method
+func (m *MockConfigParser) GetWhiteListStages() []pipeline.StageName {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetWhiteListStages")
+	ret0, _ := ret[0].([]pipeline.StageName)
+	return ret0
+}
 // GetCurrentVersionId indicates an expected call of GetCurrentVersionId
 func (mr *MockConfigParserMockRecorder) GetCurrentVersionId() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
@@ -118,6 +125,12 @@ func (mr *MockConfigParserMockRecorder) IsLastInSession() *gomock.Call {
 func (mr *MockConfigParserMockRecorder) IsLastInEra() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsLastInEra", reflect.TypeOf((*MockConfigParser)(nil).IsLastInEra))
+}
+
+// GetWhiteListStages indicates an expected call of GetWhiteListStages
+func (mr *MockConfigParserMockRecorder) GetWhiteListStages() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetWhiteListStages", reflect.TypeOf((*MockConfigParser)(nil).GetWhiteListStages))
 }
 
 // GetTasksByTargetIds mocks base method
