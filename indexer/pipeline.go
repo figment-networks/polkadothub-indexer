@@ -38,7 +38,7 @@ type indexingPipeline struct {
 	syncableDb store.Syncables
 }
 
-func NewPipeline(cfg *config.Config, cli *client.Client, accountDb store.Accounts, blockDb store.Blocks, databaseDb store.Database, eventDb store.Events, reportDb store.Reports, syncableDb store.Syncables, validatorDb store.Validators) (*indexingPipeline, error) {
+func NewPipeline(cfg *config.Config, cli *client.Client, accountDb store.Accounts, blockDb store.Blocks, databaseDb store.Database, eventDb store.Events, reportDb store.Reports, syncableDb store.Syncables, transactionDb store.Transactions, validatorDb store.Validators) (*indexingPipeline, error) {
 	p := pipeline.NewCustom(NewPayloadFactory())
 
 	// Setup logger
@@ -71,7 +71,7 @@ func NewPipeline(cfg *config.Config, cli *client.Client, accountDb store.Account
 			pipeline.RetryingTask(NewValidatorEraSeqCreatorTask(cfg, syncableDb, validatorDb), isTransient, maxRetries),
 			pipeline.RetryingTask(NewEventSeqCreatorTask(eventDb), isTransient, maxRetries),
 			pipeline.RetryingTask(NewAccountEraSeqCreatorTask(cfg, accountDb, syncableDb), isTransient, maxRetries),
-			pipeline.RetryingTask(NewTransactionSeqCreatorTask(db), isTransient, maxRetries),
+			pipeline.RetryingTask(NewTransactionSeqCreatorTask(transactionDb), isTransient, maxRetries),
 		),
 	)
 
@@ -94,7 +94,7 @@ func NewPipeline(cfg *config.Config, cli *client.Client, accountDb store.Account
 			pipeline.RetryingTask(NewValidatorAggPersistorTask(validatorDb), isTransient, maxRetries),
 			pipeline.RetryingTask(NewEventSeqPersistorTask(eventDb), isTransient, maxRetries),
 			pipeline.RetryingTask(NewAccountEraSeqPersistorTask(accountDb), isTransient, maxRetries),
-			pipeline.RetryingTask(NewTransactionSeqPersistorTask(db), isTransient, maxRetries),
+			pipeline.RetryingTask(NewTransactionSeqPersistorTask(transactionDb), isTransient, maxRetries),
 		),
 	)
 

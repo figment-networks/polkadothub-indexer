@@ -19,27 +19,31 @@ type startUseCase struct {
 	cfg    *config.Config
 	client *client.Client
 
-	accountDb   store.Accounts
-	blockDb     store.Blocks
-	databaseDb  store.Database
-	eventDb     store.Events
-	reportDb    store.Reports
-	syncableDb  store.Syncables
-	validatorDb store.Validators
+	accountDb     store.Accounts
+	blockDb       store.Blocks
+	databaseDb    store.Database
+	eventDb       store.Events
+	reportDb      store.Reports
+	syncableDb    store.Syncables
+	transactionDb store.Transactions
+	validatorDb   store.Validators
 }
 
-func NewStartUseCase(cfg *config.Config, cli *client.Client, accountDb store.Accounts, blockDb store.Blocks, databaseDb store.Database, eventDb store.Events, reportDb store.Reports, syncableDb store.Syncables, validatorDb store.Validators) *startUseCase {
+func NewStartUseCase(cfg *config.Config, cli *client.Client, accountDb store.Accounts, blockDb store.Blocks, databaseDb store.Database, eventDb store.Events, reportDb store.Reports,
+	syncableDb store.Syncables, transactionDb store.Transactions, validatorDb store.Validators,
+) *startUseCase {
 	return &startUseCase{
 		cfg:    cfg,
 		client: cli,
 
-		accountDb:   accountDb,
-		blockDb:     blockDb,
-		databaseDb:  databaseDb,
-		eventDb:     eventDb,
-		reportDb:    reportDb,
-		syncableDb:  syncableDb,
-		validatorDb: validatorDb,
+		accountDb:     accountDb,
+		blockDb:       blockDb,
+		databaseDb:    databaseDb,
+		eventDb:       eventDb,
+		reportDb:      reportDb,
+		syncableDb:    syncableDb,
+		transactionDb: transactionDb,
+		validatorDb:   validatorDb,
 	}
 }
 
@@ -48,7 +52,7 @@ func (uc *startUseCase) Execute(ctx context.Context, batchSize int64) error {
 		return err
 	}
 
-	indexingPipeline, err := indexer.NewPipeline(uc.cfg, uc.client, uc.accountDb, uc.blockDb, uc.databaseDb, uc.eventDb, uc.reportDb, uc.syncableDb, uc.validatorDb)
+	indexingPipeline, err := indexer.NewPipeline(uc.cfg, uc.client, uc.accountDb, uc.blockDb, uc.databaseDb, uc.eventDb, uc.reportDb, uc.syncableDb, uc.transactionDb, uc.validatorDb)
 	if err != nil {
 		return err
 	}

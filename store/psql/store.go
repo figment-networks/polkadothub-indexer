@@ -12,26 +12,26 @@ import (
 )
 
 var (
-	_ store.Accounts   = (*accounts)(nil)
-	_ store.Blocks     = (*blocks)(nil)
-	_ store.Database   = (*database)(nil)
-	_ store.Events     = (*events)(nil)
-	_ store.Reports    = (*reports)(nil)
-	_ store.Validators = (*validators)(nil)
-	_ store.Syncables  = (*syncables)(nil)
-	_store.Transaction = (*transactions)(nil)
+	_ store.Accounts     = (*accounts)(nil)
+	_ store.Blocks       = (*blocks)(nil)
+	_ store.Database     = (*database)(nil)
+	_ store.Events       = (*events)(nil)
+	_ store.Reports      = (*reports)(nil)
+	_ store.Validators   = (*validators)(nil)
+	_ store.Syncables    = (*syncables)(nil)
+	_ store.Transactions = (*transactions)(nil)
 )
 
 type Store struct {
-	db         *gorm.DB
-	accounts   *accounts
-	blocks     *blocks
-	database   *database
-	events     *events
-	reports    *reports
-	syncables  *syncables
+	db           *gorm.DB
+	accounts     *accounts
+	blocks       *blocks
+	database     *database
+	events       *events
+	reports      *reports
+	syncables    *syncables
 	transactions *transactions
-	validators *validators
+	validators   *validators
 }
 
 type accounts struct {
@@ -148,6 +148,16 @@ func (s *Store) GetSyncables() *syncables {
 		}
 	}
 	return s.syncables
+}
+
+// GetTransactions gets transactions
+func (s *Store) GetTransactions() *transactions {
+	if s.transactions == nil {
+		s.transactions = &transactions{
+			NewTransactionSeqStore(s.db),
+		}
+	}
+	return s.transactions
 }
 
 // GetValidators gets validators

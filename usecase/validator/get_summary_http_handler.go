@@ -18,11 +18,13 @@ var (
 type getSummaryHttpHandler struct {
 	useCase *getSummaryUseCase
 
+	syncablesDb        store.Syncables
 	validatorSummaryDb store.ValidatorSummary
 }
 
-func NewGetSummaryHttpHandler(validatorSummaryDb store.ValidatorSummary) *getSummaryHttpHandler {
+func NewGetSummaryHttpHandler(syncablesDb store.Syncables, validatorSummaryDb store.ValidatorSummary) *getSummaryHttpHandler {
 	return &getSummaryHttpHandler{
+		syncablesDb:        syncablesDb,
 		validatorSummaryDb: validatorSummaryDb,
 	}
 }
@@ -66,7 +68,7 @@ func (h *getSummaryHttpHandler) validateParams(c *gin.Context) (*GetSummaryReque
 
 func (h *getSummaryHttpHandler) getUseCase() *getSummaryUseCase {
 	if h.useCase == nil {
-		return NewGetSummaryUseCase(h.validatorSummaryDb)
+		return NewGetSummaryUseCase(h.syncablesDb, h.validatorSummaryDb)
 	}
 	return h.useCase
 }

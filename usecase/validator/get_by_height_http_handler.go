@@ -21,27 +21,31 @@ type getByHeightHttpHandler struct {
 
 	useCase *getByHeightUseCase
 
-	accountDb   store.Accounts
-	blockDb     store.Blocks
-	databaseDb  store.Database
-	eventDb     store.Events
-	reportDb    store.Reports
-	syncableDb  store.Syncables
-	validatorDb store.Validators
+	accountDb     store.Accounts
+	blockDb       store.Blocks
+	databaseDb    store.Database
+	eventDb       store.Events
+	reportDb      store.Reports
+	syncableDb    store.Syncables
+	transactionDb store.Transactions
+	validatorDb   store.Validators
 }
 
-func NewGetByHeightHttpHandler(cfg *config.Config, cli *client.Client, accountDb store.Accounts, blockDb store.Blocks, databaseDb store.Database, eventDb store.Events, reportDb store.Reports, syncableDb store.Syncables, validatorDb store.Validators) *getByHeightHttpHandler {
+func NewGetByHeightHttpHandler(cfg *config.Config, cli *client.Client, accountDb store.Accounts, blockDb store.Blocks, databaseDb store.Database, eventDb store.Events, reportDb store.Reports,
+	syncableDb store.Syncables, transactionDb store.Transactions, validatorDb store.Validators,
+) *getByHeightHttpHandler {
 	return &getByHeightHttpHandler{
 		cfg:    cfg,
 		client: cli,
 
-		accountDb:   accountDb,
-		blockDb:     blockDb,
-		databaseDb:  databaseDb,
-		eventDb:     eventDb,
-		reportDb:    reportDb,
-		syncableDb:  syncableDb,
-		validatorDb: validatorDb,
+		accountDb:     accountDb,
+		blockDb:       blockDb,
+		databaseDb:    databaseDb,
+		eventDb:       eventDb,
+		reportDb:      reportDb,
+		syncableDb:    syncableDb,
+		transactionDb: transactionDb,
+		validatorDb:   validatorDb,
 	}
 }
 
@@ -69,7 +73,7 @@ func (h *getByHeightHttpHandler) Handle(c *gin.Context) {
 
 func (h *getByHeightHttpHandler) getUseCase() *getByHeightUseCase {
 	if h.useCase == nil {
-		return NewGetByHeightUseCase(h.cfg, h.client, h.accountDb, h.blockDb, h.databaseDb, h.eventDb, h.reportDb, h.syncableDb, h.validatorDb)
+		return NewGetByHeightUseCase(h.cfg, h.client, h.accountDb, h.blockDb, h.databaseDb, h.eventDb, h.reportDb, h.syncableDb, h.transactionDb, h.validatorDb)
 	}
 	return h.useCase
 }

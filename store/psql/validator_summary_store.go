@@ -68,7 +68,7 @@ func (s *ValidatorSummaryStore) FindActivityPeriods(interval types.SummaryInterv
 // FindSummaries gets summary for validator summary
 func (s *ValidatorSummaryStore) FindSummaries(interval types.SummaryInterval, period string) ([]store.ValidatorSummaryRow, error) {
 	defer logQueryDuration(time.Now(), "ValidatorSummaryStore_FindSummary")
-	var res []ValidatorSummaryRow
+	var res []store.ValidatorSummaryRow
 
 	err := s.db.
 		Raw(allValidatorsSummaryForIntervalQuery, interval, period, interval).
@@ -77,9 +77,9 @@ func (s *ValidatorSummaryStore) FindSummaries(interval types.SummaryInterval, pe
 }
 
 // FindSummaryByStashAccount gets summary for given validator
-func (s *ValidatorSummaryStore) FindSummaryByStashAccount(stashAccount string, interval types.SummaryInterval, period string) ([]ValidatorSummaryRow, error) {
+func (s *ValidatorSummaryStore) FindSummaryByStashAccount(stashAccount string, interval types.SummaryInterval, period string) ([]store.ValidatorSummaryRow, error) {
 	defer logQueryDuration(time.Now(), "ValidatorSummaryStore_FindSummaryByStashAccount")
-	var res []ValidatorSummaryRow
+	var res []store.ValidatorSummaryRow
 
 	err := s.db.
 		Raw(validatorSummaryForIntervalQuery, interval, period, stashAccount, interval).

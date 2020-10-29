@@ -1,4 +1,4 @@
-package store
+package psql
 
 import (
 	"github.com/jinzhu/gorm"
@@ -13,6 +13,16 @@ func NewTransactionSeqStore(db *gorm.DB) *TransactionSeqStore {
 // TransactionSeqStore handles operations on balance events
 type TransactionSeqStore struct {
 	baseStore
+}
+
+// CreateTransactionSeq creates the validator aggregate
+func (s TransactionSeqStore) CreateTransactionSeq(val *model.TransactionSeq) error {
+	return s.Create(val)
+}
+
+// SaveTransactionSeq creates the validator aggregate
+func (s TransactionSeqStore) SaveTransactionSeq(val *model.TransactionSeq) error {
+	return s.Save(val)
 }
 
 // FindAllByHeightAndIndex finds all found sequences for indexes at given height, it returns map with all found sequences with indexes as keys

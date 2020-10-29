@@ -280,14 +280,14 @@ func (t *accountEraSeqPersistorTask) Run(ctx context.Context, p pipeline.Payload
 }
 
 // NewTransactionSeqPersistorTask is responsible for storing transaction info to persistence layer
-func NewTransactionSeqPersistorTask(db *store.Store) pipeline.Task {
+func NewTransactionSeqPersistorTask(transactionSeqDb store.TransactionSeq) pipeline.Task {
 	return &transactionSeqPersistorTask{
-		db: db,
+		transactionSeqDb: transactionSeqDb,
 	}
 }
 
 type transactionSeqPersistorTask struct {
-	db *store.Store
+	transactionSeqDb store.TransactionSeq
 }
 
 func (t *transactionSeqPersistorTask) GetName() string {
@@ -299,19 +299,19 @@ func (t *transactionSeqPersistorTask) Run(ctx context.Context, p pipeline.Payloa
 
 	payload, ok := p.(*payload)
 	if !ok {
-	    return fmt.Errorf("Interface is not a  *payload type (%T)", p)
-	} 
+		return fmt.Errorf("Interface is not a  *payload type (%T)", p)
+	}
 
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
 
 	for _, sequence := range payload.NewTransactionSequences {
-		if err := t.db.TransactionSeq.Create(&sequence); err != nil {
+		if err := t.transactionSeqDb.CreateTransactionSeq(&sequence); err != nil {
 			return err
 		}
 	}
 
 	for _, sequence := range payload.UpdatedTransactionSequences {
-		if err := t.db.TransactionSeq.Save(&sequence); err != nil {
+		if err := t.transactionSeqDb.SaveTransactionSeq(&sequence); err != nil {
 			return err
 		}
 	}

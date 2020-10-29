@@ -6,11 +6,14 @@ import (
 )
 
 type getSummaryUseCase struct {
+	syncablesDb store.Syncables
+
 	validatorSummaryDb store.ValidatorSummary
 }
 
-func NewGetSummaryUseCase(validatorSummaryDb store.ValidatorSummary) *getSummaryUseCase {
+func NewGetSummaryUseCase(syncablesDb store.Syncables, validatorSummaryDb store.ValidatorSummary) *getSummaryUseCase {
 	return &getSummaryUseCase{
+		syncablesDb:        syncablesDb,
 		validatorSummaryDb: validatorSummaryDb,
 	}
 }
@@ -19,18 +22,18 @@ func (uc *getSummaryUseCase) Execute(interval types.SummaryInterval, period stri
 	var err error
 	var summaries []store.ValidatorSummaryRow
 
-	lastIndexedSession, err := uc.db.Syncables.FindLastEndOfSession()
+	lastIndexedSession, err := uc.syncablesDb.FindLastEndOfSession()
 	if err != nil && err != store.ErrNotFound {
 		return summaryListView{}, err
 	}
 
-	lastIndexedEra, err := uc.db.Syncables.FindLastEndOfEra()
+	lastIndexedEra, err := uc.syncablesDb.FindLastEndOfEra()
 	if err != nil && err != store.ErrNotFound {
 		return summaryListView{}, err
 	}
 
 	if stashAccount == "" {
-		summaries, err = uc.validatorSummaryDb.FindSummary(interval, period)
+		summaries, err = uc.validatorSummaryDb.FindSummaries(interval, period)
 	} else {
 		summaries, err = uc.validatorSummaryDb.FindSummaryByStashAccount(stashAccount, interval, period)
 	}

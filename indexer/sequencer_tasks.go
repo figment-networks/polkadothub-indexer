@@ -341,14 +341,14 @@ func (t *accountEraSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) 
 }
 
 // NewTransactionSeqCreatorTask creates block sequences
-func NewTransactionSeqCreatorTask(db *store.Store) *transactionSeqCreatorTask {
+func NewTransactionSeqCreatorTask(transactionSeqDb store.TransactionSeq) *transactionSeqCreatorTask {
 	return &transactionSeqCreatorTask{
-		db: db,
+		transactionSeqDb: transactionSeqDb,
 	}
 }
 
 type transactionSeqCreatorTask struct {
-	db *store.Store
+	transactionSeqDb store.TransactionSeq
 }
 
 func (t *transactionSeqCreatorTask) GetName() string {
@@ -372,7 +372,7 @@ func (t *transactionSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload)
 		txIndexes[i] = seq.Index
 	}
 
-	seqLookup, err := t.db.TransactionSeq.FindAllByHeightAndIndex(payload.CurrentHeight, txIndexes)
+	seqLookup, err := t.transactionSeqDb.FindAllByHeightAndIndex(payload.CurrentHeight, txIndexes)
 	if err != nil {
 		return err
 	}

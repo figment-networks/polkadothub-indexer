@@ -47,7 +47,7 @@ type ValidatorSummary interface {
 	FindMostRecentSummary() (*model.ValidatorSummary, error)
 	FindMostRecentByInterval(interval types.SummaryInterval) (*model.ValidatorSummary, error)
 	FindSummaries(interval types.SummaryInterval, period string) ([]ValidatorSummaryRow, error)
-	FindSummaryByStashAccount(stashAccount string, interval types.SummaryInterval, period string) ([]model.ValidatorSummary, error)
+	FindSummaryByStashAccount(stashAccount string, interval types.SummaryInterval, period string) ([]ValidatorSummaryRow, error)
 	SaveSummary(*model.ValidatorSummary) error
 }
 

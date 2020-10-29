@@ -15,27 +15,30 @@ type getByHeightUseCase struct {
 	cfg    *config.Config
 	client *client.Client
 
-	accountDb   store.Accounts
-	blockDb     store.Blocks
-	databaseDb  store.Database
-	eventDb     store.Events
-	reportDb    store.Reports
-	syncableDb  store.Syncables
-	validatorDb store.Validators
+	accountDb     store.Accounts
+	blockDb       store.Blocks
+	databaseDb    store.Database
+	eventDb       store.Events
+	reportDb      store.Reports
+	syncableDb    store.Syncables
+	transactionDb store.Transactions
+	validatorDb   store.Validators
 }
 
-func NewGetByHeightUseCase(cfg *config.Config, cli *client.Client, accountDb store.Accounts, blockDb store.Blocks, databaseDb store.Database, eventDb store.Events, reportDb store.Reports, syncableDb store.Syncables, validatorDb store.Validators) *getByHeightUseCase {
+func NewGetByHeightUseCase(cfg *config.Config, cli *client.Client, accountDb store.Accounts, blockDb store.Blocks, databaseDb store.Database, eventDb store.Events, reportDb store.Reports,
+	syncableDb store.Syncables, transactionDb store.Transactions, validatorDb store.Validators) *getByHeightUseCase {
 	return &getByHeightUseCase{
 		cfg:    cfg,
 		client: cli,
 
-		accountDb:   accountDb,
-		blockDb:     blockDb,
-		databaseDb:  databaseDb,
-		eventDb:     eventDb,
-		reportDb:    reportDb,
-		syncableDb:  syncableDb,
-		validatorDb: validatorDb,
+		accountDb:     accountDb,
+		blockDb:       blockDb,
+		databaseDb:    databaseDb,
+		eventDb:       eventDb,
+		reportDb:      reportDb,
+		syncableDb:    syncableDb,
+		transactionDb: transactionDb,
+		validatorDb:   validatorDb,
 	}
 }
 
@@ -63,7 +66,7 @@ func (uc *getByHeightUseCase) Execute(height *int64) (SeqListView, error) {
 			return SeqListView{}, err
 		}
 
-		indexingPipeline, err := indexer.NewPipeline(uc.cfg, uc.client, uc.accountDb, uc.blockDb, uc.databaseDb, uc.eventDb, uc.reportDb, uc.syncableDb, uc.validatorDb)
+		indexingPipeline, err := indexer.NewPipeline(uc.cfg, uc.client, uc.accountDb, uc.blockDb, uc.databaseDb, uc.eventDb, uc.reportDb, uc.syncableDb, uc.transactionDb, uc.validatorDb)
 		if err != nil {
 			return SeqListView{}, err
 		}

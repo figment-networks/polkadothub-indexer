@@ -21,27 +21,31 @@ type runWorkerHandler struct {
 
 	useCase *startUseCase
 
-	accountDb   store.Accounts
-	blockDb     store.Blocks
-	databaseDb  store.Database
-	eventDb     store.Events
-	reportDb    store.Reports
-	syncableDb  store.Syncables
-	validatorDb store.Validators
+	accountDb     store.Accounts
+	blockDb       store.Blocks
+	databaseDb    store.Database
+	eventDb       store.Events
+	reportDb      store.Reports
+	syncableDb    store.Syncables
+	transactionDb store.Transactions
+	validatorDb   store.Validators
 }
 
-func NewRunWorkerHandler(cfg *config.Config, cli *client.Client, accountDb store.Accounts, blockDb store.Blocks, databaseDb store.Database, eventDb store.Events, reportDb store.Reports, syncableDb store.Syncables, validatorDb store.Validators) *runWorkerHandler {
+func NewRunWorkerHandler(cfg *config.Config, cli *client.Client, accountDb store.Accounts, blockDb store.Blocks, databaseDb store.Database, eventDb store.Events, reportDb store.Reports,
+	syncableDb store.Syncables, transactionDb store.Transactions, validatorDb store.Validators,
+) *runWorkerHandler {
 	return &runWorkerHandler{
 		cfg:    cfg,
 		client: cli,
 
-		accountDb:   accountDb,
-		blockDb:     blockDb,
-		databaseDb:  databaseDb,
-		eventDb:     eventDb,
-		reportDb:    reportDb,
-		syncableDb:  syncableDb,
-		validatorDb: validatorDb,
+		accountDb:     accountDb,
+		blockDb:       blockDb,
+		databaseDb:    databaseDb,
+		eventDb:       eventDb,
+		reportDb:      reportDb,
+		syncableDb:    syncableDb,
+		transactionDb: transactionDb,
+		validatorDb:   validatorDb,
 	}
 }
 
@@ -60,7 +64,7 @@ func (h *runWorkerHandler) Handle() {
 
 func (h *runWorkerHandler) getUseCase() *startUseCase {
 	if h.useCase == nil {
-		return NewStartUseCase(h.cfg, h.client, h.accountDb, h.blockDb, h.databaseDb, h.eventDb, h.reportDb, h.syncableDb, h.validatorDb)
+		return NewStartUseCase(h.cfg, h.client, h.accountDb, h.blockDb, h.databaseDb, h.eventDb, h.reportDb, h.syncableDb, h.transactionDb, h.validatorDb)
 	}
 	return h.useCase
 }
