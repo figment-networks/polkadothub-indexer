@@ -6,6 +6,7 @@ import (
 	"github.com/figment-networks/polkadothub-proxy/grpc/block/blockpb"
 	"github.com/figment-networks/polkadothub-proxy/grpc/event/eventpb"
 	"github.com/figment-networks/polkadothub-proxy/grpc/staking/stakingpb"
+	"github.com/figment-networks/polkadothub-proxy/grpc/transaction/transactionpb"
 	"github.com/figment-networks/polkadothub-proxy/grpc/validatorperformance/validatorperformancepb"
 )
 
@@ -35,6 +36,7 @@ type payload struct {
 	RawValidatorPerformance []*validatorperformancepb.Validator
 	RawStaking              *stakingpb.Staking
 	RawEvents               []*eventpb.Event
+	RawTransactions         []*transactionpb.Annotated
 
 	// Syncer stage
 	Syncable *model.Syncable
@@ -58,6 +60,8 @@ type payload struct {
 	UpdatedEventSequences            []model.EventSeq
 	NewAccountEraSequences           []model.AccountEraSeq
 	UpdatedAccountEraSequences       []model.AccountEraSeq
+	NewTransactionSequences          []model.TransactionSeq
+	UpdatedTransactionSequences      []model.TransactionSeq
 }
 
 func (p *payload) MarkAsProcessed() {}

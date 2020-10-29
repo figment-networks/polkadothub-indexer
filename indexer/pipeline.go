@@ -71,6 +71,7 @@ func NewPipeline(cfg *config.Config, cli *client.Client, accountDb store.Account
 			pipeline.RetryingTask(NewValidatorEraSeqCreatorTask(cfg, syncableDb, validatorDb), isTransient, maxRetries),
 			pipeline.RetryingTask(NewEventSeqCreatorTask(eventDb), isTransient, maxRetries),
 			pipeline.RetryingTask(NewAccountEraSeqCreatorTask(cfg, accountDb, syncableDb), isTransient, maxRetries),
+			pipeline.RetryingTask(NewTransactionSeqCreatorTask(db), isTransient, maxRetries),
 		),
 	)
 
@@ -93,6 +94,7 @@ func NewPipeline(cfg *config.Config, cli *client.Client, accountDb store.Account
 			pipeline.RetryingTask(NewValidatorAggPersistorTask(validatorDb), isTransient, maxRetries),
 			pipeline.RetryingTask(NewEventSeqPersistorTask(eventDb), isTransient, maxRetries),
 			pipeline.RetryingTask(NewAccountEraSeqPersistorTask(accountDb), isTransient, maxRetries),
+			pipeline.RetryingTask(NewTransactionSeqPersistorTask(db), isTransient, maxRetries),
 		),
 	)
 

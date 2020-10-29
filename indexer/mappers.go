@@ -2,11 +2,13 @@ package indexer
 
 import (
 	"encoding/json"
+
 	"github.com/figment-networks/polkadothub-indexer/model"
 	"github.com/figment-networks/polkadothub-indexer/types"
 	"github.com/figment-networks/polkadothub-proxy/grpc/block/blockpb"
 	"github.com/figment-networks/polkadothub-proxy/grpc/event/eventpb"
 	"github.com/figment-networks/polkadothub-proxy/grpc/staking/stakingpb"
+	"github.com/figment-networks/polkadothub-proxy/grpc/transaction/transactionpb"
 	"github.com/figment-networks/polkadothub-proxy/grpc/validatorperformance/validatorperformancepb"
 	"github.com/pkg/errors"
 )
@@ -17,6 +19,7 @@ var (
 	ErrValidatorEraSequenceNotValid     = errors.New("validator era sequence not valid")
 	ErrAccountEraSequenceNotValid       = errors.New("account era sequence not valid")
 	ErrEventSequenceNotValid            = errors.New("event sequence not valid")
+	ErrTransactionSequenceNotValid      = errors.New("transaction sequence not valid")
 )
 
 func ToBlockSequence(syncable *model.Syncable, rawBlock *blockpb.Block, blockParsedData ParsedBlockData) (*model.BlockSeq, error) {
@@ -95,7 +98,7 @@ func ToValidatorEraSequence(syncable *model.Syncable, firstHeight int64, rawStak
 }
 
 func ToEventSequence(syncable *model.Syncable, rawEvents []*eventpb.Event) ([]model.EventSeq, error) {
-	var transactions []model.EventSeq
+	var events []model.EventSeq
 	for _, rawEvent := range rawEvents {
 		eventData := rawEvent.GetData()
 		eventDataJSON, err := json.Marshal(eventData)
@@ -121,9 +124,9 @@ func ToEventSequence(syncable *model.Syncable, rawEvents []*eventpb.Event) ([]mo
 			return nil, ErrEventSequenceNotValid
 		}
 
-		transactions = append(transactions, e)
+		events = append(events, e)
 	}
-	return transactions, nil
+	return events, nil
 }
 
 func ToAccountEraSequence(syncable *model.Syncable, firstHeight int64, rawStakingValidator *stakingpb.Validator) ([]model.AccountEraSeq, error) {
@@ -173,4 +176,33 @@ func ToAccountEraSequence(syncable *model.Syncable, firstHeight int64, rawStakin
 	}
 
 	return accountEraSeqs, nil
+}
+
+func ToTransactionSequence(syncable *model.Syncable, rawTransactions []*transactionpb.Annotated) ([]model.TransactionSeq, error) {
+	var transactions []model.TransactionSeq
+
+	for _, rawTx := range rawTransactions {
+		if !rawTx.GetIsSigned() && rawTx.GetSection() != "sudo" {
+			continue
+		}
+
+		tx := model.TransactionSeq{
+			Sequence: &model.Sequence{
+				Height: syncable.Height,
+				Time:   syncable.Time,
+			},
+
+			Index:   rawTx.GetExtrinsicIndex(),
+			Hash:    rawTx.GetHash(),
+			Section: rawTx.GetSection(),
+			Method:  rawTx.GetMethod(),
+		}
+
+		if !tx.Valid() {
+			return nil, ErrTransactionSequenceNotValid
+		}
+
+		transactions = append(transactions, tx)
+	}
+	return transactions, nil
 }

@@ -34,6 +34,10 @@ type Syncables interface {
 	FindMostRecenter
 }
 
+type Transactions interface {
+	TransactionSeq
+}
+
 type Validators interface {
 	ValidatorAgg
 	ValidatorEraSeq

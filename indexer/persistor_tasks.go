@@ -19,6 +19,7 @@ const (
 	ValidatorAggPersistorTaskName        = "ValidatorAggPersistor"
 	EventSeqPersistorTaskName            = "EventSeqPersistor"
 	AccountEraSeqPersistorTaskName       = "AccountEraSeqPersistor"
+	TransactionSeqPersistorTaskName      = "TransactionSeqPersistor"
 )
 
 // NewSyncerPersistorTask is responsible for storing syncable to persistence layer
@@ -100,7 +101,7 @@ func (t *validatorSessionSeqPersistorTask) Run(ctx context.Context, p pipeline.P
 	payload := p.(*payload)
 
 	if !payload.Syncable.LastInSession {
-		logger.Info(fmt.Sprintf("indexer task skipped because height is not last in session [stage=%s] [task=%s] [height=%d]", pipeline.StageFetcher, t.GetName(), payload.CurrentHeight))
+		logger.Info(fmt.Sprintf("indexer task skipped because height is not last in session [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
 		return nil
 	}
 
@@ -142,7 +143,7 @@ func (t *validatorEraSeqPersistorTask) Run(ctx context.Context, p pipeline.Paylo
 	payload := p.(*payload)
 
 	if !payload.Syncable.LastInEra {
-		logger.Info(fmt.Sprintf("indexer task skipped because height is not last in era [stage=%s] [task=%s] [height=%d]", pipeline.StageFetcher, t.GetName(), payload.CurrentHeight))
+		logger.Info(fmt.Sprintf("indexer task skipped because height is not last in era [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
 		return nil
 	}
 
@@ -257,7 +258,7 @@ func (t *accountEraSeqPersistorTask) Run(ctx context.Context, p pipeline.Payload
 	payload := p.(*payload)
 
 	if !payload.Syncable.LastInEra {
-		logger.Info(fmt.Sprintf("indexer task skipped because height is not last in era [stage=%s] [task=%s] [height=%d]", pipeline.StageFetcher, t.GetName(), payload.CurrentHeight))
+		logger.Info(fmt.Sprintf("indexer task skipped because height is not last in era [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
 		return nil
 	}
 
@@ -271,6 +272,46 @@ func (t *accountEraSeqPersistorTask) Run(ctx context.Context, p pipeline.Payload
 
 	for _, sequence := range payload.UpdatedAccountEraSequences {
 		if err := t.accountEraSeqDb.Save(&sequence); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// NewTransactionSeqPersistorTask is responsible for storing transaction info to persistence layer
+func NewTransactionSeqPersistorTask(db *store.Store) pipeline.Task {
+	return &transactionSeqPersistorTask{
+		db: db,
+	}
+}
+
+type transactionSeqPersistorTask struct {
+	db *store.Store
+}
+
+func (t *transactionSeqPersistorTask) GetName() string {
+	return TransactionSeqPersistorTaskName
+}
+
+func (t *transactionSeqPersistorTask) Run(ctx context.Context, p pipeline.Payload) error {
+	defer metric.LogIndexerTaskDuration(time.Now(), t.GetName())
+
+	payload, ok := p.(*payload)
+	if !ok {
+	    return fmt.Errorf("Interface is not a  *payload type (%T)", p)
+	} 
+
+	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
+
+	for _, sequence := range payload.NewTransactionSequences {
+		if err := t.db.TransactionSeq.Create(&sequence); err != nil {
+			return err
+		}
+	}
+
+	for _, sequence := range payload.UpdatedTransactionSequences {
+		if err := t.db.TransactionSeq.Save(&sequence); err != nil {
 			return err
 		}
 	}

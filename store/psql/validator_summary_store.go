@@ -68,46 +68,23 @@ func (s *ValidatorSummaryStore) FindActivityPeriods(interval types.SummaryInterv
 // FindSummaries gets summary for validator summary
 func (s *ValidatorSummaryStore) FindSummaries(interval types.SummaryInterval, period string) ([]store.ValidatorSummaryRow, error) {
 	defer logQueryDuration(time.Now(), "ValidatorSummaryStore_FindSummary")
+	var res []ValidatorSummaryRow
 
-	rows, err := s.db.
+	err := s.db.
 		Raw(allValidatorsSummaryForIntervalQuery, interval, period, interval).
-		Rows()
-
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var res []store.ValidatorSummaryRow
-	for rows.Next() {
-		var row store.ValidatorSummaryRow
-		if err := s.db.ScanRows(rows, &row); err != nil {
-			return nil, err
-		}
-		res = append(res, row)
-	}
-	return res, nil
+		Scan(&res).Error
+	return res, err
 }
 
 // FindSummaryByStashAccount gets summary for given validator
-func (s *ValidatorSummaryStore) FindSummaryByStashAccount(stashAccount string, interval types.SummaryInterval, period string) ([]model.ValidatorSummary, error) {
+func (s *ValidatorSummaryStore) FindSummaryByStashAccount(stashAccount string, interval types.SummaryInterval, period string) ([]ValidatorSummaryRow, error) {
 	defer logQueryDuration(time.Now(), "ValidatorSummaryStore_FindSummaryByStashAccount")
+	var res []ValidatorSummaryRow
 
-	rows, err := s.db.Raw(validatorSummaryForIntervalQuery, interval, period, stashAccount, interval).Rows()
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var res []model.ValidatorSummary
-	for rows.Next() {
-		var row model.ValidatorSummary
-		if err := s.db.ScanRows(rows, &row); err != nil {
-			return nil, err
-		}
-		res = append(res, row)
-	}
-	return res, nil
+	err := s.db.
+		Raw(validatorSummaryForIntervalQuery, interval, period, stashAccount, interval).
+		Scan(&res).Error
+	return res, err
 }
 
 // FindMostRecentSummary finds most recent validator summary

@@ -72,4 +72,5 @@ type ValidatorSummaryRow struct {
 	StakersCountAvg float64        `json:"stakers_count_avg"`
 	StakersCountMin int64          `json:"stakers_count_min"`
 	StakersCountMax int64          `json:"stakers_count_max"`
+	UptimeAvg       float64        `json:"uptime_avg"`
 }

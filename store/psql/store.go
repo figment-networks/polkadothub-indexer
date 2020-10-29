@@ -19,6 +19,7 @@ var (
 	_ store.Reports    = (*reports)(nil)
 	_ store.Validators = (*validators)(nil)
 	_ store.Syncables  = (*syncables)(nil)
+	_store.Transaction = (*transactions)(nil)
 )
 
 type Store struct {
@@ -29,6 +30,7 @@ type Store struct {
 	events     *events
 	reports    *reports
 	syncables  *syncables
+	transactions *transactions
 	validators *validators
 }
 
@@ -55,6 +57,10 @@ type reports struct {
 
 type syncables struct {
 	*SyncablesStore
+}
+
+type transactions struct {
+	*TransactionSeqStore
 }
 
 type validators struct {

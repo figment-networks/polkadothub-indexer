@@ -14,6 +14,11 @@
           "id": 3,
           "targets": [4],
           "parallel": true
+      },
+      {
+        "id": 4,
+        "targets": [7],
+        "parallel": true
       }
     ],
     "shared_tasks": [
@@ -86,6 +91,17 @@
           "AccountEraSeqCreator",
           "SyncerPersistor",
           "AccountEraSeqPersistor"
+        ]
+      },
+      {
+        "id": 7,
+        "name": "index_transaction_sequences",
+        "desc": "Creates and persists transaction sequences",
+        "tasks": [
+          "Fetcher",
+          "TransactionSeqCreator",
+          "SyncerPersistor",
+          "TransactionSeqPersistor"
         ]
       }
     ]

@@ -19,6 +19,7 @@ const (
 	ValidatorEraSeqCreatorTaskName     = "ValidatorEraSeqCreator"
 	EventSeqCreatorTaskName            = "EventSeqCreator"
 	AccountEraSeqCreatorTaskName       = "AccountEraSeqCreator"
+	TransactionSeqCreatorTaskName      = "TransactionSeqCreator"
 )
 
 var (
@@ -94,7 +95,7 @@ func (t *validatorSessionSeqCreatorTask) Run(ctx context.Context, p pipeline.Pay
 	payload := p.(*payload)
 
 	if !payload.Syncable.LastInSession {
-		logger.Info(fmt.Sprintf("indexer task skipped because height is not last in session [stage=%s] [task=%s] [height=%d]", pipeline.StageFetcher, t.GetName(), payload.CurrentHeight))
+		logger.Info(fmt.Sprintf("indexer task skipped because height is not last in session [stage=%s] [task=%s] [height=%d]", pipeline.StageSequencer, t.GetName(), payload.CurrentHeight))
 		return nil
 	}
 
@@ -165,7 +166,7 @@ func (t *validatorEraSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload
 	payload := p.(*payload)
 
 	if !payload.Syncable.LastInEra {
-		logger.Info(fmt.Sprintf("indexer task skipped because height is not last in era [stage=%s] [task=%s] [height=%d]", pipeline.StageFetcher, t.GetName(), payload.CurrentHeight))
+		logger.Info(fmt.Sprintf("indexer task skipped because height is not last in era [stage=%s] [task=%s] [height=%d]", pipeline.StageSequencer, t.GetName(), payload.CurrentHeight))
 		return nil
 	}
 
@@ -238,21 +239,27 @@ func (t *eventSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) error
 		return err
 	}
 
+	txIndexes := make([]int64, len(mappedEventSeqs))
+	for i, seq := range mappedEventSeqs {
+		txIndexes[i] = seq.Index
+	}
+
+	seqLookup, err := t.eventSeqDb.FindAllByHeightAndIndex(payload.CurrentHeight, txIndexes)
+	if err != nil {
+		return err
+	}
+
 	var newEventSeqs []model.EventSeq
 	var updatedEventSeqs []model.EventSeq
 	for _, rawEventSeq := range mappedEventSeqs {
-		validatorSeq, err := t.eventSeqDb.FindByHeightAndIndex(payload.CurrentHeight, rawEventSeq.Index)
-		if err != nil {
-			if err == store.ErrNotFound {
-				newEventSeqs = append(newEventSeqs, rawEventSeq)
-				continue
-			} else {
-				return err
-			}
+		seq, exists := seqLookup[rawEventSeq.Index]
+		if !exists {
+			newEventSeqs = append(newEventSeqs, rawEventSeq)
+			continue
 		}
 
-		validatorSeq.Update(rawEventSeq)
-		updatedEventSeqs = append(updatedEventSeqs, *validatorSeq)
+		seq.Update(rawEventSeq)
+		updatedEventSeqs = append(updatedEventSeqs, *seq)
 	}
 
 	payload.NewEventSequences = newEventSeqs
@@ -286,7 +293,7 @@ func (t *accountEraSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) 
 	payload := p.(*payload)
 
 	if !payload.Syncable.LastInEra {
-		logger.Info(fmt.Sprintf("indexer task skipped because height is not last in era [stage=%s] [task=%s] [height=%d]", pipeline.StageFetcher, t.GetName(), payload.CurrentHeight))
+		logger.Info(fmt.Sprintf("indexer task skipped because height is not last in era [stage=%s] [task=%s] [height=%d]", pipeline.StageSequencer, t.GetName(), payload.CurrentHeight))
 		return nil
 	}
 
@@ -329,6 +336,62 @@ func (t *accountEraSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) 
 	}
 	payload.NewAccountEraSequences = newAccountEraSeqs
 	payload.UpdatedAccountEraSequences = updatedAccountEraSeqs
+
+	return nil
+}
+
+// NewTransactionSeqCreatorTask creates block sequences
+func NewTransactionSeqCreatorTask(db *store.Store) *transactionSeqCreatorTask {
+	return &transactionSeqCreatorTask{
+		db: db,
+	}
+}
+
+type transactionSeqCreatorTask struct {
+	db *store.Store
+}
+
+func (t *transactionSeqCreatorTask) GetName() string {
+	return TransactionSeqCreatorTaskName
+}
+
+func (t *transactionSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) error {
+	defer metric.LogIndexerTaskDuration(time.Now(), t.GetName())
+
+	payload := p.(*payload)
+
+	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StageSequencer, t.GetName(), payload.CurrentHeight))
+
+	mappedTxSeqs, err := ToTransactionSequence(payload.Syncable, payload.RawTransactions)
+	if err != nil {
+		return err
+	}
+
+	txIndexes := make([]int64, len(mappedTxSeqs))
+	for i, seq := range mappedTxSeqs {
+		txIndexes[i] = seq.Index
+	}
+
+	seqLookup, err := t.db.TransactionSeq.FindAllByHeightAndIndex(payload.CurrentHeight, txIndexes)
+	if err != nil {
+		return err
+	}
+
+	var newTxSeqs []model.TransactionSeq
+	var updatedTxSeqs []model.TransactionSeq
+	for _, rawSeq := range mappedTxSeqs {
+		seq, exists := seqLookup[rawSeq.Index]
+		if !exists {
+			newTxSeqs = append(newTxSeqs, rawSeq)
+			continue
+		}
+
+		seq.Update(rawSeq)
+		updatedTxSeqs = append(updatedTxSeqs, *seq)
+	}
+
+	payload.NewTransactionSequences = newTxSeqs
+	payload.UpdatedTransactionSequences = updatedTxSeqs
 
 	return nil
 }

@@ -15,9 +15,29 @@ func NewGetSummaryUseCase(validatorSummaryDb store.ValidatorSummary) *getSummary
 	}
 }
 
-func (uc *getSummaryUseCase) Execute(interval types.SummaryInterval, period string, stashAccount string) (interface{}, error) {
-	if stashAccount == "" {
-		return uc.validatorSummaryDb.FindSummaries(interval, period)
+func (uc *getSummaryUseCase) Execute(interval types.SummaryInterval, period string, stashAccount string) (summaryListView, error) {
+	var err error
+	var summaries []store.ValidatorSummaryRow
+
+	lastIndexedSession, err := uc.db.Syncables.FindLastEndOfSession()
+	if err != nil && err != store.ErrNotFound {
+		return summaryListView{}, err
 	}
-	return uc.validatorSummaryDb.FindSummaryByStashAccount(stashAccount, interval, period)
+
+	lastIndexedEra, err := uc.db.Syncables.FindLastEndOfEra()
+	if err != nil && err != store.ErrNotFound {
+		return summaryListView{}, err
+	}
+
+	if stashAccount == "" {
+		summaries, err = uc.validatorSummaryDb.FindSummary(interval, period)
+	} else {
+		summaries, err = uc.validatorSummaryDb.FindSummaryByStashAccount(stashAccount, interval, period)
+	}
+
+	if err != nil {
+		return summaryListView{}, err
+	}
+
+	return toSummaryListView(summaries, lastIndexedSession, lastIndexedEra), nil
 }

@@ -2,6 +2,7 @@ package validator
 
 import (
 	"github.com/figment-networks/polkadothub-indexer/model"
+	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/types"
 	"github.com/figment-networks/polkadothub-indexer/usecase/common"
 	"github.com/lib/pq"
@@ -112,4 +113,30 @@ func ToSeqListView(validatorSessionSeqs []model.ValidatorSessionSeq, validatorEr
 		SessionItems: sessionItems,
 		EraItems:     eraItems,
 	}
+}
+
+type syncableInfo struct {
+	Time types.Time `json:"time"`
+}
+
+type summaryListView struct {
+	Items       []store.ValidatorSummaryRow `json:"items"`
+	LastSession *syncableInfo               `json:"last_indexed_session,omitempty"`
+	LastEra     *syncableInfo               `json:"last_indexed_era,omitempty"`
+}
+
+func toSummaryListView(summaries []store.ValidatorSummaryRow, lastIndexedSession, lastIndexedEra *model.Syncable) summaryListView {
+	view := summaryListView{
+		Items: summaries,
+	}
+
+	if lastIndexedSession != nil {
+		view.LastSession = &syncableInfo{Time: lastIndexedSession.Time}
+	}
+
+	if lastIndexedEra != nil {
+		view.LastEra = &syncableInfo{Time: lastIndexedEra.Time}
+	}
+
+	return view
 }
