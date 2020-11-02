@@ -65,6 +65,7 @@ type transactions struct {
 
 type validators struct {
 	*ValidatorAggStore
+	*ValidatorSeqStore
 	*ValidatorEraSeqStore
 	*ValidatorSessionSeqStore
 	*ValidatorSummaryStore
@@ -165,6 +166,7 @@ func (s *Store) GetValidators() *validators {
 	if s.validators == nil {
 		s.validators = &validators{
 			NewValidatorAggStore(s.db),
+			NewValidatorSeqStore(s.db),
 			NewValidatorEraSeqStore(s.db),
 			NewValidatorSessionSeqStore(s.db),
 			NewValidatorSummaryStore(s.db),

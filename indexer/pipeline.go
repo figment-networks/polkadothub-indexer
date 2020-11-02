@@ -46,7 +46,11 @@ func NewPipeline(cfg *config.Config, cli *client.Client, accountDb store.Account
 
 	// Fetcher stage
 	p.AddStage(
-		pipeline.NewStageWithTasks(pipeline.StageFetcher, pipeline.RetryingTask(NewFetcherTask(cli.Height), isTransient, maxRetries)),
+		pipeline.NewStageWithTasks(
+			pipeline.StageFetcher,
+			pipeline.RetryingTask(NewFetcherTask(cli.Height), isTransient, maxRetries),
+			pipeline.RetryingTask(NewValidatorFetcherTask(cli.Validator), isTransient, maxRetries),
+		),
 	)
 
 	// Syncer stage
@@ -67,6 +71,7 @@ func NewPipeline(cfg *config.Config, cli *client.Client, accountDb store.Account
 		pipeline.NewAsyncStageWithTasks(
 			pipeline.StageSequencer,
 			pipeline.RetryingTask(NewBlockSeqCreatorTask(blockDb), isTransient, maxRetries),
+			pipeline.RetryingTask(NewValidatorSeqCreatorTask(cfg, syncableDb, validatorDb), isTransient, maxRetries),
 			pipeline.RetryingTask(NewValidatorSessionSeqCreatorTask(cfg, syncableDb, validatorDb), isTransient, maxRetries),
 			pipeline.RetryingTask(NewValidatorEraSeqCreatorTask(cfg, syncableDb, validatorDb), isTransient, maxRetries),
 			pipeline.RetryingTask(NewEventSeqCreatorTask(eventDb), isTransient, maxRetries),
@@ -89,6 +94,7 @@ func NewPipeline(cfg *config.Config, cli *client.Client, accountDb store.Account
 			pipeline.StagePersistor,
 			pipeline.RetryingTask(NewSyncerPersistorTask(syncableDb), isTransient, maxRetries),
 			pipeline.RetryingTask(NewBlockSeqPersistorTask(blockDb), isTransient, maxRetries),
+			pipeline.RetryingTask(NewValidatorSeqPersistorTask(validatorDb), isTransient, maxRetries),
 			pipeline.RetryingTask(NewValidatorSessionSeqPersistorTask(validatorDb), isTransient, maxRetries),
 			pipeline.RetryingTask(NewValidatorEraSeqPersistorTask(validatorDb), isTransient, maxRetries),
 			pipeline.RetryingTask(NewValidatorAggPersistorTask(validatorDb), isTransient, maxRetries),
