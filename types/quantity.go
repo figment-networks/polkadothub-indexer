@@ -7,6 +7,10 @@ import (
 	"math/big"
 )
 
+var (
+	zero big.Int
+)
+
 type Quantity struct {
 	big.Int
 }
@@ -40,6 +44,11 @@ func (b *Quantity) Valid() bool {
 
 func (b *Quantity) Equals(o Quantity) bool {
 	return b.Int.String() == o.Int.String()
+}
+
+// IsZero returns true iff b equals zero
+func (b *Quantity) IsZero() bool {
+	return b.Int.CmpAbs(&zero) == 0
 }
 
 // Value implement sql.Scanner

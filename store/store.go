@@ -34,6 +34,10 @@ type Syncables interface {
 	FindMostRecenter
 }
 
+type SystemEvents interface {
+	CreateOrUpdate(*model.SystemEvent) error
+}
+
 type Transactions interface {
 	TransactionSeq
 }
