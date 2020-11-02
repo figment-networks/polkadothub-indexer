@@ -140,6 +140,7 @@ func ToBalanceTransfers(forAddress string, balanceTransferEvents []model.EventSe
 
 		newBalanceTransfer := &BalanceTransfer{
 			Amount: amount.Value,
+			Height: eventSeq.Height,
 			Hash:   eventSeq.TxHash,
 		}
 
