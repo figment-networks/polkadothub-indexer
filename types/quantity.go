@@ -2,6 +2,7 @@ package types
 
 import (
 	"database/sql/driver"
+	"errors"
 	"fmt"
 	"math/big"
 )
@@ -21,6 +22,16 @@ func NewQuantityFromInt64(i int64) Quantity {
 func NewQuantityFromBytes(bytes []byte) Quantity {
 	b := big.Int{}
 	return Quantity{Int: *b.SetBytes(bytes)}
+}
+
+// NewQuantityFromString creates a new Quantity from a string
+func NewQuantityFromString(val string) (Quantity, error) {
+	b := new(big.Int)
+	b, ok := b.SetString(val, 10)
+	if !ok {
+		return Quantity{}, errors.New("error calling SetString")
+	}
+	return Quantity{Int: *b}, nil
 }
 
 func (b *Quantity) Valid() bool {

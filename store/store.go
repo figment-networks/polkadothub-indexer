@@ -40,6 +40,7 @@ type Transactions interface {
 
 type Validators interface {
 	ValidatorAgg
+	ValidatorSeq
 	ValidatorEraSeq
 	ValidatorSessionSeq
 	ValidatorSummary

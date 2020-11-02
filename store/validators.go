@@ -16,6 +16,12 @@ type ValidatorAgg interface {
 	SaveAgg(*model.ValidatorAgg) error
 }
 
+type ValidatorSeq interface {
+	CreateSeq(*model.ValidatorSeq) error
+	FindAllByHeight(height int64) ([]model.ValidatorSeq, error)
+	SaveSeq(*model.ValidatorSeq) error
+}
+
 type ValidatorEraSeq interface {
 	CreateEraSeq(*model.ValidatorEraSeq) error
 	DeleteEraSeqsOlderThan(purgeThreshold time.Time) (*int64, error)
