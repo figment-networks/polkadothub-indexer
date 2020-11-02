@@ -11,6 +11,8 @@ type ValidatorSeq struct {
 
 	StashAccount  string         `json:"stash_account"`
 	ActiveBalance types.Quantity `json:"active_balance"`
+	// commission won't be in effect until beginning of the next era
+	Commission types.Quantity `json:"commission"`
 }
 
 func (ValidatorSeq) TableName() string {
@@ -20,7 +22,9 @@ func (ValidatorSeq) TableName() string {
 func (vs *ValidatorSeq) Valid() bool {
 	return vs.Sequence.Valid() &&
 		vs.StashAccount != "" &&
-		vs.ActiveBalance.Valid()
+		vs.ActiveBalance.Valid() &&
+		vs.Commission.Valid()
+
 }
 
 func (vs *ValidatorSeq) Equal(m ValidatorSeq) bool {
@@ -31,4 +35,5 @@ func (vs *ValidatorSeq) Equal(m ValidatorSeq) bool {
 func (vs *ValidatorSeq) Update(m ValidatorSeq) {
 	vs.StashAccount = m.StashAccount
 	vs.ActiveBalance = m.ActiveBalance
+	vs.Commission = m.Commission
 }

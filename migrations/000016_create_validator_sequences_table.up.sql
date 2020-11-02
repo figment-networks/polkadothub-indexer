@@ -6,7 +6,8 @@ CREATE TABLE IF NOT EXISTS validator_sequences
     time                    TIMESTAMP WITH TIME ZONE NOT NULL,
 
     stash_account           TEXT                     NOT NULL,
-    active_balance                 DECIMAL(65, 0)           NOT NULL,
+    active_balance          DECIMAL(65, 0)           NOT NULL,
+    commission              DECIMAL(65, 0)           NOT NULL,
 
     PRIMARY KEY (id)
 );

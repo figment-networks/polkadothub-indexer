@@ -30,18 +30,28 @@ func TestSystemEventCreatorTask_getValueChangeSystemEvents(t *testing.T) {
 	tests := []struct {
 		description             string
 		activeBalanceChangeRate float64
+		commissionChangeRate    float64
 		expectedCount           int
 		expectedKind            model.SystemEventKind
 	}{
-		{"returns no system events when active balance haven't changed", 0, 0, ""},
-		{"returns no system events when active balance change smaller than 0.1", 0.09, 0, ""},
-		{"returns one activeBalanceChange1 system event when active balance change is 0.1", 0.1, 1, model.SystemEventActiveBalanceChange1},
-		{"returns one activeBalanceChange1 system events when active balance change is 0.9", 0.9, 1, model.SystemEventActiveBalanceChange1},
-		{"returns one activeBalanceChange2 system events when active balance change is 1", 1, 1, model.SystemEventActiveBalanceChange2},
-		{"returns one activeBalanceChange2 system events when active balance change is 9", 9, 1, model.SystemEventActiveBalanceChange2},
-		{"returns one activeBalanceChange3 system events when active balance change is 10", 10, 1, model.SystemEventActiveBalanceChange3},
-		{"returns one activeBalanceChange3 system events when active balance change is 100", 100, 1, model.SystemEventActiveBalanceChange3},
-		{"returns one activeBalanceChange3 system events when active balance change is 200", 200, 1, model.SystemEventActiveBalanceChange3},
+		{"returns no system events when active balance haven't changed", 0, 0, 0, ""},
+		{"returns no system events when active balance change smaller than 0.1", 0.09, 0, 0, ""},
+		{"returns one activeBalanceChange1 system event when active balance change is 0.1", 0.1, 0, 1, model.SystemEventActiveBalanceChange1},
+		{"returns one activeBalanceChange1 system events when active balance change is 0.9", 0.9, 0, 1, model.SystemEventActiveBalanceChange1},
+		{"returns one activeBalanceChange2 system events when active balance change is 1", 1, 0, 1, model.SystemEventActiveBalanceChange2},
+		{"returns one activeBalanceChange2 system events when active balance change is 9", 9, 0, 1, model.SystemEventActiveBalanceChange2},
+		{"returns one activeBalanceChange3 system events when active balance change is 10", 10, 0, 1, model.SystemEventActiveBalanceChange3},
+		{"returns one activeBalanceChange3 system events when active balance change is 100", 100, 0, 1, model.SystemEventActiveBalanceChange3},
+		{"returns one activeBalanceChange3 system events when active balance change is 200", 200, 0, 1, model.SystemEventActiveBalanceChange3},
+
+		{"returns no system events when commission haven't changed", 0, 0, 0, ""},
+		{"returns no system events when commission change smaller than 0.1", 0, 0.09, 0, ""},
+		{"returns one commissionChange1 system event when commission change is 0.1", 0, 0.1, 1, model.SystemEventCommissionChange1},
+		{"returns one commissionChange1 system events when commission change is 0.9", 0, 0.9, 1, model.SystemEventCommissionChange1},
+		{"returns one commissionChange2 system events when commission change is 1", 0, 1, 1, model.SystemEventCommissionChange2},
+		{"returns one commissionChange2 system events when commission change is 9", 0, 9, 1, model.SystemEventCommissionChange2},
+		{"returns one commissionChange3 system events when commission change is 10", 0, 10, 1, model.SystemEventCommissionChange3},
+		{"returns one commissionChange3 system events when commission change is 100", 0, 100, 1, model.SystemEventCommissionChange3},
 	}
 
 	for _, tt := range tests {
@@ -54,11 +64,15 @@ func TestSystemEventCreatorTask_getValueChangeSystemEvents(t *testing.T) {
 			var activeBalanceBefore int64 = 1000
 			activeBalanceAfter := float64(activeBalanceBefore) + (float64(activeBalanceBefore) * tt.activeBalanceChangeRate / 100)
 
+			var commissionBefore int64 = 1000
+			commissionAfter := float64(commissionBefore) + (float64(commissionBefore) * tt.commissionChangeRate / 100)
+
 			prevHeightValidatorSequences := []model.ValidatorSeq{
 				model.ValidatorSeq{
 					Sequence:      currSeq,
 					StashAccount:  testValidatorAddress,
 					ActiveBalance: types.NewQuantityFromInt64(activeBalanceBefore),
+					Commission:    types.NewQuantityFromInt64(commissionBefore),
 				},
 			}
 			currHeightValidatorSequences := []model.ValidatorSeq{
@@ -66,6 +80,7 @@ func TestSystemEventCreatorTask_getValueChangeSystemEvents(t *testing.T) {
 					Sequence:      currSeq,
 					StashAccount:  testValidatorAddress,
 					ActiveBalance: types.NewQuantityFromInt64(int64(activeBalanceAfter)),
+					Commission:    types.NewQuantityFromInt64(int64(commissionAfter)),
 				},
 			}
 
