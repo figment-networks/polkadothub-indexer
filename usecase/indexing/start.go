@@ -25,12 +25,13 @@ type startUseCase struct {
 	eventDb       store.Events
 	reportDb      store.Reports
 	syncableDb    store.Syncables
+	systemEventDb store.SystemEvents
 	transactionDb store.Transactions
 	validatorDb   store.Validators
 }
 
 func NewStartUseCase(cfg *config.Config, cli *client.Client, accountDb store.Accounts, blockDb store.Blocks, databaseDb store.Database, eventDb store.Events, reportDb store.Reports,
-	syncableDb store.Syncables, transactionDb store.Transactions, validatorDb store.Validators,
+	syncableDb store.Syncables, systemEventDb store.SystemEvents, transactionDb store.Transactions, validatorDb store.Validators,
 ) *startUseCase {
 	return &startUseCase{
 		cfg:    cfg,
@@ -42,6 +43,7 @@ func NewStartUseCase(cfg *config.Config, cli *client.Client, accountDb store.Acc
 		eventDb:       eventDb,
 		reportDb:      reportDb,
 		syncableDb:    syncableDb,
+		systemEventDb: systemEventDb,
 		transactionDb: transactionDb,
 		validatorDb:   validatorDb,
 	}
@@ -52,7 +54,7 @@ func (uc *startUseCase) Execute(ctx context.Context, batchSize int64) error {
 		return err
 	}
 
-	indexingPipeline, err := indexer.NewPipeline(uc.cfg, uc.client, uc.accountDb, uc.blockDb, uc.databaseDb, uc.eventDb, uc.reportDb, uc.syncableDb, uc.transactionDb, uc.validatorDb)
+	indexingPipeline, err := indexer.NewPipeline(uc.cfg, uc.client, uc.accountDb, uc.blockDb, uc.databaseDb, uc.eventDb, uc.reportDb, uc.syncableDb, uc.systemEventDb, uc.transactionDb, uc.validatorDb)
 	if err != nil {
 		return err
 	}

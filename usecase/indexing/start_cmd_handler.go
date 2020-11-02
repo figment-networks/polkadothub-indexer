@@ -22,12 +22,13 @@ type StartCmdHandler struct {
 	eventDb       store.Events
 	reportDb      store.Reports
 	syncableDb    store.Syncables
+	systemEventDb store.SystemEvents
 	transactionDb store.Transactions
 	validatorDb   store.Validators
 }
 
 func NewStartCmdHandler(cfg *config.Config, cli *client.Client, accountDb store.Accounts, blockDb store.Blocks, databaseDb store.Database, eventDb store.Events, reportDb store.Reports,
-	syncableDb store.Syncables, transactionDb store.Transactions, validatorDb store.Validators,
+	syncableDb store.Syncables, systemEventDb store.SystemEvents, transactionDb store.Transactions, validatorDb store.Validators,
 ) *StartCmdHandler {
 	return &StartCmdHandler{
 		cfg:    cfg,
@@ -39,6 +40,7 @@ func NewStartCmdHandler(cfg *config.Config, cli *client.Client, accountDb store.
 		eventDb:       eventDb,
 		reportDb:      reportDb,
 		syncableDb:    syncableDb,
+		systemEventDb: systemEventDb,
 		transactionDb: transactionDb,
 		validatorDb:   validatorDb,
 	}
@@ -56,7 +58,7 @@ func (h *StartCmdHandler) Handle(ctx context.Context, batchSize int64) {
 
 func (h *StartCmdHandler) getUseCase() *startUseCase {
 	if h.useCase == nil {
-		return NewStartUseCase(h.cfg, h.client, h.accountDb, h.blockDb, h.databaseDb, h.eventDb, h.reportDb, h.syncableDb, h.transactionDb, h.validatorDb)
+		return NewStartUseCase(h.cfg, h.client, h.accountDb, h.blockDb, h.databaseDb, h.eventDb, h.reportDb, h.syncableDb, h.systemEventDb, h.transactionDb, h.validatorDb)
 	}
 	return h.useCase
 }

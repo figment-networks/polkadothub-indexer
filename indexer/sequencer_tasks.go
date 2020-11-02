@@ -72,17 +72,13 @@ func (t *blockSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) error
 }
 
 // NewValidatorSeqCreatorTask creates validator sequences
-func NewValidatorSeqCreatorTask(cfg *config.Config, syncablesDb store.Syncables, validatorSeqDb store.ValidatorSeq) *validatorSeqCreatorTask {
+func NewValidatorSeqCreatorTask(validatorSeqDb store.ValidatorSeq) *validatorSeqCreatorTask {
 	return &validatorSeqCreatorTask{
-		cfg:            cfg,
-		syncablesDb:    syncablesDb,
 		validatorSeqDb: validatorSeqDb,
 	}
 }
 
 type validatorSeqCreatorTask struct {
-	cfg            *config.Config
-	syncablesDb    store.Syncables
 	validatorSeqDb store.ValidatorSeq
 }
 

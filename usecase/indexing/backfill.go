@@ -25,12 +25,13 @@ type backfillUseCase struct {
 	eventDb       store.Events
 	reportDb      store.Reports
 	syncableDb    store.Syncables
+	systemEventDb store.SystemEvents
 	transactionDb store.Transactions
 	validatorDb   store.Validators
 }
 
 func NewBackfillUseCase(cfg *config.Config, cli *client.Client, accountDb store.Accounts, blockDb store.Blocks, databaseDb store.Database, eventDb store.Events,
-	reportDb store.Reports, syncableDb store.Syncables, transactionDb store.Transactions, validatorDb store.Validators,
+	reportDb store.Reports, syncableDb store.Syncables, systemEventDb store.SystemEvents, transactionDb store.Transactions, validatorDb store.Validators,
 ) *backfillUseCase {
 	return &backfillUseCase{
 		cfg:    cfg,
@@ -42,6 +43,7 @@ func NewBackfillUseCase(cfg *config.Config, cli *client.Client, accountDb store.
 		eventDb:       eventDb,
 		reportDb:      reportDb,
 		syncableDb:    syncableDb,
+		systemEventDb: systemEventDb,
 		transactionDb: transactionDb,
 		validatorDb:   validatorDb,
 	}
@@ -58,7 +60,7 @@ func (uc *backfillUseCase) Execute(ctx context.Context, useCaseConfig BackfillUs
 		return err
 	}
 
-	indexingPipeline, err := indexer.NewPipeline(uc.cfg, uc.client, uc.accountDb, uc.blockDb, uc.databaseDb, uc.eventDb, uc.reportDb, uc.syncableDb, uc.transactionDb, uc.validatorDb)
+	indexingPipeline, err := indexer.NewPipeline(uc.cfg, uc.client, uc.accountDb, uc.blockDb, uc.databaseDb, uc.eventDb, uc.reportDb, uc.syncableDb, uc.systemEventDb, uc.transactionDb, uc.validatorDb)
 	if err != nil {
 		return err
 	}
