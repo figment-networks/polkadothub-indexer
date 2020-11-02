@@ -80,24 +80,28 @@ func (t *systemEventCreatorTask) getPrevHeightValidatorSequences(payload *payloa
 	return prevHeightValidatorSequences, nil
 }
 
-func (t *systemEventCreatorTask) getValueChangeSystemEvents(currHeightValidatorSequences []model.ValidatorSeq, prevHeightValidatorSequences []model.ValidatorSeq) ([]*model.SystemEvent, error) {
+func (t *systemEventCreatorTask) getValueChangeSystemEvents(currHeightValidatorSequences, prevHeightValidatorSequences []model.ValidatorSeq) ([]*model.SystemEvent, error) {
 	var systemEvents []*model.SystemEvent
-	for _, validatorSequence := range currHeightValidatorSequences {
-		for _, prevValidatorSequence := range prevHeightValidatorSequences {
-			if validatorSequence.StashAccount == prevValidatorSequence.StashAccount {
-				newSystemEvent, err := t.getActiveBalanceChange(validatorSequence, prevValidatorSequence)
-				if err != nil {
-					if err != ErrActiveBalanceOutsideOfRange {
-						return nil, err
-					}
-				} else {
-					logger.Debug(fmt.Sprintf("active balance change for address %s occured [kind=%s]", validatorSequence.StashAccount, newSystemEvent.Kind))
-					systemEvents = append(systemEvents, newSystemEvent)
-				}
-			}
-		}
+
+	prevLookup := make(map[string]model.ValidatorSeq, len(prevHeightValidatorSequences))
+	for _, seq := range prevHeightValidatorSequences {
+		prevLookup[seq.StashAccount] = seq
 	}
 
+	for _, validatorSequence := range currHeightValidatorSequences {
+		if prevValidatorSequence, ok := prevLookup[validatorSequence.StashAccount]; ok {
+			newSystemEvent, err := t.getActiveBalanceChange(validatorSequence, prevValidatorSequence)
+			if err != nil {
+				if err != ErrActiveBalanceOutsideOfRange {
+					return nil, err
+				}
+				continue
+			}
+
+			logger.Debug(fmt.Sprintf("active balance change for address %s occured [kind=%s]", validatorSequence.StashAccount, newSystemEvent.Kind))
+			systemEvents = append(systemEvents, newSystemEvent)
+		}
+	}
 	return systemEvents, nil
 }
 
