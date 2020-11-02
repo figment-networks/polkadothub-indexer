@@ -24,6 +24,7 @@ const (
 
 var (
 	ErrActiveBalanceOutsideOfRange = errors.New("active balance is outside of specified buckets")
+	ErrCommissionOutsideOfRange    = errors.New("commission is outside of specified buckets")
 )
 
 // NewSystemEventCreatorTask creates system events
@@ -95,11 +96,20 @@ func (t *systemEventCreatorTask) getValueChangeSystemEvents(currHeightValidatorS
 				if err != ErrActiveBalanceOutsideOfRange {
 					return nil, err
 				}
-				continue
+			} else {
+				logger.Debug(fmt.Sprintf("active balance change for address %s occured [kind=%s]", validatorSequence.StashAccount, newSystemEvent.Kind))
+				systemEvents = append(systemEvents, newSystemEvent)
 			}
 
-			logger.Debug(fmt.Sprintf("active balance change for address %s occured [kind=%s]", validatorSequence.StashAccount, newSystemEvent.Kind))
-			systemEvents = append(systemEvents, newSystemEvent)
+			newSystemEvent, err = t.getCommissionChange(validatorSequence, prevValidatorSequence)
+			if err != nil {
+				if err != ErrCommissionOutsideOfRange {
+					return nil, err
+				}
+			} else {
+				logger.Debug(fmt.Sprintf("commission change for address %s occured [kind=%s]", validatorSequence.StashAccount, newSystemEvent.Kind))
+				systemEvents = append(systemEvents, newSystemEvent)
+			}
 		}
 	}
 	return systemEvents, nil
@@ -120,6 +130,30 @@ func (t *systemEventCreatorTask) getActiveBalanceChange(currValidatorSeq model.V
 		kind = model.SystemEventActiveBalanceChange3
 	} else {
 		return nil, ErrActiveBalanceOutsideOfRange
+	}
+
+	return t.newSystemEvent(currValidatorSeq, kind, systemEventRawData{
+		"before": prevValue,
+		"after":  currValue,
+		"change": roundedChangeRate,
+	})
+}
+
+func (t *systemEventCreatorTask) getCommissionChange(currValidatorSeq model.ValidatorSeq, prevValidatorSeq model.ValidatorSeq) (*model.SystemEvent, error) {
+	currValue := currValidatorSeq.Commission.Int64()
+	prevValue := prevValidatorSeq.Commission.Int64()
+	roundedChangeRate := t.getRoundedChangeRate(currValue, prevValue)
+	roundedAbsChangeRate := math.Abs(roundedChangeRate)
+
+	var kind model.SystemEventKind
+	if roundedAbsChangeRate >= 0.1 && roundedAbsChangeRate < 1 {
+		kind = model.SystemEventCommissionChange1
+	} else if roundedAbsChangeRate >= 1 && roundedAbsChangeRate < 10 {
+		kind = model.SystemEventCommissionChange2
+	} else if roundedAbsChangeRate >= 10 {
+		kind = model.SystemEventCommissionChange3
+	} else {
+		return nil, ErrCommissionOutsideOfRange
 	}
 
 	return t.newSystemEvent(currValidatorSeq, kind, systemEventRawData{
