@@ -28,6 +28,27 @@ func (s ValidatorSessionSeqStore) SaveSessionSeq(val *model.ValidatorSessionSeq)
 	return s.Save(val)
 }
 
+// GetCountByAddress returns map of address to count
+func (s ValidatorSessionSeqStore) GetCountsForAccounts(sinceSession int64) (map[string]int64, error) {
+	var result []struct {
+		Count        int64
+		StashAccount string
+	}
+
+	err := s.db.
+		Select(getCountsQuery).
+		Where("session >", sinceSession).
+		Find(&result).
+		Error
+
+	resultMap := make(map[string]int64, len(result))
+	for _, r := range result {
+		resultMap[r.StashAccount] = r.Count
+	}
+
+	return resultMap, checkErr(err)
+}
+
 // FindByHeightAndStashAccount finds validator by height and stash account
 func (s ValidatorSessionSeqStore) FindByHeightAndStashAccount(height int64, stash string) (*model.ValidatorSessionSeq, error) {
 	q := model.ValidatorSessionSeq{

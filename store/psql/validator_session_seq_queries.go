@@ -8,4 +8,9 @@ const (
    	MAX(online::INT) AS uptime_max,
    	MIN(online::INT) AS uptime_min
 `
+
+	getCountsQuery = `
+	stash_account,
+	COUNT(*) AS count
+`
 )
