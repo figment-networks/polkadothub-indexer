@@ -48,6 +48,7 @@ func TestValidatorSeqCreator_Run(t *testing.T) {
 					Sequence:      seq,
 					StashAccount:  "validator1",
 					ActiveBalance: types.NewQuantityFromInt64(100),
+					Commission:    types.NewQuantityFromInt64(900),
 				},
 			},
 
@@ -64,6 +65,7 @@ func TestValidatorSeqCreator_Run(t *testing.T) {
 					Sequence:      seq,
 					StashAccount:  "validator1",
 					ActiveBalance: types.NewQuantityFromInt64(200),
+					Commission:    types.NewQuantityFromInt64(100),
 				},
 			},
 			dbErr:     nil,
@@ -73,6 +75,7 @@ func TestValidatorSeqCreator_Run(t *testing.T) {
 					Sequence:      seq,
 					StashAccount:  "validator1",
 					ActiveBalance: types.NewQuantityFromInt64(100),
+					Commission:    types.NewQuantityFromInt64(900),
 				},
 			},
 
@@ -90,6 +93,7 @@ func TestValidatorSeqCreator_Run(t *testing.T) {
 					Sequence:      seq,
 					StashAccount:  "validator2",
 					ActiveBalance: types.NewQuantityFromInt64(789),
+					Commission:    types.NewQuantityFromInt64(100),
 				},
 			},
 			dbErr: nil,
@@ -98,11 +102,13 @@ func TestValidatorSeqCreator_Run(t *testing.T) {
 					Sequence:      seq,
 					StashAccount:  "validator1",
 					ActiveBalance: types.NewQuantityFromInt64(100),
+					Commission:    types.NewQuantityFromInt64(900),
 				},
 				{
 					Sequence:      seq,
 					StashAccount:  "validator3",
 					ActiveBalance: types.NewQuantityFromInt64(300),
+					Commission:    types.NewQuantityFromInt64(900),
 				},
 			},
 			expectUpdated: []model.ValidatorSeq{
@@ -110,6 +116,7 @@ func TestValidatorSeqCreator_Run(t *testing.T) {
 					Sequence:      seq,
 					StashAccount:  "validator2",
 					ActiveBalance: types.NewQuantityFromInt64(200),
+					Commission:    types.NewQuantityFromInt64(900),
 				},
 			},
 
