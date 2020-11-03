@@ -38,6 +38,7 @@ type ValidatorSessionSeq interface {
 	CreateSessionSeq(*model.ValidatorSessionSeq) error
 	DeleteSessionSeqsOlderThan(purgeThreshold time.Time) (*int64, error)
 	FindSessionSeqsByHeight(h int64) ([]model.ValidatorSessionSeq, error)
+	FindBySession(h int64) ([]model.ValidatorSessionSeq, error)
 	FindBySessionAndStashAccount(session int64, stash string) (*model.ValidatorSessionSeq, error)
 	FindLastSessionSeqByStashAccount(stashAccount string, limit int64) ([]model.ValidatorSessionSeq, error)
 	FindMostRecentSessionSeq() (*model.ValidatorSessionSeq, error)
