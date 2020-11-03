@@ -1523,6 +1523,21 @@ func (mr *MockValidatorSessionSeqMockRecorder) DeleteSessionSeqsOlderThan(arg0 i
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSessionSeqsOlderThan", reflect.TypeOf((*MockValidatorSessionSeq)(nil).DeleteSessionSeqsOlderThan), arg0)
 }
 
+// FindBySession mocks base method
+func (m *MockValidatorSessionSeq) FindBySession(arg0 int64) ([]model.ValidatorSessionSeq, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindBySession", arg0)
+	ret0, _ := ret[0].([]model.ValidatorSessionSeq)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindBySession indicates an expected call of FindBySession
+func (mr *MockValidatorSessionSeqMockRecorder) FindBySession(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindBySession", reflect.TypeOf((*MockValidatorSessionSeq)(nil).FindBySession), arg0)
+}
+
 // FindBySessionAndStashAccount mocks base method
 func (m *MockValidatorSessionSeq) FindBySessionAndStashAccount(arg0 int64, arg1 string) (*model.ValidatorSessionSeq, error) {
 	m.ctrl.T.Helper()

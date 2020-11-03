@@ -10,7 +10,8 @@ const (
 	SystemEventCommissionChange2    SystemEventKind = "commission_change_2"
 	SystemEventCommissionChange3    SystemEventKind = "commission_change_3"
 	SystemEventJoinedActiveSet      SystemEventKind = "joined_active_set"
-	SystemEventLeftActiveSet        SystemEventKind = "left_active_set"
+	SystemEventJoinedWaitingSet     SystemEventKind = "joined_waiting_set"
+	SystemEventLeftSet              SystemEventKind = "left_set"
 	SystemEventMissedNConsecutive   SystemEventKind = "missed_n_consecutive"
 	SystemEventMissedNofM           SystemEventKind = "missed_n_of_m"
 )
