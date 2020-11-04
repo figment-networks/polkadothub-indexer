@@ -19,10 +19,16 @@
         "id": 4,
         "targets": [7],
         "parallel": true
+      },
+      {
+        "id": 5,
+        "targets": [8, 9],
+        "parallel": true
       }
     ],
     "shared_tasks": [
-        "MainSyncer"
+        "MainSyncer",
+        "SyncerPersistor"
     ],
     "available_targets": [
       {
@@ -33,7 +39,6 @@
           "Fetcher",
           "BlockParser",
           "BlockSeqCreator",
-          "SyncerPersistor",
           "BlockSeqPersistor"
         ]
       },
@@ -44,7 +49,6 @@
         "tasks": [
           "Fetcher",
           "ValidatorSessionSeqCreator",
-          "SyncerPersistor",
           "ValidatorSessionSeqPersistor"
         ]
       },
@@ -55,7 +59,6 @@
         "tasks": [
           "Fetcher",
           "ValidatorEraSeqCreator",
-          "SyncerPersistor",
           "ValidatorEraSeqPersistor"
         ]
       },
@@ -67,7 +70,6 @@
           "Fetcher",
           "ValidatorsParser",
           "ValidatorAggCreator",
-          "SyncerPersistor",
           "ValidatorAggPersistor"
         ]
       },
@@ -78,7 +80,6 @@
         "tasks": [
           "Fetcher",
           "EventSeqCreator",
-          "SyncerPersistor",
           "EventSeqPersistor"
         ]
       },
@@ -89,7 +90,6 @@
         "tasks": [
           "Fetcher",
           "AccountEraSeqCreator",
-          "SyncerPersistor",
           "AccountEraSeqPersistor"
         ]
       },
@@ -100,8 +100,30 @@
         "tasks": [
           "Fetcher",
           "TransactionSeqCreator",
-          "SyncerPersistor",
           "TransactionSeqPersistor"
+        ]
+      },
+      {
+        "id": 8,
+        "name": "index_validator_sequences",
+        "desc": "Creates and persists validator sequences",
+        "tasks": [
+          "ValidatorFetcher",
+          "ValidatorSeqCreator",
+          "ValidatorSeqPersistor"
+        ]
+      },
+      {
+        "id": 9,
+        "name": "index_system_events",
+        "desc": "Creates and persists system events",
+        "tasks": [
+          "Fetcher",
+          "ValidatorFetcher",
+          "ValidatorSeqCreator",
+          "validatorSessionSeqCreator",
+          "SystemEventCreator",
+          "SystemEventPersistor"
         ]
       }
     ]
