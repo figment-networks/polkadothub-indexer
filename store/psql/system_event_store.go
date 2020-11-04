@@ -27,7 +27,7 @@ func (s SystemEventStore) CreateOrUpdate(val *model.SystemEvent) error {
 
 	existing.Update(*val)
 
-	return s.Save(existing)
+	return s.Update(existing)
 }
 
 func (s SystemEventStore) findUnique(height int64, address string, kind model.SystemEventKind) (*model.SystemEvent, error) {

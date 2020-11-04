@@ -2,7 +2,6 @@ package types
 
 import (
 	"database/sql/driver"
-	"errors"
 	"fmt"
 	"math/big"
 )
@@ -33,7 +32,7 @@ func NewQuantityFromString(val string) (Quantity, error) {
 	b := new(big.Int)
 	b, ok := b.SetString(val, 10)
 	if !ok {
-		return Quantity{}, errors.New("error calling SetString")
+		return Quantity{}, fmt.Errorf("could not create quantity from string '%v'", val)
 	}
 	return Quantity{Int: *b}, nil
 }
