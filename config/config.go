@@ -40,7 +40,7 @@ type Config struct {
 	IndexerMetricAddr            string `json:"indexer_metric_addr" envconfig:"INDEXER_METRIC_ADDR" default:":8080"`
 	ServerMetricAddr             string `json:"server_metric_addr" envconfig:"SERVER_METRIC_ADDR" default:":8090"`
 	MetricServerUrl              string `json:"metric_server_url" envconfig:"METRIC_SERVER_URL" default:"/metrics"`
-	PurgeSequencesInterval       string `json:"purge_sequences_interval" envconfig:"PURGE_SEQUENCES_INTERVAL" default:"26 hours"`
+	PurgeSequencesInterval       string `json:"purge_sequences_interval" envconfig:"PURGE_SEQUENCES_INTERVAL" default:"26h"`
 	PurgeHourlySummariesInterval string `json:"purge_hourly_summaries_interval" envconfig:"PURGE_HOURLY_SUMMARIES_INTERVAL" default:"26h"`
 	IndexerConfigFile            string `json:"indexer_config_file" envconfig:"INDEXER_CONFIG_FILE" default:"indexer_config.json"`
 }
