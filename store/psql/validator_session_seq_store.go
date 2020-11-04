@@ -37,7 +37,7 @@ func (s ValidatorSessionSeqStore) GetCountsForAccounts(sinceSession int64) (map[
 
 	err := s.db.
 		Select(getCountsQuery).
-		Where("session >", sinceSession).
+		Where("session >= ?", sinceSession).
 		Find(&result).
 		Error
 
