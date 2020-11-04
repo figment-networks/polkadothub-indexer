@@ -18,7 +18,9 @@ type ValidatorAgg interface {
 
 type ValidatorSeq interface {
 	CreateSeq(*model.ValidatorSeq) error
+	DeleteSeqsOlderThan(purgeThreshold time.Time) (*int64, error)
 	FindAllByHeight(height int64) ([]model.ValidatorSeq, error)
+	FindMostRecentSeq() (*model.ValidatorSeq, error)
 	SaveSeq(*model.ValidatorSeq) error
 }
 
