@@ -22,9 +22,14 @@ var (
 )
 
 func TestSystemEventCreatorTask_getValueChangeSystemEvents(t *testing.T) {
-	currSeq := &model.Sequence{
+	currSyncable := &model.Syncable{
 		Height: 20,
 		Time:   *types.NewTimeFromTime(time.Date(2020, 11, 10, 23, 0, 0, 0, time.UTC)),
+	}
+
+	currSeq := &model.Sequence{
+		Height: currSyncable.Height,
+		Time:   currSyncable.Time,
 	}
 
 	tests := []struct {
@@ -55,7 +60,9 @@ func TestSystemEventCreatorTask_getValueChangeSystemEvents(t *testing.T) {
 	}
 
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.description, func(t *testing.T) {
+			t.Parallel()
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
@@ -85,7 +92,7 @@ func TestSystemEventCreatorTask_getValueChangeSystemEvents(t *testing.T) {
 			}
 
 			task := NewSystemEventCreatorTask(testCfg, nil, validatorSeqStoreMock, nil)
-			createdSystemEvents, _ := task.getValueChangeSystemEvents(currHeightValidatorSequences, prevHeightValidatorSequences)
+			createdSystemEvents, _ := task.getValueChangeSystemEvents(currHeightValidatorSequences, prevHeightValidatorSequences, currSyncable)
 
 			if len(createdSystemEvents) != tt.expectedCount {
 				t.Errorf("unexpected system event count, want %v; got %v", tt.expectedCount, len(createdSystemEvents))
@@ -100,6 +107,11 @@ func TestSystemEventCreatorTask_getValueChangeSystemEvents(t *testing.T) {
 }
 
 func TestSystemEventCreatorTask_getActiveSetPresenceChangeSystemEvents(t *testing.T) {
+	currSyncable := &model.Syncable{
+		Height: 20,
+		Time:   *types.NewTimeFromTime(time.Date(2020, 11, 10, 23, 0, 0, 0, time.UTC)),
+	}
+
 	tests := []struct {
 		description    string
 		prevSeqs       []model.ValidatorSeq // contains waiting and active
@@ -218,12 +230,14 @@ func TestSystemEventCreatorTask_getActiveSetPresenceChangeSystemEvents(t *testin
 	}
 
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.description, func(t *testing.T) {
+			t.Parallel()
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
 			task := NewSystemEventCreatorTask(testCfg, nil, nil, nil)
-			createdSystemEvents, _ := task.getActiveSetPresenceChangeSystemEvents(tt.currSeqs, tt.prevSeqs, tt.currActiveSeqs, tt.prevActiveSeqs, 20)
+			createdSystemEvents, _ := task.getActiveSetPresenceChangeSystemEvents(tt.currSeqs, tt.prevSeqs, tt.currActiveSeqs, tt.prevActiveSeqs, currSyncable)
 
 			if len(createdSystemEvents) != tt.expectedCount {
 				t.Errorf("unexpected system event count, want %v; got %v", tt.expectedCount, len(createdSystemEvents))

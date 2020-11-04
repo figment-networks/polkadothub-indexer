@@ -5,6 +5,8 @@ CREATE TABLE IF NOT EXISTS system_events
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL,
 
     height     DECIMAL(65, 0)           NOT NULL,
+    time       TIMESTAMP WITH TIME ZONE NOT NULL,
+
     actor      TEXT,
     kind       TEXT                     NOT NULL,
     data       JSONB                    NOT NULL,

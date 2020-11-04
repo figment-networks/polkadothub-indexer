@@ -57,6 +57,7 @@ This package connects via gRPC to a polkadothub-proxy which in turn connects to 
 | GET    | `/validators/for_min_height/:height` | get the list of validators for height greater than provided | height (required) - height [Default: 0 = last]                                                                                                        |
 | GET    | `/validator/:stash_account`          | get validator by address                                    | stash_account (required) - validator's stash account    sessions_limit (required) - number of last sessions to include    eras_limit (required) - number of last eras to include                                                                                                      |
 | GET    | `/validators_summary`                | validator summary                                           | interval (required) - time interval [hourly or daily] period (required) - summary period [ie. 24 hours]  stash_account (optional) - validator's stash account |
+| GET    | `/system_events`                | get system events for validator                                  | after (optional) - height kind (optional) - system event kind [eg. "joined_active_set"]  |
 
 ### Running app
 
