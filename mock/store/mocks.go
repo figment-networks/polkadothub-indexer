@@ -1286,6 +1286,21 @@ func (mr *MockValidatorSeqMockRecorder) CreateSeq(arg0 interface{}) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSeq", reflect.TypeOf((*MockValidatorSeq)(nil).CreateSeq), arg0)
 }
 
+// DeleteSeqsOlderThan mocks base method
+func (m *MockValidatorSeq) DeleteSeqsOlderThan(arg0 time.Time) (*int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteSeqsOlderThan", arg0)
+	ret0, _ := ret[0].(*int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteSeqsOlderThan indicates an expected call of DeleteSeqsOlderThan
+func (mr *MockValidatorSeqMockRecorder) DeleteSeqsOlderThan(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSeqsOlderThan", reflect.TypeOf((*MockValidatorSeq)(nil).DeleteSeqsOlderThan), arg0)
+}
+
 // FindAllByHeight mocks base method
 func (m *MockValidatorSeq) FindAllByHeight(arg0 int64) ([]model.ValidatorSeq, error) {
 	m.ctrl.T.Helper()
@@ -1299,6 +1314,21 @@ func (m *MockValidatorSeq) FindAllByHeight(arg0 int64) ([]model.ValidatorSeq, er
 func (mr *MockValidatorSeqMockRecorder) FindAllByHeight(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindAllByHeight", reflect.TypeOf((*MockValidatorSeq)(nil).FindAllByHeight), arg0)
+}
+
+// FindMostRecentSeq mocks base method
+func (m *MockValidatorSeq) FindMostRecentSeq() (*model.ValidatorSeq, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindMostRecentSeq")
+	ret0, _ := ret[0].(*model.ValidatorSeq)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindMostRecentSeq indicates an expected call of FindMostRecentSeq
+func (mr *MockValidatorSeqMockRecorder) FindMostRecentSeq() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindMostRecentSeq", reflect.TypeOf((*MockValidatorSeq)(nil).FindMostRecentSeq))
 }
 
 // SaveSeq mocks base method
@@ -1596,6 +1626,21 @@ func (m *MockValidatorSessionSeq) FindSessionSeqsByHeight(arg0 int64) ([]model.V
 func (mr *MockValidatorSessionSeqMockRecorder) FindSessionSeqsByHeight(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindSessionSeqsByHeight", reflect.TypeOf((*MockValidatorSessionSeq)(nil).FindSessionSeqsByHeight), arg0)
+}
+
+// GetCountsForAccounts mocks base method
+func (m *MockValidatorSessionSeq) GetCountsForAccounts(arg0 int64) (map[string]int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCountsForAccounts", arg0)
+	ret0, _ := ret[0].(map[string]int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCountsForAccounts indicates an expected call of GetCountsForAccounts
+func (mr *MockValidatorSessionSeqMockRecorder) GetCountsForAccounts(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCountsForAccounts", reflect.TypeOf((*MockValidatorSessionSeq)(nil).GetCountsForAccounts), arg0)
 }
 
 // SaveSessionSeq mocks base method
