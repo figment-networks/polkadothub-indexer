@@ -26,6 +26,7 @@ type SystemEvent struct {
 	*Model
 
 	Height int64           `json:"height"`
+	Time   types.Time      `json:"time"`
 	Actor  string          `json:"actor"`
 	Kind   SystemEventKind `json:"kind"`
 	Data   types.Jsonb     `json:"data"`
@@ -33,6 +34,7 @@ type SystemEvent struct {
 
 func (o SystemEvent) Update(m SystemEvent) {
 	o.Height = m.Height
+	o.Time = m.Time
 	o.Actor = m.Actor
 	o.Kind = m.Kind
 	o.Data = m.Data

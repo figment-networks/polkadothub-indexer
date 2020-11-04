@@ -30,6 +30,29 @@ func (s SystemEventStore) CreateOrUpdate(val *model.SystemEvent) error {
 	return s.Update(existing)
 }
 
+// FindByActor returns system events by actor
+func (s SystemEventStore) FindByActor(actorAddress string, kind *model.SystemEventKind, minHeight *int64) ([]model.SystemEvent, error) {
+	var result []model.SystemEvent
+	q := model.SystemEvent{}
+	if kind != nil {
+		q.Kind = *kind
+	}
+
+	statement := s.db.
+		Where("actor = ?", actorAddress).
+		Where(&q)
+
+	if minHeight != nil {
+		statement = statement.Where("height > ?", *minHeight)
+	}
+
+	err := statement.
+		Find(&result).
+		Error
+
+	return result, checkErr(err)
+}
+
 func (s SystemEventStore) findUnique(height int64, address string, kind model.SystemEventKind) (*model.SystemEvent, error) {
 	q := model.SystemEvent{
 		Height: height,

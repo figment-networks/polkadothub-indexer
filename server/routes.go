@@ -10,6 +10,7 @@ func (s *Server) setupRoutes() {
 	s.engine.GET("/transactions", s.handlers.GetTransactionsByHeight.Handle)
 	s.engine.GET("/account_details/:stash_account", s.handlers.GetAccountDetails.Handle)
 	s.engine.GET("/account/:stash_account", s.handlers.GetAccountByHeight.Handle)
+	s.engine.GET("/system_events/:address", s.handlers.GetSystemEventsForAddress.Handle)
 	s.engine.GET("/validator/:stash_account", s.handlers.GetValidatorByStashAccount.Handle)
 	s.engine.GET("/validators/for_min_height/:height", s.handlers.GetValidatorsForMinHeight.Handle)
 	s.engine.GET("/validators", s.handlers.GetValidatorsByHeight.Handle)
