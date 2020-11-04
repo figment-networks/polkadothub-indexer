@@ -57,7 +57,7 @@ func (s SyncablesStore) FindLastInSessionForHeight(height int64) (syncable *mode
 
 	err = s.db.
 		Where("height >= ? AND last_in_session = ?", height, true).
-		Order("height DESC").
+		Order("height ASC").
 		First(result).
 		Error
 
