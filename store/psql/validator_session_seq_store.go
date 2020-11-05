@@ -36,8 +36,10 @@ func (s ValidatorSessionSeqStore) GetCountsForAccounts(sinceSession int64) (map[
 	}
 
 	err := s.db.
+		Table(model.ValidatorSessionSeq{}.TableName()).
 		Select(getCountsQuery).
 		Where("session >= ?", sinceSession).
+		Group("stash_account").
 		Find(&result).
 		Error
 
