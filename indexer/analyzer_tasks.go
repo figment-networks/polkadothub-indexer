@@ -135,25 +135,20 @@ func (t *systemEventCreatorTask) getPrevSessionValidatorSequences(payload *paylo
 	var prevSessionValidatorSequences []model.ValidatorSeq
 	lastSyncableInPrevSession, err := t.syncablesDb.FindLastInSession(payload.Syncable.Session - 1)
 	var lastSessionHeight int64
-	// todo improve logic
-	if err != nil {
-		if err == store.ErrNotFound {
-			lastSessionHeight = t.cfg.FirstBlockHeight
-		} else {
-			return nil, err
-		}
+
+	if err == store.ErrNotFound {
+		lastSessionHeight = t.cfg.FirstBlockHeight
+	} else if err != nil {
+		return nil, err
 	} else {
 		lastSessionHeight = lastSyncableInPrevSession.Height
 	}
 
-	if payload.CurrentHeight > t.cfg.FirstBlockHeight {
-		var err error
-		prevSessionValidatorSequences, err = t.validatorSeqDb.FindAllByHeight(lastSessionHeight)
-		if err != nil {
-			return nil, err
-		}
+	if payload.CurrentHeight <= t.cfg.FirstBlockHeight {
+		return prevSessionValidatorSequences, nil
 	}
-	return prevSessionValidatorSequences, nil
+
+	return t.validatorSeqDb.FindAllByHeight(lastSessionHeight)
 }
 
 func (t *systemEventCreatorTask) getMissedBlocksSystemEvents(currSeqs []model.ValidatorSeq, currActiveSeqs []model.ValidatorSessionSeq, syncable *model.Syncable) ([]*model.SystemEvent, error) {
