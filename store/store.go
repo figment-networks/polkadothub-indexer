@@ -1,97 +1,56 @@
 package store
 
 import (
-	"github.com/figment-networks/polkadothub-indexer/metric"
-	"github.com/figment-networks/polkadothub-indexer/types"
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/postgres"
-	"reflect"
-	"time"
+	"github.com/figment-networks/polkadothub-indexer/model"
 )
 
-// NewIndexerMetric returns a new store from the connection string
-func New(connStr string) (*Store, error) {
-	conn, err := gorm.Open("postgres", connStr)
-	if err != nil {
-		return nil, err
-	}
-
-	registerPlugins(conn)
-
-	return &Store{
-		db: conn,
-
-		Database:  NewDatabaseStore(conn),
-		Syncables: NewSyncablesStore(conn),
-		Reports:   NewReportsStore(conn),
-
-		BlockSeq:            NewBlockSeqStore(conn),
-		ValidatorSessionSeq: NewValidatorSessionSeqStore(conn),
-		ValidatorEraSeq:     NewValidatorEraSeqStore(conn),
-		AccountEraSeq:       NewAccountEraSeqStore(conn),
-		EventSeq:            NewEventSeqStore(conn),
-
-		ValidatorAgg: NewValidatorAggStore(conn),
-
-		BlockSummary:     NewBlockSummaryStore(conn),
-		ValidatorSummary: NewValidatorSummaryStore(conn),
-	}, nil
+type Accounts interface {
+	AccountEraSeq
 }
 
-// Store handles all database operations
-type Store struct {
-	db *gorm.DB
-
-	Database  *DatabaseStore
-	Syncables *SyncablesStore
-	Reports   *ReportsStore
-
-	BlockSeq            *BlockSeqStore
-	ValidatorSessionSeq *ValidatorSessionSeqStore
-	ValidatorEraSeq     *ValidatorEraSeqStore
-	EventSeq            *EventSeqStore
-	AccountEraSeq       *AccountEraSeqStore
-
-	ValidatorAgg *ValidatorAggStore
-
-	BlockSummary     *BlockSummaryStore
-	ValidatorSummary *ValidatorSummaryStore
+type Blocks interface {
+	BlockSeq
+	BlockSummary
 }
 
-// Test checks the connection status
-func (s *Store) Test() error {
-	return s.db.DB().Ping()
+type Database interface {
+	GetTotalSize() (*GetTotalSizeResult, error)
 }
 
-// Close closes the database connection
-func (s *Store) Close() error {
-	return s.db.Close()
+type Events interface {
+	EventSeq
 }
 
-// SetDebugMode enabled detailed query logging
-func (s *Store) SetDebugMode(enabled bool) {
-	s.db.LogMode(enabled)
+type Reports interface {
+	baseStore
+	DeleteByKinds(kinds []model.ReportKind) error
+	FindNotCompletedByIndexVersion(indexVersion int64, kinds ...model.ReportKind) (*model.Report, error)
+	FindNotCompletedByKind(kinds ...model.ReportKind) (*model.Report, error)
+	Last() (*model.Report, error)
 }
 
-// registerPlugins registers gorm plugins
-func registerPlugins(c *gorm.DB) {
-	c.Callback().Create().Before("gorm:create").Register("db_plugin:before_create", castQuantity)
-	c.Callback().Update().Before("gorm:update").Register("db_plugin:before_update", castQuantity)
+type Syncables interface {
+	syncables
+	FindMostRecenter
 }
 
-// castQuantity casts decimal to quantity type
-func castQuantity(scope *gorm.Scope) {
-	for _, f := range scope.Fields() {
-		v := f.Field.Type().String()
-		if v == "types.Quantity" {
-			f.IsNormal = true
-			t := f.Field.Interface().(types.Quantity)
-			f.Field = reflect.ValueOf(gorm.Expr("cast(? AS DECIMAL(65,0))", t.String()))
-		}
-	}
+type Transactions interface {
+	TransactionSeq
 }
 
-func logQueryDuration(start time.Time, queryName string) {
-	elapsed := time.Since(start)
-	metric.DatabaseQueryDuration.WithLabelValues(queryName).Set(elapsed.Seconds())
+type Validators interface {
+	ValidatorAgg
+	ValidatorEraSeq
+	ValidatorSessionSeq
+	ValidatorSummary
+}
+
+type GetTotalSizeResult struct {
+	Size float64 `json:"size"`
+}
+
+type baseStore interface {
+	Create(record interface{}) error
+	Update(record interface{}) error
+	Save(record interface{}) error
 }

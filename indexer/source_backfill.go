@@ -15,11 +15,12 @@ var (
 	_ pipeline.Source = (*backfillSource)(nil)
 )
 
-func NewBackfillSource(cfg *config.Config, db *store.Store, client *client.Client, indexVersion int64, isLastInSession, isLastInEra bool) (*backfillSource, error) {
+func NewBackfillSource(cfg *config.Config, syncablesDb store.Syncables, client *client.Client, indexVersion int64, isLastInSession, isLastInEra bool) (*backfillSource, error) {
 	src := &backfillSource{
-		cfg:                 cfg,
-		db:                  db,
-		client:              client,
+		cfg:         cfg,
+		syncablesDb: syncablesDb,
+		client:      client,
+
 		currentIndexVersion: indexVersion,
 	}
 
@@ -31,12 +32,13 @@ func NewBackfillSource(cfg *config.Config, db *store.Store, client *client.Clien
 }
 
 type backfillSource struct {
-	cfg                 *config.Config
-	db                  *store.Store
-	client              *client.Client
-	useWhiteList        bool
-	heightsWhitelist    map[int64]int64
-	whiteListStages     []pipeline.StageName
+	cfg              *config.Config
+	syncablesDb      store.Syncables
+	client           *client.Client
+	useWhiteList     bool
+	heightsWhitelist map[int64]int64
+	whiteListStages  []pipeline.StageName
+
 	currentIndexVersion int64
 	currentHeight       int64
 	startHeight         int64
@@ -102,7 +104,7 @@ func (s *backfillSource) init(isLastInSession, isLastInEra bool) error {
 }
 
 func (s *backfillSource) setStartHeight() error {
-	syncable, err := s.db.Syncables.FindFirstByDifferentIndexVersion(s.currentIndexVersion)
+	syncable, err := s.syncablesDb.FindFirstByDifferentIndexVersion(s.currentIndexVersion)
 	if err != nil {
 		if err == store.ErrNotFound {
 			return errors.New(fmt.Sprintf("nothing to backfill [currentIndexVersion=%d]", s.currentIndexVersion))
@@ -116,7 +118,7 @@ func (s *backfillSource) setStartHeight() error {
 }
 
 func (s *backfillSource) setEndHeight() error {
-	syncable, err := s.db.Syncables.FindMostRecentByDifferentIndexVersion(s.currentIndexVersion)
+	syncable, err := s.syncablesDb.FindMostRecentByDifferentIndexVersion(s.currentIndexVersion)
 	if err != nil {
 		if err == store.ErrNotFound {
 			return errors.New(fmt.Sprintf("nothing to backfill [currentIndexVersion=%d]", s.currentIndexVersion))
@@ -129,7 +131,7 @@ func (s *backfillSource) setEndHeight() error {
 }
 
 func (s *backfillSource) setHeightsWhitelist(isLastInSession, isLastInEra bool) error {
-	syncables, err := s.db.Syncables.FindAllByLastInSessionOrEra(s.currentIndexVersion, isLastInSession, isLastInEra)
+	syncables, err := s.syncablesDb.FindAllByLastInSessionOrEra(s.currentIndexVersion, isLastInSession, isLastInEra)
 	if err != nil {
 		return err
 	}

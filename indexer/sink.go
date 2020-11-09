@@ -3,33 +3,35 @@ package indexer
 import (
 	"context"
 	"fmt"
+
 	"github.com/figment-networks/indexing-engine/pipeline"
 	"github.com/figment-networks/polkadothub-indexer/metric"
 	"github.com/figment-networks/polkadothub-indexer/model"
 	"github.com/figment-networks/polkadothub-indexer/store"
-	"github.com/figment-networks/polkadothub-indexer/types"
 	"github.com/figment-networks/polkadothub-indexer/utils/logger"
 	"github.com/pkg/errors"
-	"time"
 )
 
 var (
 	_ pipeline.Sink = (*sink)(nil)
 )
 
-func NewSink(db *store.Store, versionNumber int64) *sink {
+func NewSink(databaseDb store.Database, syncablesDb store.Syncables, versionNumber int64) *sink {
 	return &sink{
-		db:            db,
+		databaseDb:    databaseDb,
+		syncablesDb:   syncablesDb,
 		versionNumber: versionNumber,
 	}
 }
 
 type sink struct {
-	db            *store.Store
+	databaseDb    store.Database
+	syncablesDb   store.Syncables
 	versionNumber int64
 
 	successCount int64
 }
+
 
 func (s *sink) Consume(ctx context.Context, p pipeline.Payload) error {
 	payload := p.(*payload)
@@ -55,16 +57,24 @@ func (s *sink) Consume(ctx context.Context, p pipeline.Payload) error {
 	return nil
 }
 
+func (s *sink) setProcessed(payload *payload) error {
+	payload.Syncable.MarkProcessed(s.versionNumber)
+	if err := s.syncablesDb.SaveSyncable(payload.Syncable); err != nil {
+		return errors.Wrap(err, "failed saving syncable in sink")
+	}
+	return nil
+}
+
 func (s *sink) setProcessed(syncable *model.Syncable) error {
 	syncable.MarkProcessed(s.versionNumber)
-	if err := s.db.Syncables.Save(syncable); err != nil {
+	if err := s.syncablesDb.SaveSyncable(syncable); err != nil {
 		return errors.Wrap(err, "failed saving syncable in sink")
 	}
 	return nil
 }
 
 func (s *sink) addMetrics(syncable *model.Syncable) error {
-	res, err := s.db.Database.GetTotalSize()
+	res, err := s.databaseDb.GetTotalSize()
 	if err != nil {
 		return err
 	}
@@ -73,13 +83,4 @@ func (s *sink) addMetrics(syncable *model.Syncable) error {
 	metric.IndexerHeightDuration.Set(syncable.Duration.Seconds())
 	metric.IndexerDbSizeAfterHeight.Set(res.Size)
 	return nil
-}
-
-func (s *sink) prepareSyncableToProcess(currentHeight int64) (*model.Syncable, error) {
-	syncable, err := s.db.Syncables.FindByHeight(currentHeight)
-	if err != nil {
-		return nil, err
-	}
-	syncable.StartedAt = *types.NewTimeFromTime(time.Now())
-	return syncable, nil
 }

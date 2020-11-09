@@ -1,7 +1,8 @@
-package store
+package psql
 
 import (
 	"github.com/figment-networks/polkadothub-indexer/model"
+	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/types"
 	"github.com/jinzhu/gorm"
 )
@@ -56,7 +57,7 @@ func (s SyncablesStore) FindLastInSessionForHeight(height int64) (syncable *mode
 
 	err = s.db.
 		Where("height >= ? AND last_in_session = ?", height, true).
-		Order("height DESC").
+		Order("height ASC").
 		First(result).
 		Error
 
@@ -82,6 +83,32 @@ func (s SyncablesStore) FindLastInEra(era int64) (syncable *model.Syncable, err 
 
 	err = s.db.
 		Where("era = ?", era).
+		Order("height DESC").
+		First(result).
+		Error
+
+	return result, checkErr(err)
+}
+
+// FindLastEndOfSession finds last end of session syncable
+func (s SyncablesStore) FindLastEndOfSession() (syncable *model.Syncable, err error) {
+	result := &model.Syncable{}
+
+	err = s.db.
+		Where("last_in_session = ?", true).
+		Order("height DESC").
+		First(result).
+		Error
+
+	return result, checkErr(err)
+}
+
+// FindLastEndOfEra finds last end of era syncable
+func (s SyncablesStore) FindLastEndOfEra() (syncable *model.Syncable, err error) {
+	result := &model.Syncable{}
+
+	err = s.db.
+		Where("last_in_era = ?", true).
 		Order("height DESC").
 		First(result).
 		Error
@@ -117,12 +144,16 @@ func (s SyncablesStore) FindMostRecentByDifferentIndexVersion(indexVersion int64
 func (s SyncablesStore) CreateOrUpdate(val *model.Syncable) error {
 	existing, err := s.FindByHeight(val.Height)
 	if err != nil {
-		if err == ErrNotFound {
+		if err == store.ErrNotFound {
 			return s.Create(val)
 		}
 		return err
 	}
 	return s.Update(existing)
+}
+
+func (s SyncablesStore) SaveSyncable(val *model.Syncable) error {
+	return s.Save(val)
 }
 
 // SetProcessedAtForRange creates a new syncable or updates an existing one

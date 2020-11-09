@@ -20,13 +20,17 @@ var (
 
 type purgeUseCase struct {
 	cfg *config.Config
-	db  *store.Store
+
+	blockDb     store.Blocks
+	validatorDb store.Validators
 }
 
-func NewPurgeUseCase(cfg *config.Config, db *store.Store) *purgeUseCase {
+func NewPurgeUseCase(cfg *config.Config, blockDb store.Blocks, validatorDb store.Validators) *purgeUseCase {
 	return &purgeUseCase{
 		cfg: cfg,
-		db:  db,
+
+		blockDb:     blockDb,
+		validatorDb: validatorDb,
 	}
 }
 
@@ -74,7 +78,7 @@ func (uc *purgeUseCase) purgeValidators(currentIndexVersion int64) error {
 }
 
 func (uc *purgeUseCase) purgeBlockSequences(currentIndexVersion int64) error {
-	blockSeq, err := uc.db.BlockSeq.FindMostRecent()
+	blockSeq, err := uc.blockDb.FindMostRecentSeq()
 	if err != nil {
 		return err
 	}
@@ -90,14 +94,14 @@ func (uc *purgeUseCase) purgeBlockSequences(currentIndexVersion int64) error {
 
 	purgeThresholdFromLastSeq := lastSeqTime.Add(-*duration)
 
-	activityPeriods, err := uc.db.BlockSummary.FindActivityPeriods(types.IntervalDaily, currentIndexVersion)
+	activityPeriods, err := uc.blockDb.FindActivityPeriods(types.IntervalDaily, currentIndexVersion)
 	if err != nil {
 		return err
 	}
 
 	logger.Info(fmt.Sprintf("purging summarized block sequences... [older than=%s]", purgeThresholdFromLastSeq))
 
-	deletedCount, err := uc.db.BlockSeq.DeleteOlderThan(purgeThresholdFromLastSeq, activityPeriods)
+	deletedCount, err := uc.blockDb.DeleteSeqOlderThan(purgeThresholdFromLastSeq, activityPeriods)
 	if err != nil {
 		return err
 	}
@@ -108,7 +112,7 @@ func (uc *purgeUseCase) purgeBlockSequences(currentIndexVersion int64) error {
 }
 
 func (uc *purgeUseCase) purgeBlockSummaries(interval types.SummaryInterval, purgeInterval string) error {
-	blockSummary, err := uc.db.BlockSummary.FindMostRecentByInterval(interval)
+	blockSummary, err := uc.blockDb.FindMostRecentByInterval(interval)
 	if err != nil {
 		return err
 	}
@@ -126,7 +130,7 @@ func (uc *purgeUseCase) purgeBlockSummaries(interval types.SummaryInterval, purg
 
 	logger.Info(fmt.Sprintf("purging block summaries... [interval=%s] [older than=%s]", interval, purgeThreshold))
 
-	deletedCount, err := uc.db.BlockSummary.DeleteOlderThan(interval, purgeThreshold)
+	deletedCount, err := uc.blockDb.DeleteOlderThan(interval, purgeThreshold)
 	if err != nil {
 		return err
 	}
@@ -137,13 +141,13 @@ func (uc *purgeUseCase) purgeBlockSummaries(interval types.SummaryInterval, purg
 }
 
 func (uc *purgeUseCase) purgeValidatorSessionSequences(currentIndexVersion int64) error {
-	validatorSeq, err := uc.db.ValidatorSessionSeq.FindMostRecent()
+	validatorSeq, err := uc.validatorDb.FindMostRecentSessionSeq()
 	if err != nil {
 		return err
 	}
 	lastSeqTime := validatorSeq.Time.Time
 
-	validatorSummary, err := uc.db.ValidatorSummary.FindMostRecent()
+	validatorSummary, err := uc.validatorDb.FindMostRecentSummary()
 	if err != nil {
 		return err
 	}
@@ -168,7 +172,7 @@ func (uc *purgeUseCase) purgeValidatorSessionSequences(currentIndexVersion int64
 
 	logger.Info(fmt.Sprintf("purging validator session sequences... [older than=%s]", purgeThreshold))
 
-	deletedCount, err := uc.db.ValidatorSessionSeq.DeleteOlderThan(purgeThreshold)
+	deletedCount, err := uc.validatorDb.DeleteSessionSeqsOlderThan(purgeThreshold)
 	if err != nil {
 		return err
 	}
@@ -179,7 +183,7 @@ func (uc *purgeUseCase) purgeValidatorSessionSequences(currentIndexVersion int64
 }
 
 func (uc *purgeUseCase) purgeValidatorSummaries(interval types.SummaryInterval, purgeInterval string) error {
-	blockSummary, err := uc.db.ValidatorSummary.FindMostRecentByInterval(interval)
+	blockSummary, err := uc.validatorDb.FindMostRecentByInterval(interval)
 	if err != nil {
 		return err
 	}
@@ -197,7 +201,7 @@ func (uc *purgeUseCase) purgeValidatorSummaries(interval types.SummaryInterval, 
 
 	logger.Info(fmt.Sprintf("purging validator summaries... [interval=%s] [older than=%s]", interval, purgeThreshold))
 
-	deletedCount, err := uc.db.ValidatorSummary.DeleteOlderThan(interval, purgeThreshold)
+	deletedCount, err := uc.validatorDb.DeleteSummaryOlderThan(interval, purgeThreshold)
 	if err != nil {
 		return err
 	}

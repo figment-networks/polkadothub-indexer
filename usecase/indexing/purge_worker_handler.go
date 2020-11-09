@@ -2,7 +2,7 @@ package indexing
 
 import (
 	"context"
-	"github.com/figment-networks/polkadothub-indexer/client"
+
 	"github.com/figment-networks/polkadothub-indexer/config"
 	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/types"
@@ -14,18 +14,20 @@ var (
 )
 
 type purgeWorkerHandler struct {
-	cfg    *config.Config
-	db     *store.Store
-	client *client.Client
+	cfg *config.Config
 
 	useCase *purgeUseCase
+
+	blockDb     store.Blocks
+	validatorDb store.Validators
 }
 
-func NewPurgeWorkerHandler(cfg *config.Config, db *store.Store, c *client.Client) *purgeWorkerHandler {
+func NewPurgeWorkerHandler(cfg *config.Config, blockDb store.Blocks, validatorDb store.Validators) *purgeWorkerHandler {
 	return &purgeWorkerHandler{
-		cfg:    cfg,
-		db:     db,
-		client: c,
+		cfg: cfg,
+
+		blockDb:     blockDb,
+		validatorDb: validatorDb,
 	}
 }
 
@@ -43,10 +45,7 @@ func (h *purgeWorkerHandler) Handle() {
 
 func (h *purgeWorkerHandler) getUseCase() *purgeUseCase {
 	if h.useCase == nil {
-		return NewPurgeUseCase(h.cfg, h.db)
+		return NewPurgeUseCase(h.cfg, h.blockDb, h.validatorDb)
 	}
 	return h.useCase
 }
-
-
-

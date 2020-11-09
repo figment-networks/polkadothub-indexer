@@ -1,7 +1,6 @@
 package validator
 
 import (
-	"github.com/figment-networks/polkadothub-indexer/client"
 	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/types"
 	"github.com/figment-networks/polkadothub-indexer/usecase/http"
@@ -17,16 +16,16 @@ var (
 )
 
 type getSummaryHttpHandler struct {
-	db     *store.Store
-	client *client.Client
-
 	useCase *getSummaryUseCase
+
+	syncablesDb        store.Syncables
+	validatorSummaryDb store.ValidatorSummary
 }
 
-func NewGetSummaryHttpHandler(db *store.Store, c *client.Client) *getSummaryHttpHandler {
+func NewGetSummaryHttpHandler(syncablesDb store.Syncables, validatorSummaryDb store.ValidatorSummary) *getSummaryHttpHandler {
 	return &getSummaryHttpHandler{
-		db:     db,
-		client: c,
+		syncablesDb:        syncablesDb,
+		validatorSummaryDb: validatorSummaryDb,
 	}
 }
 
@@ -69,7 +68,7 @@ func (h *getSummaryHttpHandler) validateParams(c *gin.Context) (*GetSummaryReque
 
 func (h *getSummaryHttpHandler) getUseCase() *getSummaryUseCase {
 	if h.useCase == nil {
-		return NewGetSummaryUseCase(h.db)
+		return NewGetSummaryUseCase(h.syncablesDb, h.validatorSummaryDb)
 	}
 	return h.useCase
 }

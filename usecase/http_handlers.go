@@ -13,20 +13,22 @@ import (
 	"github.com/figment-networks/polkadothub-indexer/usecase/validator"
 )
 
-func NewHttpHandlers(cfg *config.Config, db *store.Store, c *client.Client) *HttpHandlers {
+func NewHttpHandlers(cfg *config.Config, cli *client.Client, accountDb store.Accounts, blockDb store.Blocks, databaseDb store.Database, eventDb store.Events, reportDb store.Reports,
+	syncableDb store.Syncables, transactionDb store.Transactions, validatorDb store.Validators,
+) *HttpHandlers {
 	return &HttpHandlers{
 		Health:                     health.NewHealthHttpHandler(),
-		GetStatus:                  chain.NewGetStatusHttpHandler(db, c),
-		GetBlockByHeight:           block.NewGetByHeightHttpHandler(db, c),
-		GetBlockTimes:              block.NewGetBlockTimesHttpHandler(db, c),
-		GetBlockSummary:            block.NewGetBlockSummaryHttpHandler(db, c),
-		GetTransactionsByHeight:    transaction.NewGetByHeightHttpHandler(db, c),
-		GetAccountByHeight:         account.NewGetByHeightHttpHandler(db, c),
-		GetAccountDetails:          account.NewGetDetailsHttpHandler(db, c),
-		GetValidatorsByHeight:      validator.NewGetByHeightHttpHandler(cfg, db, c),
-		GetValidatorByStashAccount: validator.NewGetByStashAccountHttpHandler(db, c),
-		GetValidatorSummary:        validator.NewGetSummaryHttpHandler(db, c),
-		GetValidatorsForMinHeight:  validator.NewGetForMinHeightHttpHandler(db, c),
+		GetStatus:                  chain.NewGetStatusHttpHandler(cli, syncableDb),
+		GetBlockByHeight:           block.NewGetByHeightHttpHandler(cli, syncableDb),
+		GetBlockTimes:              block.NewGetBlockTimesHttpHandler(blockDb),
+		GetBlockSummary:            block.NewGetBlockSummaryHttpHandler(blockDb),
+		GetTransactionsByHeight:    transaction.NewGetByHeightHttpHandler(cli, syncableDb),
+		GetAccountByHeight:         account.NewGetByHeightHttpHandler(cli, syncableDb),
+		GetAccountDetails:          account.NewGetDetailsHttpHandler(cli, accountDb, eventDb),
+		GetValidatorsByHeight:      validator.NewGetByHeightHttpHandler(cfg, cli, accountDb, blockDb, databaseDb, eventDb, reportDb, syncableDb, transactionDb, validatorDb),
+		GetValidatorByStashAccount: validator.NewGetByStashAccountHttpHandler(accountDb, validatorDb),
+		GetValidatorSummary:        validator.NewGetSummaryHttpHandler(syncableDb, validatorDb),
+		GetValidatorsForMinHeight:  validator.NewGetForMinHeightHttpHandler(syncableDb, validatorDb),
 	}
 }
 

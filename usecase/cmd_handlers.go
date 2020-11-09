@@ -8,13 +8,15 @@ import (
 	"github.com/figment-networks/polkadothub-indexer/usecase/indexing"
 )
 
-func NewCmdHandlers(cfg *config.Config, db *store.Store, c *client.Client) *CmdHandlers {
+func NewCmdHandlers(cfg *config.Config, cli *client.Client, accountDb store.Accounts, blockDb store.Blocks, databaseDb store.Database, eventDb store.Events, reportDb store.Reports,
+	syncableDb store.Syncables, transactionDb store.Transactions, validatorDb store.Validators,
+) *CmdHandlers {
 	return &CmdHandlers{
-		GetStatus:        chain.NewGetStatusCmdHandler(db, c),
-		StartIndexer:     indexing.NewStartCmdHandler(cfg, db, c),
-		BackfillIndexer:  indexing.NewBackfillCmdHandler(cfg, db, c),
-		PurgeIndexer:     indexing.NewPurgeCmdHandler(cfg, db, c),
-		SummarizeIndexer: indexing.NewSummarizeCmdHandler(cfg, db, c),
+		GetStatus:        chain.NewGetStatusCmdHandler(cli, syncableDb),
+		StartIndexer:     indexing.NewStartCmdHandler(cfg, cli, accountDb, blockDb, databaseDb, eventDb, reportDb, syncableDb, transactionDb, validatorDb),
+		BackfillIndexer:  indexing.NewBackfillCmdHandler(cfg, cli, accountDb, blockDb, databaseDb, eventDb, reportDb, syncableDb, transactionDb, validatorDb),
+		PurgeIndexer:     indexing.NewPurgeCmdHandler(cfg, blockDb, validatorDb),
+		SummarizeIndexer: indexing.NewSummarizeCmdHandler(cfg, blockDb, validatorDb),
 	}
 }
 
