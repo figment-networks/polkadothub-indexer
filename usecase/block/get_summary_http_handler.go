@@ -1,7 +1,6 @@
 package block
 
 import (
-	"github.com/figment-networks/polkadothub-indexer/client"
 	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/types"
 	"github.com/figment-networks/polkadothub-indexer/usecase/http"
@@ -17,16 +16,14 @@ var (
 )
 
 type getBlockSummaryHttpHandler struct {
-	db     *store.Store
-	client *client.Client
-
 	useCase *getBlockSummaryUseCase
+
+	blockSummaryDb store.BlockSummary
 }
 
-func NewGetBlockSummaryHttpHandler(db *store.Store, client *client.Client) *getBlockSummaryHttpHandler {
+func NewGetBlockSummaryHttpHandler(blockSummaryDb store.BlockSummary) *getBlockSummaryHttpHandler {
 	return &getBlockSummaryHttpHandler{
-		db:     db,
-		client: client,
+		blockSummaryDb: blockSummaryDb,
 	}
 }
 
@@ -68,7 +65,7 @@ func (h *getBlockSummaryHttpHandler) validateParams(c *gin.Context) (*GetBlockTi
 
 func (h *getBlockSummaryHttpHandler) getUseCase() *getBlockSummaryUseCase {
 	if h.useCase == nil {
-		return NewGetBlockSummaryUseCase(h.db)
+		return NewGetBlockSummaryUseCase(h.blockSummaryDb)
 	}
 	return h.useCase
 }

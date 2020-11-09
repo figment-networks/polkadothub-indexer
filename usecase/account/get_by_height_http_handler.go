@@ -15,16 +15,17 @@ var (
 )
 
 type getByHeightHttpHandler struct {
-	db     *store.Store
 	client *client.Client
 
 	useCase *getByHeightUseCase
+
+	syncablesDb store.FindMostRecenter
 }
 
-func NewGetByHeightHttpHandler(db *store.Store, c *client.Client) *getByHeightHttpHandler {
+func NewGetByHeightHttpHandler(c *client.Client, syncablesDb store.FindMostRecenter) *getByHeightHttpHandler {
 	return &getByHeightHttpHandler{
-		db:     db,
-		client: c,
+		client:      c,
+		syncablesDb: syncablesDb,
 	}
 }
 
@@ -58,7 +59,7 @@ func (h *getByHeightHttpHandler) Handle(c *gin.Context) {
 
 func (h *getByHeightHttpHandler) getUseCase() *getByHeightUseCase {
 	if h.useCase == nil {
-		return NewGetByHeightUseCase(h.db, h.client)
+		return NewGetByHeightUseCase(h.client, h.syncablesDb)
 	}
 	return h.useCase
 }

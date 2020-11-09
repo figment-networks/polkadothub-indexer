@@ -17,17 +17,35 @@ var (
 
 type getByHeightHttpHandler struct {
 	cfg    *config.Config
-	db     *store.Store
 	client *client.Client
 
 	useCase *getByHeightUseCase
+
+	accountDb     store.Accounts
+	blockDb       store.Blocks
+	databaseDb    store.Database
+	eventDb       store.Events
+	reportDb      store.Reports
+	syncableDb    store.Syncables
+	transactionDb store.Transactions
+	validatorDb   store.Validators
 }
 
-func NewGetByHeightHttpHandler(cfg *config.Config, db *store.Store, c *client.Client) *getByHeightHttpHandler {
+func NewGetByHeightHttpHandler(cfg *config.Config, cli *client.Client, accountDb store.Accounts, blockDb store.Blocks, databaseDb store.Database, eventDb store.Events, reportDb store.Reports,
+	syncableDb store.Syncables, transactionDb store.Transactions, validatorDb store.Validators,
+) *getByHeightHttpHandler {
 	return &getByHeightHttpHandler{
 		cfg:    cfg,
-		db:     db,
-		client: c,
+		client: cli,
+
+		accountDb:     accountDb,
+		blockDb:       blockDb,
+		databaseDb:    databaseDb,
+		eventDb:       eventDb,
+		reportDb:      reportDb,
+		syncableDb:    syncableDb,
+		transactionDb: transactionDb,
+		validatorDb:   validatorDb,
 	}
 }
 
@@ -55,7 +73,7 @@ func (h *getByHeightHttpHandler) Handle(c *gin.Context) {
 
 func (h *getByHeightHttpHandler) getUseCase() *getByHeightUseCase {
 	if h.useCase == nil {
-		return NewGetByHeightUseCase(h.cfg, h.db, h.client)
+		return NewGetByHeightUseCase(h.cfg, h.client, h.accountDb, h.blockDb, h.databaseDb, h.eventDb, h.reportDb, h.syncableDb, h.transactionDb, h.validatorDb)
 	}
 	return h.useCase
 }

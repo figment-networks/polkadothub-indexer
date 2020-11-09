@@ -16,6 +16,14 @@ type EventSeq struct {
 	Section        string      `json:"section"`
 }
 
+type EventSeqWithTxHash struct {
+	Height  int64       `json:"height"`
+	Data    types.Jsonb `json:"data"`
+	Method  string      `json:"method"`
+	Section string      `json:"section"`
+	TxHash  string      `json:"hash"`
+}
+
 func (EventSeq) TableName() string {
 	return "event_sequences"
 }

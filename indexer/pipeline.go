@@ -27,15 +27,18 @@ var (
 
 type indexingPipeline struct {
 	cfg    *config.Config
-	db     *store.Store
 	client *client.Client
 
 	status       *pipelineStatus
 	configParser ConfigParser
 	pipeline     pipeline.CustomPipeline
+
+	databaseDb store.Database
+	reportDb   store.Reports
+	syncableDb store.Syncables
 }
 
-func NewPipeline(cfg *config.Config, db *store.Store, client *client.Client) (*indexingPipeline, error) {
+func NewPipeline(cfg *config.Config, cli *client.Client, accountDb store.Accounts, blockDb store.Blocks, databaseDb store.Database, eventDb store.Events, reportDb store.Reports, syncableDb store.Syncables, transactionDb store.Transactions, validatorDb store.Validators) (*indexingPipeline, error) {
 	p := pipeline.NewCustom(NewPayloadFactory())
 
 	// Setup logger
@@ -43,12 +46,12 @@ func NewPipeline(cfg *config.Config, db *store.Store, client *client.Client) (*i
 
 	// Fetcher stage
 	p.AddStage(
-		pipeline.NewStageWithTasks(pipeline.StageFetcher, pipeline.RetryingTask(NewFetcherTask(client.Height), isTransient, maxRetries)),
+		pipeline.NewStageWithTasks(pipeline.StageFetcher, pipeline.RetryingTask(NewFetcherTask(cli.Height), isTransient, maxRetries)),
 	)
 
 	// Syncer stage
 	p.AddStage(
-		pipeline.NewStageWithTasks(pipeline.StageSyncer, pipeline.RetryingTask(NewMainSyncerTask(db), isTransient, maxRetries)),
+		pipeline.NewStageWithTasks(pipeline.StageSyncer, pipeline.RetryingTask(NewMainSyncerTask(syncableDb), isTransient, maxRetries)),
 	)
 
 	// Set parser stage
@@ -56,19 +59,19 @@ func NewPipeline(cfg *config.Config, db *store.Store, client *client.Client) (*i
 		pipeline.NewAsyncStageWithTasks(
 			pipeline.StageParser,
 			NewBlockParserTask(),
-			NewValidatorsParserTask(client.Account),
+			NewValidatorsParserTask(cli.Account),
 		),
 	)
 
-	// Set sequencer stage
 	p.AddStage(
 		pipeline.NewAsyncStageWithTasks(
 			pipeline.StageSequencer,
-			pipeline.RetryingTask(NewBlockSeqCreatorTask(db), isTransient, maxRetries),
-			pipeline.RetryingTask(NewValidatorSessionSeqCreatorTask(cfg, db), isTransient, maxRetries),
-			pipeline.RetryingTask(NewValidatorEraSeqCreatorTask(cfg, db), isTransient, maxRetries),
-			pipeline.RetryingTask(NewEventSeqCreatorTask(db), isTransient, maxRetries),
-			pipeline.RetryingTask(NewAccountEraSeqCreatorTask(cfg, db), isTransient, maxRetries),
+			pipeline.RetryingTask(NewBlockSeqCreatorTask(blockDb), isTransient, maxRetries),
+			pipeline.RetryingTask(NewValidatorSessionSeqCreatorTask(cfg, syncableDb, validatorDb), isTransient, maxRetries),
+			pipeline.RetryingTask(NewValidatorEraSeqCreatorTask(cfg, syncableDb, validatorDb), isTransient, maxRetries),
+			pipeline.RetryingTask(NewEventSeqCreatorTask(eventDb), isTransient, maxRetries),
+			pipeline.RetryingTask(NewAccountEraSeqCreatorTask(cfg, accountDb, syncableDb), isTransient, maxRetries),
+			pipeline.RetryingTask(NewTransactionSeqCreatorTask(transactionDb), isTransient, maxRetries),
 		),
 	)
 
@@ -76,7 +79,7 @@ func NewPipeline(cfg *config.Config, db *store.Store, client *client.Client) (*i
 	p.AddStage(
 		pipeline.NewStageWithTasks(
 			pipeline.StageAggregator,
-			pipeline.RetryingTask(NewValidatorAggCreatorTask(db), isTransient, maxRetries),
+			pipeline.RetryingTask(NewValidatorAggCreatorTask(validatorDb), isTransient, maxRetries),
 		),
 	)
 
@@ -84,13 +87,14 @@ func NewPipeline(cfg *config.Config, db *store.Store, client *client.Client) (*i
 	p.AddStage(
 		pipeline.NewAsyncStageWithTasks(
 			pipeline.StagePersistor,
-			pipeline.RetryingTask(NewSyncerPersistorTask(db), isTransient, maxRetries),
-			pipeline.RetryingTask(NewBlockSeqPersistorTask(db), isTransient, maxRetries),
-			pipeline.RetryingTask(NewValidatorSessionSeqPersistorTask(db), isTransient, maxRetries),
-			pipeline.RetryingTask(NewValidatorEraSeqPersistorTask(db), isTransient, maxRetries),
-			pipeline.RetryingTask(NewValidatorAggPersistorTask(db), isTransient, maxRetries),
-			pipeline.RetryingTask(NewEventSeqPersistorTask(db), isTransient, maxRetries),
-			pipeline.RetryingTask(NewAccountEraSeqPersistorTask(db), isTransient, maxRetries),
+			pipeline.RetryingTask(NewSyncerPersistorTask(syncableDb), isTransient, maxRetries),
+			pipeline.RetryingTask(NewBlockSeqPersistorTask(blockDb), isTransient, maxRetries),
+			pipeline.RetryingTask(NewValidatorSessionSeqPersistorTask(validatorDb), isTransient, maxRetries),
+			pipeline.RetryingTask(NewValidatorEraSeqPersistorTask(validatorDb), isTransient, maxRetries),
+			pipeline.RetryingTask(NewValidatorAggPersistorTask(validatorDb), isTransient, maxRetries),
+			pipeline.RetryingTask(NewEventSeqPersistorTask(eventDb), isTransient, maxRetries),
+			pipeline.RetryingTask(NewAccountEraSeqPersistorTask(accountDb), isTransient, maxRetries),
+			pipeline.RetryingTask(NewTransactionSeqPersistorTask(transactionDb), isTransient, maxRetries),
 		),
 	)
 
@@ -100,7 +104,7 @@ func NewPipeline(cfg *config.Config, db *store.Store, client *client.Client) (*i
 		return nil, err
 	}
 
-	statusChecker := pipelineStatusChecker{db.Syncables, configParser.GetCurrentVersionId()}
+	statusChecker := pipelineStatusChecker{syncableDb, configParser.GetCurrentVersionId()}
 	pipelineStatus, err := statusChecker.getStatus()
 	if err != nil {
 		return nil, err
@@ -108,12 +112,15 @@ func NewPipeline(cfg *config.Config, db *store.Store, client *client.Client) (*i
 
 	return &indexingPipeline{
 		cfg:    cfg,
-		db:     db,
-		client: client,
+		client: cli,
 
 		pipeline:     p,
 		status:       pipelineStatus,
 		configParser: configParser,
+
+		databaseDb: databaseDb,
+		reportDb:   reportDb,
+		syncableDb: syncableDb,
 	}, nil
 }
 
@@ -130,7 +137,7 @@ func (p *indexingPipeline) Start(ctx context.Context, indexCfg IndexConfig) erro
 
 	indexVersion := p.configParser.GetCurrentVersionId()
 
-	source, err := NewIndexSource(p.cfg, p.db, p.client, &IndexSourceConfig{
+	source, err := NewIndexSource(p.cfg, p.syncableDb, p.client, &IndexSourceConfig{
 		BatchSize:   indexCfg.BatchSize,
 		StartHeight: indexCfg.StartHeight,
 	})
@@ -138,14 +145,14 @@ func (p *indexingPipeline) Start(ctx context.Context, indexCfg IndexConfig) erro
 		return err
 	}
 
-	sink := NewSink(p.db, indexVersion)
+	sink := NewSink(p.databaseDb, p.syncableDb, indexVersion)
 
 	reportCreator := &reportCreator{
 		kind:         model.ReportKindIndex,
 		indexVersion: indexVersion,
 		startHeight:  source.startHeight,
 		endHeight:    source.endHeight,
-		store:        p.db.Reports,
+		reportDb:     p.reportDb,
 	}
 
 	if err := reportCreator.create(); err != nil {
@@ -199,12 +206,12 @@ func (p *indexingPipeline) Backfill(ctx context.Context, backfillCfg BackfillCon
 	indexVersion := p.configParser.GetCurrentVersionId()
 	isLastInSession := p.configParser.IsLastInSession()
 	isLastInEra := p.configParser.IsLastInEra()
-	source, err := NewBackfillSource(p.cfg, p.db, p.client, indexVersion, isLastInSession, isLastInEra)
+	source, err := NewBackfillSource(p.cfg, p.syncableDb, p.client, indexVersion, isLastInSession, isLastInEra)
 	if err != nil {
 		return err
 	}
 
-	sink := NewSink(p.db, indexVersion)
+	sink := NewSink(p.databaseDb, p.syncableDb, indexVersion)
 
 	kind := model.ReportKindSequentialReindex
 	if backfillCfg.Parallel {
@@ -212,7 +219,7 @@ func (p *indexingPipeline) Backfill(ctx context.Context, backfillCfg BackfillCon
 	}
 
 	if backfillCfg.Force {
-		if err := p.db.Reports.DeleteByKinds([]model.ReportKind{model.ReportKindParallelReindex, model.ReportKindSequentialReindex}); err != nil {
+		if err := p.reportDb.DeleteByKinds([]model.ReportKind{model.ReportKindParallelReindex, model.ReportKindSequentialReindex}); err != nil {
 			return err
 		}
 	}
@@ -222,7 +229,7 @@ func (p *indexingPipeline) Backfill(ctx context.Context, backfillCfg BackfillCon
 		indexVersion: indexVersion,
 		startHeight:  source.startHeight,
 		endHeight:    source.endHeight,
-		store:        p.db.Reports,
+		reportDb:     p.reportDb,
 	}
 
 	versionIds := p.status.missingVersionIds
@@ -239,7 +246,7 @@ func (p *indexingPipeline) Backfill(ctx context.Context, backfillCfg BackfillCon
 		return err
 	}
 
-	if err := p.db.Syncables.SetProcessedAtForRange(reportCreator.report.ID, source.startHeight, source.endHeight); err != nil {
+	if err := p.syncableDb.SetProcessedAtForRange(reportCreator.report.ID, source.startHeight, source.endHeight); err != nil {
 		return err
 	}
 

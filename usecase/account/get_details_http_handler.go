@@ -6,6 +6,7 @@ import (
 	"github.com/figment-networks/polkadothub-indexer/types"
 	"github.com/figment-networks/polkadothub-indexer/usecase/http"
 	"github.com/figment-networks/polkadothub-indexer/utils/logger"
+
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 )
@@ -15,16 +16,20 @@ var (
 )
 
 type getDetailsHttpHandler struct {
-	db     *store.Store
 	client *client.Client
 
 	useCase *getDetailsUseCase
+
+	accountEraSeqDb store.AccountEraSeq
+	eventSeqDb      store.EventSeq
 }
 
-func NewGetDetailsHttpHandler(db *store.Store, c *client.Client) *getDetailsHttpHandler {
+func NewGetDetailsHttpHandler(c *client.Client, accountEraSeqDb store.AccountEraSeq, eventSeqDb store.EventSeq) *getDetailsHttpHandler {
 	return &getDetailsHttpHandler{
-		db:     db,
 		client: c,
+
+		accountEraSeqDb: accountEraSeqDb,
+		eventSeqDb:      eventSeqDb,
 	}
 }
 
@@ -52,7 +57,7 @@ func (h *getDetailsHttpHandler) Handle(c *gin.Context) {
 
 func (h *getDetailsHttpHandler) getUseCase() *getDetailsUseCase {
 	if h.useCase == nil {
-		return NewGetDetailsUseCase(h.db, h.client)
+		return NewGetDetailsUseCase(h.client, h.accountEraSeqDb, h.eventSeqDb)
 	}
 	return h.useCase
 }

@@ -48,7 +48,7 @@ type DetailsView struct {
 	Delegations []*common.Delegation `json:"delegations"`
 }
 
-func ToDetailsView(address string, rawAccountIdentity *accountpb.AccountIdentity, accountEraSeqs []model.AccountEraSeq, balanceTransferModels []model.EventSeq, balanceDepositModels []model.EventSeq, bondedModels []model.EventSeq, unbondedModels []model.EventSeq, withdrawnModels []model.EventSeq) (*DetailsView, error) {
+func ToDetailsView(address string, rawAccountIdentity *accountpb.AccountIdentity, accountEraSeqs []model.AccountEraSeq, balanceTransferModels, balanceDepositModels, bondedModels, unbondedModels, withdrawnModels []model.EventSeqWithTxHash) (*DetailsView, error) {
 	view := &DetailsView{
 		Address: address,
 
@@ -119,13 +119,14 @@ type EventData struct {
 }
 
 type BalanceTransfer struct {
-	Hash        string `json:"hash"`
+	Hash        string `json:"transaction_hash"`
+	Height      int64  `json:"height"`
 	Amount      string `json:"amount"`
 	Kind        string `json:"kind"`
 	Participant string `json:"participant"`
 }
 
-func ToBalanceTransfers(forAddress string, balanceTransferEvents []model.EventSeq) ([]*BalanceTransfer, error) {
+func ToBalanceTransfers(forAddress string, balanceTransferEvents []model.EventSeqWithTxHash) ([]*BalanceTransfer, error) {
 	var balanceTransfers []*BalanceTransfer
 	for _, eventSeq := range balanceTransferEvents {
 		eventData, err := unmarshalEventData(eventSeq)
@@ -139,6 +140,8 @@ func ToBalanceTransfers(forAddress string, balanceTransferEvents []model.EventSe
 
 		newBalanceTransfer := &BalanceTransfer{
 			Amount: amount.Value,
+			Height: eventSeq.Height,
+			Hash:   eventSeq.TxHash,
 		}
 
 		if fromAddress.Value == forAddress {
@@ -157,9 +160,11 @@ func ToBalanceTransfers(forAddress string, balanceTransferEvents []model.EventSe
 
 type BalanceDeposit struct {
 	Amount string `json:"amount"`
+	Hash   string `json:"transaction_hash"`
+	Height int64  `json:"height"`
 }
 
-func ToBalanceDeposits(balanceDepositsEvents []model.EventSeq) ([]*BalanceDeposit, error) {
+func ToBalanceDeposits(balanceDepositsEvents []model.EventSeqWithTxHash) ([]*BalanceDeposit, error) {
 	var balanceDeposits []*BalanceDeposit
 	for _, eventSeq := range balanceDepositsEvents {
 		eventData, err := unmarshalEventData(eventSeq)
@@ -171,6 +176,8 @@ func ToBalanceDeposits(balanceDepositsEvents []model.EventSeq) ([]*BalanceDeposi
 
 		newBalanceDeposit := &BalanceDeposit{
 			Amount: amount.Value,
+			Hash:   eventSeq.TxHash,
+			Height: eventSeq.Height,
 		}
 
 		balanceDeposits = append(balanceDeposits, newBalanceDeposit)
@@ -182,9 +189,11 @@ func ToBalanceDeposits(balanceDepositsEvents []model.EventSeq) ([]*BalanceDeposi
 type Bonded struct {
 	Amount   string `json:"amount"`
 	Receiver string `json:"receiver"`
+	Hash     string `json:"transaction_hash"`
+	Height   int64  `json:"height"`
 }
 
-func ToBondedList(bondedEvents []model.EventSeq) ([]*Bonded, error) {
+func ToBondedList(bondedEvents []model.EventSeqWithTxHash) ([]*Bonded, error) {
 	var bondedList []*Bonded
 	for _, eventSeq := range bondedEvents {
 		eventData, err := unmarshalEventData(eventSeq)
@@ -196,6 +205,8 @@ func ToBondedList(bondedEvents []model.EventSeq) ([]*Bonded, error) {
 
 		newBonded := &Bonded{
 			Amount: amount.Value,
+			Hash:   eventSeq.TxHash,
+			Height: eventSeq.Height,
 		}
 
 		bondedList = append(bondedList, newBonded)
@@ -206,9 +217,11 @@ func ToBondedList(bondedEvents []model.EventSeq) ([]*Bonded, error) {
 
 type Unbonded struct {
 	Amount string `json:"amount"`
+	Hash   string `json:"transaction_hash"`
+	Height int64  `json:"height"`
 }
 
-func ToUnbondedList(bondedEvents []model.EventSeq) ([]*Unbonded, error) {
+func ToUnbondedList(bondedEvents []model.EventSeqWithTxHash) ([]*Unbonded, error) {
 	var unbondedList []*Unbonded
 	for _, eventSeq := range bondedEvents {
 		eventData, err := unmarshalEventData(eventSeq)
@@ -220,6 +233,8 @@ func ToUnbondedList(bondedEvents []model.EventSeq) ([]*Unbonded, error) {
 
 		newUnbonded := &Unbonded{
 			Amount: amount.Value,
+			Hash:   eventSeq.TxHash,
+			Height: eventSeq.Height,
 		}
 
 		unbondedList = append(unbondedList, newUnbonded)
@@ -230,9 +245,11 @@ func ToUnbondedList(bondedEvents []model.EventSeq) ([]*Unbonded, error) {
 
 type Withdrawn struct {
 	Amount string `json:"amount"`
+	Hash   string `json:"transaction_hash"`
+	Height int64  `json:"height"`
 }
 
-func ToWithdrawnList(bondedEvents []model.EventSeq) ([]*Withdrawn, error) {
+func ToWithdrawnList(bondedEvents []model.EventSeqWithTxHash) ([]*Withdrawn, error) {
 	var withdrawnList []*Withdrawn
 	for _, eventSeq := range bondedEvents {
 		eventData, err := unmarshalEventData(eventSeq)
@@ -244,6 +261,8 @@ func ToWithdrawnList(bondedEvents []model.EventSeq) ([]*Withdrawn, error) {
 
 		newWithdrawn := &Withdrawn{
 			Amount: amount.Value,
+			Hash:   eventSeq.TxHash,
+			Height: eventSeq.Height,
 		}
 
 		withdrawnList = append(withdrawnList, newWithdrawn)
@@ -252,7 +271,7 @@ func ToWithdrawnList(bondedEvents []model.EventSeq) ([]*Withdrawn, error) {
 	return withdrawnList, nil
 }
 
-func unmarshalEventData(eventSeq model.EventSeq) ([]*EventData, error) {
+func unmarshalEventData(eventSeq model.EventSeqWithTxHash) ([]*EventData, error) {
 	bytes, err := eventSeq.Data.RawMessage.MarshalJSON()
 	if err != nil {
 		err := ErrCouldNotMarshalJSON

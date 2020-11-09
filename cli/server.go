@@ -12,15 +12,19 @@ func startServer(cfg *config.Config) error {
 		return err
 	}
 	defer client.Close()
-	db, err := initStore(cfg)
+
+	db, err := initPostgres(cfg)
 	if err != nil {
 		return err
 	}
 	defer db.Close()
 
-	httpHandlers := usecase.NewHttpHandlers(cfg, db, client)
+	httpHandlers := usecase.NewHttpHandlers(cfg, client, db.GetAccounts(), db.GetBlocks(), db.GetDatabase(), db.GetEvents(), db.GetReports(), db.GetSyncables(), db.GetTransactions(), db.GetValidators())
 
-	a := server.New(cfg, httpHandlers)
+	a, err := server.New(cfg, httpHandlers)
+	if err != nil {
+		return err
+	}
 	if err := a.Start(cfg.ListenAddr()); err != nil {
 		return err
 	}

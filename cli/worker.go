@@ -7,18 +7,19 @@ import (
 )
 
 func startWorker(cfg *config.Config) error {
-	db, err := initStore(cfg)
+	db, err := initPostgres(cfg)
 	if err != nil {
 		return err
 	}
 	defer db.Close()
+
 	client, err := initClient(cfg)
 	if err != nil {
 		return err
 	}
 	defer client.Close()
 
-	workerHandlers := usecase.NewWorkerHandlers(cfg, db, client)
+	workerHandlers := usecase.NewWorkerHandlers(cfg, client, db.GetAccounts(), db.GetBlocks(), db.GetDatabase(), db.GetEvents(), db.GetReports(), db.GetSyncables(), db.GetTransactions(), db.GetValidators())
 
 	w, err := worker.New(cfg, workerHandlers)
 	if err != nil {
