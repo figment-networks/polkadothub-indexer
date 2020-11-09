@@ -3,7 +3,7 @@ module github.com/figment-networks/polkadothub-indexer
 go 1.14
 
 require (
-	github.com/figment-networks/indexing-engine v0.1.11
+	github.com/figment-networks/indexing-engine v0.1.14
 	github.com/figment-networks/polkadothub-proxy/grpc v0.0.0-20201028164645-31f3cc45aa01
 	github.com/gin-gonic/gin v1.5.0
 	github.com/golang-migrate/migrate/v4 v4.11.0

@@ -1035,6 +1035,22 @@ func (mr *MockSyncablesMockRecorder) SetProcessedAtForRange(arg0, arg1, arg2 int
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetProcessedAtForRange", reflect.TypeOf((*MockSyncables)(nil).SetProcessedAtForRange), arg0, arg1, arg2)
 }
 
+// FindAllByLastInSessionOrEra mocks base method
+func (m *MockSyncables) FindAllByLastInSessionOrEra(arg0 int64, arg1, arg2 bool) ([]model.Syncable, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetProcessedAtForRange", arg0, arg1, arg2)
+	ret0, _ := ret[0].([]model.Syncable)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindAllByLastInSessionOrEra indicates an expected call of FindAllByLastInSessionOrEra
+func (mr *MockSyncablesMockRecorder) FindAllByLastInSessionOrEra(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindAllByLastInSessionOrEra", reflect.TypeOf((*MockSyncables)(nil).FindAllByLastInSessionOrEra), arg0, arg1, arg2)
+}
+
+
 // MockTransactionSeq is a mock of TransactionSeq interface
 type MockTransactionSeq struct {
 	ctrl     *gomock.Controller

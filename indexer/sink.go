@@ -32,7 +32,6 @@ type sink struct {
 	successCount int64
 }
 
-
 func (s *sink) Consume(ctx context.Context, p pipeline.Payload) error {
 	payload := p.(*payload)
 
@@ -54,14 +53,6 @@ func (s *sink) Consume(ctx context.Context, p pipeline.Payload) error {
 
 	logger.Info(fmt.Sprintf("processing completed [status=success] [height=%d]", payload.CurrentHeight))
 
-	return nil
-}
-
-func (s *sink) setProcessed(payload *payload) error {
-	payload.Syncable.MarkProcessed(s.versionNumber)
-	if err := s.syncablesDb.SaveSyncable(payload.Syncable); err != nil {
-		return errors.Wrap(err, "failed saving syncable in sink")
-	}
 	return nil
 }
 
