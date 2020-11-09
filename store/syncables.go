@@ -18,6 +18,7 @@ type syncables interface {
 	FindSmallestIndexVersion() (*int64, error)
 	SaveSyncable(*model.Syncable) error
 	SetProcessedAtForRange(reportID types.ID, startHeight int64, endHeight int64) error
+	FindAllByLastInSessionOrEra(indexVersion int64, isLastInSession, isLastInEra bool) ([]model.Syncable, error)
 }
 
 type FindMostRecenter interface {

@@ -204,8 +204,9 @@ func (p *indexingPipeline) Backfill(ctx context.Context, backfillCfg BackfillCon
 	}
 
 	indexVersion := p.configParser.GetCurrentVersionId()
-
-	source, err := NewBackfillSource(p.cfg, p.syncableDb, p.client, indexVersion)
+	isLastInSession := p.configParser.IsLastInSession()
+	isLastInEra := p.configParser.IsLastInEra()
+	source, err := NewBackfillSource(p.cfg, p.syncableDb, p.client, indexVersion, isLastInSession, isLastInEra)
 	if err != nil {
 		return err
 	}
