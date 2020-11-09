@@ -1050,7 +1050,6 @@ func (mr *MockSyncablesMockRecorder) FindAllByLastInSessionOrEra(arg0, arg1, arg
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindAllByLastInSessionOrEra", reflect.TypeOf((*MockSyncables)(nil).FindAllByLastInSessionOrEra), arg0, arg1, arg2)
 }
 
-
 // MockTransactionSeq is a mock of TransactionSeq interface
 type MockTransactionSeq struct {
 	ctrl     *gomock.Controller

@@ -38,7 +38,6 @@ type backfillSource struct {
 	useWhiteList     bool
 	heightsWhitelist map[int64]int64
 	whiteListStages  []pipeline.StageName
-
 	currentIndexVersion int64
 	currentHeight       int64
 	startHeight         int64
