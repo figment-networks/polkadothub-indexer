@@ -36,8 +36,8 @@ func ToHeightDetailsView(rawAccount *accountpb.Account) *HeightDetailsView {
 }
 
 type DetailsView struct {
-	Address string `json:"address"`
-
+	Address string   `json:"address"`
+	Account *Account `json:"account"`
 	*Identity
 
 	Transfers   []*BalanceTransfer   `json:"transfers"`
@@ -48,41 +48,41 @@ type DetailsView struct {
 	Delegations []*common.Delegation `json:"delegations"`
 }
 
-func ToDetailsView(address string, rawAccountIdentity *accountpb.AccountIdentity, accountEraSeqs []model.AccountEraSeq, balanceTransferModels, balanceDepositModels, bondedModels, unbondedModels, withdrawnModels []model.EventSeqWithTxHash) (*DetailsView, error) {
-	view := &DetailsView{
-		Address: address,
-
+func ToDetailsView(address string, rawAccountIdentity *accountpb.AccountIdentity, rawAccount *accountpb.Account, accountEraSeqs []model.AccountEraSeq, balanceTransferModels, balanceDepositModels, bondedModels, unbondedModels, withdrawnModels []model.EventSeqWithTxHash) (DetailsView, error) {
+	view := DetailsView{
+		Address:     address,
+		Account:     ToAccount(rawAccount),
 		Identity:    ToIdentity(rawAccountIdentity),
 		Delegations: common.ToDelegations(accountEraSeqs),
 	}
 
 	transfers, err := ToBalanceTransfers(address, balanceTransferModels)
 	if err != nil {
-		return nil, err
+		return DetailsView{}, err
 	}
 	view.Transfers = transfers
 
 	deposits, err := ToBalanceDeposits(balanceDepositModels)
 	if err != nil {
-		return nil, err
+		return DetailsView{}, err
 	}
 	view.Deposits = deposits
 
 	bondedList, err := ToBondedList(bondedModels)
 	if err != nil {
-		return nil, err
+		return DetailsView{}, err
 	}
 	view.Bonded = bondedList
 
 	unbondedList, err := ToUnbondedList(unbondedModels)
 	if err != nil {
-		return nil, err
+		return DetailsView{}, err
 	}
 	view.Unbonded = unbondedList
 
 	withdrawnList, err := ToWithdrawnList(withdrawnModels)
 	if err != nil {
-		return nil, err
+		return DetailsView{}, err
 	}
 	view.Withdrawn = withdrawnList
 
@@ -113,6 +113,22 @@ func ToIdentity(rawAccountIdentity *accountpb.AccountIdentity) *Identity {
 	}
 }
 
+type Account struct {
+	Free       string `json:"free"`
+	Reserved   string `json:"reserved"`
+	MiscFrozen string `json:"misc_frozen"`
+	FeeFrozen  string `json:"fee_frozen"`
+}
+
+func ToAccount(rawAccount *accountpb.Account) *Account {
+	return &Account{
+		Free:       rawAccount.GetFree(),
+		Reserved:   rawAccount.GetReserved(),
+		MiscFrozen: rawAccount.GetMiscFrozen(),
+		FeeFrozen:  rawAccount.GetFeeFrozen(),
+	}
+}
+
 type EventData struct {
 	Name  string `json:"name"`
 	Value string `json:"value"`
@@ -127,8 +143,8 @@ type BalanceTransfer struct {
 }
 
 func ToBalanceTransfers(forAddress string, balanceTransferEvents []model.EventSeqWithTxHash) ([]*BalanceTransfer, error) {
-	var balanceTransfers []*BalanceTransfer
-	for _, eventSeq := range balanceTransferEvents {
+	balanceTransfers := make([]*BalanceTransfer, len(balanceTransferEvents))
+	for i, eventSeq := range balanceTransferEvents {
 		eventData, err := unmarshalEventData(eventSeq)
 		if err != nil {
 			return nil, err
@@ -152,7 +168,7 @@ func ToBalanceTransfers(forAddress string, balanceTransferEvents []model.EventSe
 			newBalanceTransfer.Participant = fromAddress.Value
 		}
 
-		balanceTransfers = append(balanceTransfers, newBalanceTransfer)
+		balanceTransfers[i] = newBalanceTransfer
 	}
 
 	return balanceTransfers, nil
@@ -165,8 +181,8 @@ type BalanceDeposit struct {
 }
 
 func ToBalanceDeposits(balanceDepositsEvents []model.EventSeqWithTxHash) ([]*BalanceDeposit, error) {
-	var balanceDeposits []*BalanceDeposit
-	for _, eventSeq := range balanceDepositsEvents {
+	balanceDeposits := make([]*BalanceDeposit, len(balanceDepositsEvents))
+	for i, eventSeq := range balanceDepositsEvents {
 		eventData, err := unmarshalEventData(eventSeq)
 		if err != nil {
 			return nil, err
@@ -180,7 +196,7 @@ func ToBalanceDeposits(balanceDepositsEvents []model.EventSeqWithTxHash) ([]*Bal
 			Height: eventSeq.Height,
 		}
 
-		balanceDeposits = append(balanceDeposits, newBalanceDeposit)
+		balanceDeposits[i] = newBalanceDeposit
 	}
 
 	return balanceDeposits, nil
@@ -194,8 +210,8 @@ type Bonded struct {
 }
 
 func ToBondedList(bondedEvents []model.EventSeqWithTxHash) ([]*Bonded, error) {
-	var bondedList []*Bonded
-	for _, eventSeq := range bondedEvents {
+	bondedList := make([]*Bonded, len(bondedEvents))
+	for i, eventSeq := range bondedEvents {
 		eventData, err := unmarshalEventData(eventSeq)
 		if err != nil {
 			return nil, err
@@ -209,7 +225,7 @@ func ToBondedList(bondedEvents []model.EventSeqWithTxHash) ([]*Bonded, error) {
 			Height: eventSeq.Height,
 		}
 
-		bondedList = append(bondedList, newBonded)
+		bondedList[i] = newBonded
 	}
 
 	return bondedList, nil
@@ -222,8 +238,8 @@ type Unbonded struct {
 }
 
 func ToUnbondedList(bondedEvents []model.EventSeqWithTxHash) ([]*Unbonded, error) {
-	var unbondedList []*Unbonded
-	for _, eventSeq := range bondedEvents {
+	unbondedList := make([]*Unbonded, len(bondedEvents))
+	for i, eventSeq := range bondedEvents {
 		eventData, err := unmarshalEventData(eventSeq)
 		if err != nil {
 			return nil, err
@@ -237,7 +253,7 @@ func ToUnbondedList(bondedEvents []model.EventSeqWithTxHash) ([]*Unbonded, error
 			Height: eventSeq.Height,
 		}
 
-		unbondedList = append(unbondedList, newUnbonded)
+		unbondedList[i] = newUnbonded
 	}
 
 	return unbondedList, nil
@@ -249,9 +265,9 @@ type Withdrawn struct {
 	Height int64  `json:"height"`
 }
 
-func ToWithdrawnList(bondedEvents []model.EventSeqWithTxHash) ([]*Withdrawn, error) {
-	var withdrawnList []*Withdrawn
-	for _, eventSeq := range bondedEvents {
+func ToWithdrawnList(withdrawnEvents []model.EventSeqWithTxHash) ([]*Withdrawn, error) {
+	withdrawnList := make([]*Withdrawn, len(withdrawnEvents))
+	for i, eventSeq := range withdrawnEvents {
 		eventData, err := unmarshalEventData(eventSeq)
 		if err != nil {
 			return nil, err
@@ -265,7 +281,7 @@ func ToWithdrawnList(bondedEvents []model.EventSeqWithTxHash) ([]*Withdrawn, err
 			Height: eventSeq.Height,
 		}
 
-		withdrawnList = append(withdrawnList, newWithdrawn)
+		withdrawnList[i] = newWithdrawn
 	}
 
 	return withdrawnList, nil

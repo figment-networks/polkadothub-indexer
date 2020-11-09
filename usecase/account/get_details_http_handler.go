@@ -22,14 +22,16 @@ type getDetailsHttpHandler struct {
 
 	accountEraSeqDb store.AccountEraSeq
 	eventSeqDb      store.EventSeq
+	syncablesDb     store.Syncables
 }
 
-func NewGetDetailsHttpHandler(c *client.Client, accountEraSeqDb store.AccountEraSeq, eventSeqDb store.EventSeq) *getDetailsHttpHandler {
+func NewGetDetailsHttpHandler(c *client.Client, accountEraSeqDb store.AccountEraSeq, eventSeqDb store.EventSeq, syncablesDb store.Syncables) *getDetailsHttpHandler {
 	return &getDetailsHttpHandler{
 		client: c,
 
 		accountEraSeqDb: accountEraSeqDb,
 		eventSeqDb:      eventSeqDb,
+		syncablesDb:     syncablesDb,
 	}
 }
 
@@ -57,7 +59,7 @@ func (h *getDetailsHttpHandler) Handle(c *gin.Context) {
 
 func (h *getDetailsHttpHandler) getUseCase() *getDetailsUseCase {
 	if h.useCase == nil {
-		return NewGetDetailsUseCase(h.client, h.accountEraSeqDb, h.eventSeqDb)
+		return NewGetDetailsUseCase(h.client, h.accountEraSeqDb, h.eventSeqDb, h.syncablesDb)
 	}
 	return h.useCase
 }

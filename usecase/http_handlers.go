@@ -24,7 +24,7 @@ func NewHttpHandlers(cfg *config.Config, cli *client.Client, accountDb store.Acc
 		GetBlockSummary:            block.NewGetBlockSummaryHttpHandler(blockDb),
 		GetTransactionsByHeight:    transaction.NewGetByHeightHttpHandler(cli, syncableDb),
 		GetAccountByHeight:         account.NewGetByHeightHttpHandler(cli, syncableDb),
-		GetAccountDetails:          account.NewGetDetailsHttpHandler(cli, accountDb, eventDb),
+		GetAccountDetails:          account.NewGetDetailsHttpHandler(cli, accountDb, eventDb, syncableDb),
 		GetValidatorsByHeight:      validator.NewGetByHeightHttpHandler(cfg, cli, accountDb, blockDb, databaseDb, eventDb, reportDb, syncableDb, transactionDb, validatorDb),
 		GetValidatorByStashAccount: validator.NewGetByStashAccountHttpHandler(accountDb, validatorDb),
 		GetValidatorSummary:        validator.NewGetSummaryHttpHandler(syncableDb, validatorDb),
