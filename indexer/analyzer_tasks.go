@@ -30,9 +30,11 @@ var (
 )
 
 // NewSystemEventCreatorTask creates system events
-func NewSystemEventCreatorTask(cfg *config.Config, syncablesDb store.Syncables, systemEventDb store.SystemEvents, validatorSeqDb store.ValidatorSeq, validatorSessionSeqDb store.ValidatorSessionSeq) *systemEventCreatorTask {
+func NewSystemEventCreatorTask(cfg *config.Config, accountEraSeqDb store.AccountEraSeq, systemEventDb store.SystemEvents, syncablesDb store.Syncables, validatorSeqDb store.ValidatorSeq, validatorSessionSeqDb store.ValidatorSessionSeq,
+) *systemEventCreatorTask {
 	return &systemEventCreatorTask{
 		cfg:                   cfg,
+		accountEraSeqDb:       accountEraSeqDb,
 		syncablesDb:           syncablesDb,
 		systemEventDb:         systemEventDb,
 		validatorSeqDb:        validatorSeqDb,
@@ -41,7 +43,9 @@ func NewSystemEventCreatorTask(cfg *config.Config, syncablesDb store.Syncables, 
 }
 
 type systemEventCreatorTask struct {
-	cfg                   *config.Config
+	cfg *config.Config
+
+	accountEraSeqDb       store.AccountEraSeq
 	syncablesDb           store.Syncables
 	systemEventDb         store.SystemEvents
 	validatorSeqDb        store.ValidatorSeq
@@ -103,6 +107,21 @@ func (t *systemEventCreatorTask) Run(ctx context.Context, p pipeline.Payload) er
 	}
 	payload.SystemEvents = append(payload.SystemEvents, missedBlocksSystemEvents...)
 
+	if !payload.Syncable.LastInEra {
+		return nil
+	}
+
+	currAccountSeqs := append(payload.NewAccountEraSequences, payload.UpdatedAccountEraSequences...)
+	prevEraAccountSeqs, err := t.getPrevEraAccountSequences(payload)
+	if err != nil {
+		return err
+	}
+	delegationChangedSystemEvents, err := t.getDelegationChangedSystemEvents(currAccountSeqs, prevEraAccountSeqs, payload.Syncable)
+	if err != nil {
+		return err
+	}
+
+	payload.SystemEvents = append(payload.SystemEvents, delegationChangedSystemEvents...)
 	return nil
 }
 
@@ -264,6 +283,68 @@ func (t *systemEventCreatorTask) getActiveSetPresenceChangeSystemEvents(currSeqs
 			return nil, err
 		}
 		systemEvents = append(systemEvents, newSystemEvent)
+	}
+
+	return systemEvents, nil
+}
+
+type delgationLookup map[string]struct{}
+
+func (t *systemEventCreatorTask) getDelegationChangedSystemEvents(currSeqs, prevSeqs []model.AccountEraSeq, syncable *model.Syncable) ([]*model.SystemEvent, error) {
+	var systemEvents []*model.SystemEvent
+
+	prevDelegationsforValidator := make(map[string]delgationLookup, len(prevSeqs))
+
+	for _, seq := range prevSeqs {
+		delegations, ok := prevDelegationsforValidator[seq.ValidatorStashAccount]
+		if !ok {
+			delegations = make(delgationLookup)
+		}
+		delegations[seq.StashAccount] = struct{}{}
+		prevDelegationsforValidator[seq.ValidatorStashAccount] = delegations
+	}
+
+	currDelegationsforValidator := make(map[string]delgationLookup, len(prevSeqs))
+	for _, seq := range currSeqs {
+		delegations, ok := currDelegationsforValidator[seq.ValidatorStashAccount]
+		if !ok {
+			delegations = make(delgationLookup)
+		}
+		delegations[seq.StashAccount] = struct{}{}
+		currDelegationsforValidator[seq.ValidatorStashAccount] = delegations
+
+		prevDelegations, ok := prevDelegationsforValidator[seq.ValidatorStashAccount]
+		if !ok {
+			// validator wasnt active in prev era
+			continue
+		}
+		if _, ok = prevDelegations[seq.StashAccount]; !ok {
+			newSystemEvent, err := t.newSystemEvent(seq.ValidatorStashAccount, syncable, model.SystemEventDelegationJoined, systemEventRawData{
+				"nominator": seq.StashAccount,
+			})
+			if err != nil {
+				return nil, err
+			}
+			systemEvents = append(systemEvents, newSystemEvent)
+
+		}
+	}
+
+	for _, seq := range prevSeqs {
+		currDelegations, ok := currDelegationsforValidator[seq.ValidatorStashAccount]
+		if !ok {
+			// validator isnt active in current era
+			continue
+		}
+		if _, ok = currDelegations[seq.StashAccount]; !ok {
+			newSystemEvent, err := t.newSystemEvent(seq.ValidatorStashAccount, syncable, model.SystemEventDelegationLeft, systemEventRawData{
+				"nominator": seq.StashAccount,
+			})
+			if err != nil {
+				return nil, err
+			}
+			systemEvents = append(systemEvents, newSystemEvent)
+		}
 	}
 
 	return systemEvents, nil

@@ -13,6 +13,8 @@ const (
 	SystemEventJoinedWaitingSet     SystemEventKind = "joined_waiting_set"
 	SystemEventLeftSet              SystemEventKind = "left_set"
 	SystemEventMissedNConsecutive   SystemEventKind = "missed_n_consecutive"
+	SystemEventDelegationLeft       SystemEventKind = "delegation_left"
+	SystemEventDelegationJoined     SystemEventKind = "delegation_joined"
 )
 
 type SystemEventKind string
