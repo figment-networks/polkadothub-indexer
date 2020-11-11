@@ -10,7 +10,7 @@ const (
 	AccountEraSeqFindLastByValidatorStash = `SELECT * FROM account_era_sequences   WHERE validator_stash_account = ?   AND era = ( 	SELECT era  		FROM account_era_sequences  		WHERE validator_stash_account = ?  		GROUP BY era  		ORDER BY era LIMIT 1);`
 	
 	// store/psql/queries/account_era_seq_insert.sql
-	AccountEraSeqInsert = `INSERT INTO account_era_sequences (   era,   start_height,   end_height,   time,   stash_account,   controller_account,   validator_stash_account,   validator_controller_account,   stake ) VALUES @values  ON CONFLICT (era, stash_account, validator_stash_account) DO UPDATE SET   controller_account     = excluded.controller_account,   validator_controller_account       = excluded.validator_controller_account,   stake         = excluded.stake `
+	AccountEraSeqInsert = `INSERT INTO account_era_sequences (   era,   start_height,   end_height,   time,   stash_account,   controller_account,   validator_stash_account,   validator_controller_account,   stake ) VALUES @values  ON CONFLICT (era, stash_account, validator_stash_account) DO UPDATE SET   controller_account                 = excluded.controller_account,   validator_controller_account       = excluded.validator_controller_account,   stake                              = excluded.stake `
 	
 	// store/psql/queries/block_seq_summarize.sql
 	BlockSeqSummarize = `DATE_TRUNC(?, time) AS time_bucket, COUNT(*) AS count, EXTRACT(EPOCH FROM (MAX(time) - MIN(time)) / COUNT(*)) AS block_time_avg`
@@ -35,6 +35,9 @@ const (
 	
 	// store/psql/queries/validator_era_seq_summarize_select.sql
 	ValidatorEraSeqSummarizeSelect = `	stash_account, 	DATE_TRUNC(?, time) AS time_bucket,    	AVG(total_stake) AS total_stake_avg,    	MAX(total_stake) AS total_stake_max,    	MIN(total_stake) AS total_stake_min, 	AVG(own_stake) AS own_stake_avg,    	MAX(own_stake) AS own_stake_max,    	MIN(own_stake) AS own_stake_min, 	AVG(stakers_stake) AS stakers_stake_avg,    	MAX(stakers_stake) AS stakers_stake_max,    	MIN(stakers_stake) AS stakers_stake_min, 	AVG(reward_points) AS reward_points_avg,    	MAX(reward_points) AS reward_points_max,    	MIN(reward_points) AS reward_points_min, 	AVG(commission) AS commission_avg,    	MAX(commission) AS commission_max,    	MIN(commission) AS commission_min, 	AVG(stakers_count) AS stakers_count_avg,    	MAX(stakers_count) AS stakers_count_max,    	MIN(stakers_count) AS stakers_count_min`
+	
+	// store/psql/queries/validator_seq_insert.sql
+	ValidatorSeqInsert = `INSERT INTO validator_sequences (   height,   time,   stash_account,   active_balance,   commission ) VALUES @values  ON CONFLICT (height, stash_account) DO UPDATE SET   active_balance   = excluded.active_balance,   commission       = excluded.commission `
 	
 	// store/psql/queries/validator_session_seq_get_counts.sql
 	ValidatorSessionSeqGetCounts = `	stash_account, 	COUNT(*) AS count`

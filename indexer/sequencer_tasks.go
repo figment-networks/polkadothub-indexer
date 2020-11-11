@@ -98,30 +98,7 @@ func (t *validatorSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) e
 		return err
 	}
 
-	existing, err := t.validatorSeqDb.FindAllByHeight(payload.CurrentHeight)
-	if err != nil {
-		return err
-	}
-	seqLookup := make(map[string]model.ValidatorSeq, len(existing))
-	for _, seq := range existing {
-		seqLookup[seq.StashAccount] = seq
-	}
-
-	var newValidatorSeqs []model.ValidatorSeq
-	var updatedValidatorSeqs []model.ValidatorSeq
-	for _, rawValidatorSeq := range mappedValidatorSeqs {
-		seq, exists := seqLookup[rawValidatorSeq.StashAccount]
-		if !exists {
-			newValidatorSeqs = append(newValidatorSeqs, rawValidatorSeq)
-			continue
-		}
-
-		seq.Update(rawValidatorSeq)
-		updatedValidatorSeqs = append(updatedValidatorSeqs, seq)
-	}
-
-	payload.NewValidatorSequences = newValidatorSeqs
-	payload.UpdatedValidatorSequences = updatedValidatorSeqs
+	payload.ValidatorSequences = mappedValidatorSeqs
 	return nil
 }
 

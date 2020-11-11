@@ -330,16 +330,8 @@ func (t *validatorSeqPersistorTask) Run(ctx context.Context, p pipeline.Payload)
 
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
 
-	for _, sequence := range payload.NewValidatorSequences {
-		if err := t.ValidatorSeqDb.CreateSeq(&sequence); err != nil {
-			return err
-		}
-	}
-
-	for _, sequence := range payload.UpdatedValidatorSequences {
-		if err := t.ValidatorSeqDb.SaveSeq(&sequence); err != nil {
-			return err
-		}
+	if err := t.ValidatorSeqDb.BulkUpsertSeqs(payload.ValidatorSequences); err != nil {
+		return err
 	}
 
 	return nil

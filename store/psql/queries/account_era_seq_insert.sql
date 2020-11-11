@@ -13,6 +13,6 @@ VALUES @values
 
 ON CONFLICT (era, stash_account, validator_stash_account) DO UPDATE
 SET
-  controller_account     = excluded.controller_account,
+  controller_account                 = excluded.controller_account,
   validator_controller_account       = excluded.validator_controller_account,
-  stake         = excluded.stake
+  stake                              = excluded.stake

@@ -65,13 +65,12 @@ func (t *systemEventCreatorTask) Run(ctx context.Context, p pipeline.Payload) er
 
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", "Analyzer", t.GetName(), payload.CurrentHeight))
 
-	currValidatorSeqs := append(payload.NewValidatorSequences, payload.UpdatedValidatorSequences...)
 	prevHeightValidatorSeqs, err := t.getPrevHeightValidatorSequences(payload)
 	if err != nil {
 		return err
 	}
 
-	valueChangeSystemEvents, err := t.getValueChangeSystemEvents(currValidatorSeqs, prevHeightValidatorSeqs, payload.Syncable)
+	valueChangeSystemEvents, err := t.getValueChangeSystemEvents(payload.ValidatorSequences, prevHeightValidatorSeqs, payload.Syncable)
 	if err != nil {
 		return err
 	}
@@ -95,7 +94,7 @@ func (t *systemEventCreatorTask) Run(ctx context.Context, p pipeline.Payload) er
 		return err
 	}
 
-	activeSetPresenceChangeSystemEvents, err := t.getActiveSetPresenceChangeSystemEvents(currValidatorSeqs, prevSessionSeqs, currActiveSeqs, prevSessionActiveSeqs, payload.Syncable)
+	activeSetPresenceChangeSystemEvents, err := t.getActiveSetPresenceChangeSystemEvents(payload.ValidatorSequences, prevSessionSeqs, currActiveSeqs, prevSessionActiveSeqs, payload.Syncable)
 	if err != nil {
 		return err
 	}

@@ -6,3 +6,6 @@ DROP index IF EXISTS idx_transaction_seq;
 
 CREATE UNIQUE INDEX idx_transaction_seq_height_index
   ON transaction_sequences(height, index);
+
+CREATE UNIQUE INDEX idx_validator_sequences_height_stash
+    ON validator_sequences(height, stash_account);

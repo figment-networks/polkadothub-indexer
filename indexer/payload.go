@@ -54,8 +54,7 @@ type payload struct {
 	// Sequencer stage
 	NewBlockSequence                 *model.BlockSeq
 	UpdatedBlockSequence             *model.BlockSeq
-	NewValidatorSequences            []model.ValidatorSeq
-	UpdatedValidatorSequences        []model.ValidatorSeq
+	ValidatorSequences               []model.ValidatorSeq
 	NewValidatorSessionSequences     []model.ValidatorSessionSeq
 	UpdatedValidatorSessionSequences []model.ValidatorSessionSeq
 	NewValidatorEraSequences         []model.ValidatorEraSeq

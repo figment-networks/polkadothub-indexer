@@ -31,9 +31,3 @@ func (vs *ValidatorSeq) Equal(m ValidatorSeq) bool {
 	return vs.Sequence.Equal(*m.Sequence) &&
 		vs.StashAccount == m.StashAccount
 }
-
-func (vs *ValidatorSeq) Update(m ValidatorSeq) {
-	vs.StashAccount = m.StashAccount
-	vs.ActiveBalance = m.ActiveBalance
-	vs.Commission = m.Commission
-}
