@@ -366,31 +366,14 @@ func (t *accountEraSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) 
 		firstHeightInEra = lastSyncableInPrevEra.Height + 1
 	}
 
-	var newAccountEraSeqs []model.AccountEraSeq
-	var updatedAccountEraSeqs []model.AccountEraSeq
 	for _, stakingValidator := range payload.RawStaking.GetValidators() {
 		mappedAccountEraSeqs, err := ToAccountEraSequence(payload.Syncable, firstHeightInEra, stakingValidator)
 		if err != nil {
 			return err
 		}
 
-		for _, mappedAccountEraSeq := range mappedAccountEraSeqs {
-			validatorEraSeq, err := t.accountEraSeqDb.FindByEraAndStashAccounts(payload.Syncable.Era, mappedAccountEraSeq.StashAccount, mappedAccountEraSeq.StashAccount)
-			if err != nil {
-				if err == store.ErrNotFound {
-					newAccountEraSeqs = append(newAccountEraSeqs, mappedAccountEraSeq)
-					continue
-				} else {
-					return err
-				}
-			}
-
-			validatorEraSeq.Update(mappedAccountEraSeq)
-			updatedAccountEraSeqs = append(updatedAccountEraSeqs, *validatorEraSeq)
-		}
+		payload.AccountEraSequences = append(payload.AccountEraSequences, mappedAccountEraSeqs...)
 	}
-	payload.NewAccountEraSequences = newAccountEraSeqs
-	payload.UpdatedAccountEraSequences = updatedAccountEraSeqs
 
 	return nil
 }

@@ -9,6 +9,9 @@ const (
 	// store/psql/queries/account_era_seq_find_last_by_validator_stash.sql
 	AccountEraSeqFindLastByValidatorStash = `SELECT * FROM account_era_sequences   WHERE validator_stash_account = ?   AND era = ( 	SELECT era  		FROM account_era_sequences  		WHERE validator_stash_account = ?  		GROUP BY era  		ORDER BY era LIMIT 1);`
 	
+	// store/psql/queries/account_era_seq_insert.sql
+	AccountEraSeqInsert = `INSERT INTO account_era_sequences (   era,   start_height,   end_height,   time,   stash_account,   controller_account,   validator_stash_account,   validator_controller_account,   stake ) VALUES @values  ON CONFLICT (era, stash_account, validator_stash_account) DO UPDATE SET   controller_account     = excluded.controller_account,   validator_controller_account       = excluded.validator_controller_account,   stake         = excluded.stake `
+	
 	// store/psql/queries/block_seq_summarize.sql
 	BlockSeqSummarize = `DATE_TRUNC(?, time) AS time_bucket, COUNT(*) AS count, EXTRACT(EPOCH FROM (MAX(time) - MIN(time)) / COUNT(*)) AS block_time_avg`
 	

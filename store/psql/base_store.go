@@ -3,6 +3,7 @@ package psql
 import (
 	"fmt"
 
+	"github.com/figment-networks/indexing-engine/store/bulk"
 	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/jinzhu/gorm"
 )
@@ -23,6 +24,11 @@ func (s baseStore) Create(record interface{}) error {
 func (s baseStore) Update(record interface{}) error {
 	err := s.db.Save(record).Error
 	return checkErr(err)
+}
+
+// Import imports records in bulk
+func (s baseStore) Import(query string, rows int, fn bulk.RowFunc) error {
+	return bulk.Import(s.db, query, rows, fn)
 }
 
 // Save saves record to database

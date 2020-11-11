@@ -266,16 +266,8 @@ func (t *accountEraSeqPersistorTask) Run(ctx context.Context, p pipeline.Payload
 
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
 
-	for _, sequence := range payload.NewAccountEraSequences {
-		if err := t.accountEraSeqDb.Create(&sequence); err != nil {
-			return err
-		}
-	}
-
-	for _, sequence := range payload.UpdatedAccountEraSequences {
-		if err := t.accountEraSeqDb.Save(&sequence); err != nil {
-			return err
-		}
+	if err := t.accountEraSeqDb.BulkUpsert(payload.AccountEraSequences); err != nil {
+		return err
 	}
 
 	return nil

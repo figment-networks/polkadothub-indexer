@@ -111,12 +111,11 @@ func (t *systemEventCreatorTask) Run(ctx context.Context, p pipeline.Payload) er
 		return nil
 	}
 
-	currAccountSeqs := append(payload.NewAccountEraSequences, payload.UpdatedAccountEraSequences...)
 	prevEraAccountSeqs, err := t.getPrevEraAccountSequences(payload)
 	if err != nil {
 		return err
 	}
-	delegationChangedSystemEvents, err := t.getDelegationChangedSystemEvents(currAccountSeqs, prevEraAccountSeqs, payload.Syncable)
+	delegationChangedSystemEvents, err := t.getDelegationChangedSystemEvents(payload.AccountEraSequences, prevEraAccountSeqs, payload.Syncable)
 	if err != nil {
 		return err
 	}

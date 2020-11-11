@@ -1,8 +1,7 @@
 package psql
 
 import (
-	"time"
-
+	"github.com/figment-networks/indexing-engine/store/bulk"
 	"github.com/figment-networks/polkadothub-indexer/model"
 	"github.com/figment-networks/polkadothub-indexer/store/psql/queries"
 
@@ -18,70 +17,22 @@ type AccountEraSeqStore struct {
 	baseStore
 }
 
-// FindByEraAndStashAccounts finds account era sequence by era and stash accounts
-func (s AccountEraSeqStore) FindByEraAndStashAccounts(era int64, stash string, validatorStash string) (*model.AccountEraSeq, error) {
-	q := model.AccountEraSeq{
-		EraSequence: &model.EraSequence{
-			Era: era,
-		},
-		StashAccount:          stash,
-		ValidatorStashAccount: validatorStash,
-	}
-	var result model.AccountEraSeq
-
-	err := s.db.
-		Where(&q).
-		First(&result).
-		Error
-
-	return &result, checkErr(err)
-}
-
-// FindByHeightAndStashAccount finds account are sequence by height and stash accounts
-func (s AccountEraSeqStore) FindByHeightAndStashAccounts(height int64, stash string, validatorStash string) (*model.AccountEraSeq, error) {
-	q := model.AccountEraSeq{
-		StashAccount:          stash,
-		ValidatorStashAccount: validatorStash,
-	}
-	var result model.AccountEraSeq
-
-	err := s.db.
-		Where(&q).
-		Where("start_height <= ? AND end_height >= ?", height, height).
-		First(&result).
-		Error
-
-	return &result, checkErr(err)
-}
-
-// FindByEraAndStashAccount finds account by era and stash account
-func (s AccountEraSeqStore) FindByEraAndStashAccount(era int64, stash string) (*model.AccountEraSeq, error) {
-	q := model.AccountEraSeq{
-		EraSequence: &model.EraSequence{
-			Era: era,
-		},
-		StashAccount: stash,
-	}
-	var result model.AccountEraSeq
-
-	err := s.db.
-		Where(&q).
-		First(&result).
-		Error
-
-	return &result, checkErr(err)
-}
-
-// FindByHeight finds account era sequences by height
-func (s AccountEraSeqStore) FindByHeight(h int64) ([]model.AccountEraSeq, error) {
-	var result []model.AccountEraSeq
-
-	err := s.db.
-		Where("start_height <= ? AND end_height >= ?", h, h).
-		Find(&result).
-		Error
-
-	return result, checkErr(err)
+// BulkUpsert imports new records and updates existing ones
+func (s AccountEraSeqStore) BulkUpsert(records []model.AccountEraSeq) error {
+	return s.Import(queries.AccountEraSeqInsert, len(records), func(i int) bulk.Row {
+		r := records[i]
+		return bulk.Row{
+			r.Era,
+			r.StartHeight,
+			r.EndHeight,
+			r.Time,
+			r.StashAccount,
+			r.ControllerAccount,
+			r.ValidatorStashAccount,
+			r.ValidatorControllerAccount,
+			r.Stake.String(),
+		}
+	})
 }
 
 // FindByHeight finds account era sequences by era
@@ -99,15 +50,6 @@ func (s AccountEraSeqStore) FindByEra(era int64) ([]model.AccountEraSeq, error) 
 		Error
 
 	return result, checkErr(err)
-}
-
-// FindMostRecent finds most recent account era sequence
-func (s *AccountEraSeqStore) FindMostRecent() (*model.AccountEraSeq, error) {
-	accountSeq := &model.AccountEraSeq{}
-	if err := findMostRecent(s.db, "time", accountSeq); err != nil {
-		return nil, err
-	}
-	return accountSeq, nil
 }
 
 // FindLastByStashAccount finds last account era sequences for given stash account
@@ -152,18 +94,4 @@ func (s AccountEraSeqStore) FindLastByValidatorStashAccount(validatorStashAccoun
 		res = append(res, row)
 	}
 	return res, nil
-}
-
-// DeleteOlderThan deletes account sequence older than given threshold
-func (s *AccountEraSeqStore) DeleteOlderThan(purgeThreshold time.Time) (*int64, error) {
-	tx := s.db.
-		Unscoped().
-		Where("time < ?", purgeThreshold).
-		Delete(&model.AccountEraSeq{})
-
-	if tx.Error != nil {
-		return nil, checkErr(tx.Error)
-	}
-
-	return &tx.RowsAffected, nil
 }

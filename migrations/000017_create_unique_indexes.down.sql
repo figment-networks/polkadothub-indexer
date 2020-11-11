@@ -1,0 +1,1 @@
+DROP index IF EXISTS idx_account_era_sequences_accounts_era;
