@@ -3,6 +3,8 @@ package psql
 import (
 	"time"
 
+	"github.com/figment-networks/polkadothub-indexer/store/psql/queries"
+
 	"github.com/jinzhu/gorm"
 
 	"github.com/figment-networks/polkadothub-indexer/model"
@@ -124,10 +126,10 @@ func (s EventSeqStore) findForEventSeqWithTxHashQuery(section, method, address s
 	tx := s.db
 	if method == "Transfer" {
 		tx = s.db.
-			Raw(eventSeqWithTxHashForSrcAndTargetQuery, section, method, address, address)
+			Raw(queries.EventSeqWithTxHashForSrcAndTarget, section, method, address, address)
 	} else {
 		tx = s.db.
-			Raw(eventSeqWithTxHashForSrcQuery, section, method, address)
+			Raw(queries.EventSeqWithTxHashForSrc, section, method, address)
 	}
 
 	rows, err := tx.Rows()

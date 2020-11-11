@@ -1,10 +1,12 @@
 package psql
 
 import (
-	"github.com/jinzhu/gorm"
 	"time"
 
 	"github.com/figment-networks/polkadothub-indexer/model"
+	"github.com/figment-networks/polkadothub-indexer/store/psql/queries"
+
+	"github.com/jinzhu/gorm"
 )
 
 func NewAccountEraSeqStore(db *gorm.DB) *AccountEraSeqStore {
@@ -111,7 +113,7 @@ func (s *AccountEraSeqStore) FindMostRecent() (*model.AccountEraSeq, error) {
 // FindLastByStashAccount finds last account era sequences for given stash account
 func (s AccountEraSeqStore) FindLastByStashAccount(stashAccount string) ([]model.AccountEraSeq, error) {
 	rows, err := s.db.
-		Raw(findLastAccountEraSeqByStashQuery, stashAccount, stashAccount).
+		Raw(queries.AccountEraSeqFindLastByStash, stashAccount, stashAccount).
 		Rows()
 
 	if err != nil {
@@ -133,7 +135,7 @@ func (s AccountEraSeqStore) FindLastByStashAccount(stashAccount string) ([]model
 // FindLastByValidatorStashAccount finds last account era sequences for given validator stash account
 func (s AccountEraSeqStore) FindLastByValidatorStashAccount(validatorStashAccount string) ([]model.AccountEraSeq, error) {
 	rows, err := s.db.
-		Raw(findLastAccountEraSeqByValidatorStashQuery, validatorStashAccount, validatorStashAccount).
+		Raw(queries.AccountEraSeqFindLastByValidatorStash, validatorStashAccount, validatorStashAccount).
 		Rows()
 
 	if err != nil {
