@@ -24,10 +24,3 @@ func (t *TransactionSeq) Valid() bool {
 	}
 	return true
 }
-
-func (t *TransactionSeq) Update(m TransactionSeq) {
-	t.Index = m.Index
-	t.Hash = m.Hash
-	t.Method = m.Method
-	t.Section = m.Section
-}

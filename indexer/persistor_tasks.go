@@ -298,16 +298,8 @@ func (t *transactionSeqPersistorTask) Run(ctx context.Context, p pipeline.Payloa
 
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
 
-	for _, sequence := range payload.NewTransactionSequences {
-		if err := t.transactionSeqDb.CreateTransactionSeq(&sequence); err != nil {
-			return err
-		}
-	}
-
-	for _, sequence := range payload.UpdatedTransactionSequences {
-		if err := t.transactionSeqDb.SaveTransactionSeq(&sequence); err != nil {
-			return err
-		}
+	if err := t.transactionSeqDb.BulkUpsert(payload.TransactionSequences); err != nil {
+		return err
 	}
 
 	return nil

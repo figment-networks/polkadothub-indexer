@@ -63,8 +63,7 @@ type payload struct {
 	NewEventSequences                []model.EventSeq
 	UpdatedEventSequences            []model.EventSeq
 	AccountEraSequences              []model.AccountEraSeq
-	NewTransactionSequences          []model.TransactionSeq
-	UpdatedTransactionSequences      []model.TransactionSeq
+	TransactionSequences             []model.TransactionSeq
 
 	// Analyzer
 	SystemEvents []*model.SystemEvent
