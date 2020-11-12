@@ -59,8 +59,7 @@ type payload struct {
 	UpdatedValidatorSessionSequences []model.ValidatorSessionSeq
 	NewValidatorEraSequences         []model.ValidatorEraSeq
 	UpdatedValidatorEraSequences     []model.ValidatorEraSeq
-	NewEventSequences                []model.EventSeq
-	UpdatedEventSequences            []model.EventSeq
+	EventSequences                   []model.EventSeq
 	AccountEraSequences              []model.AccountEraSeq
 	TransactionSequences             []model.TransactionSeq
 

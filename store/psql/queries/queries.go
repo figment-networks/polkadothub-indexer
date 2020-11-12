@@ -24,6 +24,9 @@ const (
 	// store/psql/queries/block_summary_for_interval.sql
 	BlockSummaryForInterval = `SELECT *  FROM block_summary  WHERE time_bucket >= ( 	SELECT time_bucket  	FROM block_summary  	WHERE time_interval = ? 	ORDER BY time_bucket DESC 	LIMIT 1 ) - ?::INTERVAL AND time_interval = ? ORDER BY time_bucket`
 	
+	// store/psql/queries/event_seq_insert.sql
+	EventSeqInsert = `INSERT INTO event_sequences (   height,   time,   index,   extrinsic_index,   data,   phase,   method,   section ) VALUES @values  ON CONFLICT (height, index) DO UPDATE SET   extrinsic_index    = excluded.extrinsic_index,   data               = excluded.data,   phase              = excluded.phase,   method             = excluded.method,   section            = excluded.section `
+	
 	// store/psql/queries/event_seq_with_tx_hash_for_src.sql
 	EventSeqWithTxHashForSrc = `	SELECT 		e.height, 		e.method, 		e.section, 		e.data, 		t.hash 	FROM event_sequences AS e 	INNER JOIN transaction_sequences as t 		ON t.height = e.height AND t.index = e.extrinsic_index 	WHERE e.section = ? AND e.method = ? AND e.data->0->>'value' = ?`
 	

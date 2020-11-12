@@ -224,19 +224,7 @@ func (t *eventSeqPersistorTask) Run(ctx context.Context, p pipeline.Payload) err
 
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
 
-	for _, sequence := range payload.NewEventSequences {
-		if err := t.eventSeqDb.Create(&sequence); err != nil {
-			return err
-		}
-	}
-
-	for _, sequence := range payload.UpdatedEventSequences {
-		if err := t.eventSeqDb.Save(&sequence); err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return t.eventSeqDb.BulkUpsert(payload.EventSequences)
 }
 
 // NewAccountEraSeqPersistorTask is responsible for storing account era info to persistence layer

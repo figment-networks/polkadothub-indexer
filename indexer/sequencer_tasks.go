@@ -271,32 +271,7 @@ func (t *eventSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) error
 		return err
 	}
 
-	txIndexes := make([]int64, len(mappedEventSeqs))
-	for i, seq := range mappedEventSeqs {
-		txIndexes[i] = seq.Index
-	}
-
-	seqLookup, err := t.eventSeqDb.FindAllByHeightAndIndex(payload.CurrentHeight, txIndexes)
-	if err != nil {
-		return err
-	}
-
-	var newEventSeqs []model.EventSeq
-	var updatedEventSeqs []model.EventSeq
-	for _, rawEventSeq := range mappedEventSeqs {
-		seq, exists := seqLookup[rawEventSeq.Index]
-		if !exists {
-			newEventSeqs = append(newEventSeqs, rawEventSeq)
-			continue
-		}
-
-		seq.Update(rawEventSeq)
-		updatedEventSeqs = append(updatedEventSeqs, *seq)
-	}
-
-	payload.NewEventSequences = newEventSeqs
-	payload.UpdatedEventSequences = updatedEventSeqs
-
+	payload.EventSequences = mappedEventSeqs
 	return nil
 }
 

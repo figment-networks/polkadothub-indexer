@@ -6,4 +6,6 @@ CREATE index idx_transaction_seq on transaction_sequences (height, index);
 
 DROP index IF EXISTS idx_validator_sequences_height_stash;
 
-DROP index IF EXISTS system_events_height_actor_kind;
+DROP index IF EXISTS idx_system_events_height_actor_kind;
+
+DROP index IF EXISTS idx_event_sequences_height_index;
