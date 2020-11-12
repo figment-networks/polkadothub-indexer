@@ -65,7 +65,7 @@ type payload struct {
 	TransactionSequences             []model.TransactionSeq
 
 	// Analyzer
-	SystemEvents []*model.SystemEvent
+	SystemEvents []model.SystemEvent
 }
 
 func (p *payload) MarkAsProcessed() {}

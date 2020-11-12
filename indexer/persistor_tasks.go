@@ -266,11 +266,7 @@ func (t *accountEraSeqPersistorTask) Run(ctx context.Context, p pipeline.Payload
 
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
 
-	if err := t.accountEraSeqDb.BulkUpsert(payload.AccountEraSequences); err != nil {
-		return err
-	}
-
-	return nil
+	return t.accountEraSeqDb.BulkUpsert(payload.AccountEraSequences)
 }
 
 // NewTransactionSeqPersistorTask is responsible for storing transaction info to persistence layer
@@ -298,11 +294,7 @@ func (t *transactionSeqPersistorTask) Run(ctx context.Context, p pipeline.Payloa
 
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
 
-	if err := t.transactionSeqDb.BulkUpsert(payload.TransactionSequences); err != nil {
-		return err
-	}
-
-	return nil
+	return t.transactionSeqDb.BulkUpsert(payload.TransactionSequences)
 }
 
 // NewValidatorSeqPersistorTask is responsible for storing transaction info to persistence layer
@@ -330,11 +322,7 @@ func (t *validatorSeqPersistorTask) Run(ctx context.Context, p pipeline.Payload)
 
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
 
-	if err := t.ValidatorSeqDb.BulkUpsertSeqs(payload.ValidatorSequences); err != nil {
-		return err
-	}
-
-	return nil
+	return t.ValidatorSeqDb.BulkUpsertSeqs(payload.ValidatorSequences)
 }
 
 func NewSystemEventPersistorTask(systemEventDb store.SystemEvents) pipeline.Task {
@@ -358,11 +346,5 @@ func (t *systemEventPersistorTask) Run(ctx context.Context, p pipeline.Payload) 
 
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
 
-	for _, systemEvent := range payload.SystemEvents {
-		if err := t.systemEventDb.CreateOrUpdate(systemEvent); err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return t.systemEventDb.BulkUpsert(payload.SystemEvents)
 }

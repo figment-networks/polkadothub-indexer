@@ -1,8 +1,11 @@
 package psql
 
 import (
+	"time"
+
+	"github.com/figment-networks/indexing-engine/store/bulk"
 	"github.com/figment-networks/polkadothub-indexer/model"
-	"github.com/figment-networks/polkadothub-indexer/store"
+	"github.com/figment-networks/polkadothub-indexer/store/psql/queries"
 	"github.com/jinzhu/gorm"
 )
 
@@ -15,19 +18,22 @@ type SystemEventStore struct {
 	baseStore
 }
 
-// CreateOrUpdate creates a new system event or updates an existing one
-func (s SystemEventStore) CreateOrUpdate(val *model.SystemEvent) error {
-	existing, err := s.findUnique(val.Height, val.Actor, val.Kind)
-	if err != nil {
-		if err == store.ErrNotFound {
-			return s.Create(val)
+// BulkUpsert imports new records and updates existing ones
+func (s SystemEventStore) BulkUpsert(records []model.SystemEvent) error {
+	t := time.Now()
+
+	return s.Import(queries.SystemEventInsert, len(records), func(i int) bulk.Row {
+		r := records[i]
+		return bulk.Row{
+			t,
+			t,
+			r.Height,
+			r.Time,
+			r.Actor,
+			r.Kind,
+			r.Data,
 		}
-		return err
-	}
-
-	existing.Update(*val)
-
-	return s.Update(existing)
+	})
 }
 
 // FindByActor returns system events by actor

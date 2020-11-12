@@ -35,7 +35,7 @@ type Syncables interface {
 }
 
 type SystemEvents interface {
-	CreateOrUpdate(*model.SystemEvent) error
+	BulkUpsert(records []model.SystemEvent) error
 	FindByActor(actorAddress string, kind *model.SystemEventKind, minHeight *int64) ([]model.SystemEvent, error)
 }
 
