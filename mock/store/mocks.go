@@ -422,33 +422,18 @@ func (m *MockEventSeq) EXPECT() *MockEventSeqMockRecorder {
 	return m.recorder
 }
 
-// Create mocks base method
-func (m *MockEventSeq) Create(arg0 interface{}) error {
+// BulkUpsert mocks base method
+func (m *MockEventSeq) BulkUpsert(arg0 []model.EventSeq) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Create", arg0)
+	ret := m.ctrl.Call(m, "BulkUpsert", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// Create indicates an expected call of Create
-func (mr *MockEventSeqMockRecorder) Create(arg0 interface{}) *gomock.Call {
+// BulkUpsert indicates an expected call of BulkUpsert
+func (mr *MockEventSeqMockRecorder) BulkUpsert(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockEventSeq)(nil).Create), arg0)
-}
-
-// FindAllByHeightAndIndex mocks base method
-func (m *MockEventSeq) FindAllByHeightAndIndex(arg0 int64, arg1 []int64) (map[int64]*model.EventSeq, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindAllByHeightAndIndex", arg0, arg1)
-	ret0, _ := ret[0].(map[int64]*model.EventSeq)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// FindAllByHeightAndIndex indicates an expected call of FindAllByHeightAndIndex
-func (mr *MockEventSeqMockRecorder) FindAllByHeightAndIndex(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindAllByHeightAndIndex", reflect.TypeOf((*MockEventSeq)(nil).FindAllByHeightAndIndex), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BulkUpsert", reflect.TypeOf((*MockEventSeq)(nil).BulkUpsert), arg0)
 }
 
 // FindBalanceDeposits mocks base method
@@ -539,34 +524,6 @@ func (m *MockEventSeq) FindWithdrawn(arg0 string) ([]model.EventSeqWithTxHash, e
 func (mr *MockEventSeqMockRecorder) FindWithdrawn(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindWithdrawn", reflect.TypeOf((*MockEventSeq)(nil).FindWithdrawn), arg0)
-}
-
-// Save mocks base method
-func (m *MockEventSeq) Save(arg0 interface{}) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Save", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Save indicates an expected call of Save
-func (mr *MockEventSeqMockRecorder) Save(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Save", reflect.TypeOf((*MockEventSeq)(nil).Save), arg0)
-}
-
-// Update mocks base method
-func (m *MockEventSeq) Update(arg0 interface{}) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Update", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Update indicates an expected call of Update
-func (mr *MockEventSeqMockRecorder) Update(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockEventSeq)(nil).Update), arg0)
 }
 
 // MockReports is a mock of Reports interface

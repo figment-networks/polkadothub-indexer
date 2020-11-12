@@ -377,7 +377,7 @@ func TestEventSequencePersistor_Run(t *testing.T) {
 
 	for _, tt := range tests {
 		tt := tt
-		t.Run(fmt.Sprintf("[new] %v", tt.description), func(t *testing.T) {
+		t.Run(tt.description, func(t *testing.T) {
 			t.Parallel()
 
 			ctrl := gomock.NewController(t)
@@ -388,45 +388,10 @@ func TestEventSequencePersistor_Run(t *testing.T) {
 			task := NewEventSeqPersistorTask(dbMock)
 
 			pl := &payload{
-				NewEventSequences: seqs,
+				EventSequences: seqs,
 			}
 
-			for _, s := range seqs {
-				createSeq := s
-				dbMock.EXPECT().Create(&createSeq).Return(tt.expectErr).Times(1)
-				if tt.expectErr != nil {
-					// don't expect any more calls
-					break
-				}
-			}
-
-			if err := task.Run(ctx, pl); err != tt.expectErr {
-				t.Errorf("want %v; got %v", tt.expectErr, err)
-			}
-		})
-
-		t.Run(fmt.Sprintf("[updated] %v", tt.description), func(t *testing.T) {
-			t.Parallel()
-
-			ctrl := gomock.NewController(t)
-			ctx := context.Background()
-
-			dbMock := mock.NewMockEventSeq(ctrl)
-
-			task := NewEventSeqPersistorTask(dbMock)
-
-			pl := &payload{
-				UpdatedEventSequences: seqs,
-			}
-
-			for _, s := range seqs {
-				saveSeq := s
-				dbMock.EXPECT().Save(&saveSeq).Return(tt.expectErr).Times(1)
-				if tt.expectErr != nil {
-					// don't expect any more calls
-					break
-				}
-			}
+			dbMock.EXPECT().BulkUpsert(seqs).Return(tt.expectErr).Times(1)
 
 			if err := task.Run(ctx, pl); err != tt.expectErr {
 				t.Errorf("want %v; got %v", tt.expectErr, err)
