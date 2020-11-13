@@ -1072,6 +1072,21 @@ func (mr *MockSystemEventsMockRecorder) CreateOrUpdate(arg0 interface{}) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOrUpdate", reflect.TypeOf((*MockSystemEvents)(nil).CreateOrUpdate), arg0)
 }
 
+// FindByActor mocks base method
+func (m *MockSystemEvents) FindByActor(arg0 string, arg1 *model.SystemEventKind, arg2 *int64) ([]model.SystemEvent, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindByActor", arg0, arg1, arg2)
+	ret0, _ := ret[0].([]model.SystemEvent)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindByActor indicates an expected call of FindByActor
+func (mr *MockSystemEventsMockRecorder) FindByActor(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByActor", reflect.TypeOf((*MockSystemEvents)(nil).FindByActor), arg0, arg1, arg2)
+}
+
 // MockTransactionSeq is a mock of TransactionSeq interface
 type MockTransactionSeq struct {
 	ctrl     *gomock.Controller
@@ -1626,21 +1641,6 @@ func (m *MockValidatorSessionSeq) FindSessionSeqsByHeight(arg0 int64) ([]model.V
 func (mr *MockValidatorSessionSeqMockRecorder) FindSessionSeqsByHeight(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindSessionSeqsByHeight", reflect.TypeOf((*MockValidatorSessionSeq)(nil).FindSessionSeqsByHeight), arg0)
-}
-
-// GetCountsForAccounts mocks base method
-func (m *MockValidatorSessionSeq) GetCountsForAccounts(arg0 int64) (map[string]int64, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetCountsForAccounts", arg0)
-	ret0, _ := ret[0].(map[string]int64)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetCountsForAccounts indicates an expected call of GetCountsForAccounts
-func (mr *MockValidatorSessionSeqMockRecorder) GetCountsForAccounts(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCountsForAccounts", reflect.TypeOf((*MockValidatorSessionSeq)(nil).GetCountsForAccounts), arg0)
 }
 
 // SaveSessionSeq mocks base method

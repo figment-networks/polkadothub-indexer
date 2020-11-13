@@ -13,7 +13,6 @@ const (
 	SystemEventJoinedWaitingSet     SystemEventKind = "joined_waiting_set"
 	SystemEventLeftSet              SystemEventKind = "left_set"
 	SystemEventMissedNConsecutive   SystemEventKind = "missed_n_consecutive"
-	SystemEventMissedNofM           SystemEventKind = "missed_n_of_m"
 )
 
 type SystemEventKind string
@@ -30,6 +29,12 @@ type SystemEvent struct {
 	Actor  string          `json:"actor"`
 	Kind   SystemEventKind `json:"kind"`
 	Data   types.Jsonb     `json:"data"`
+}
+
+// MissedNConsecutive is data format for missed_n_consecutive system events
+type MissedNConsecutive struct {
+	Missed    int64 `json:"missed"`
+	Threshold int64 `json:"threshold"`
 }
 
 func (o SystemEvent) Update(m SystemEvent) {

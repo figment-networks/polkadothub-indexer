@@ -95,7 +95,7 @@ func NewPipeline(cfg *config.Config, cli *client.Client, accountDb store.Account
 	p.AddStage(
 		pipeline.NewStageWithTasks(
 			StageAnalyzer,
-			pipeline.RetryingTask(NewSystemEventCreatorTask(cfg, syncableDb, validatorDb, validatorDb), isTransient, maxRetries),
+			pipeline.RetryingTask(NewSystemEventCreatorTask(cfg, syncableDb, systemEventDb, validatorDb, validatorDb), isTransient, maxRetries),
 		),
 	)
 
