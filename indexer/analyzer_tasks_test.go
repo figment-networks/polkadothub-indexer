@@ -1,6 +1,7 @@
 package indexer
 
 import (
+	"encoding/json"
 	"testing"
 	"time"
 
@@ -9,6 +10,7 @@ import (
 	"github.com/figment-networks/polkadothub-indexer/model"
 	"github.com/figment-networks/polkadothub-indexer/types"
 	"github.com/golang/mock/gomock"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -91,7 +93,7 @@ func TestSystemEventCreatorTask_getValueChangeSystemEvents(t *testing.T) {
 				},
 			}
 
-			task := NewSystemEventCreatorTask(testCfg, nil, validatorSeqStoreMock, nil)
+			task := NewSystemEventCreatorTask(testCfg, nil, nil, validatorSeqStoreMock, nil)
 			createdSystemEvents, _ := task.getValueChangeSystemEvents(currHeightValidatorSequences, prevHeightValidatorSequences, currSyncable)
 
 			if len(createdSystemEvents) != tt.expectedCount {
@@ -236,7 +238,7 @@ func TestSystemEventCreatorTask_getActiveSetPresenceChangeSystemEvents(t *testin
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			task := NewSystemEventCreatorTask(testCfg, nil, nil, nil)
+			task := NewSystemEventCreatorTask(testCfg, nil, nil, nil, nil)
 			createdSystemEvents, _ := task.getActiveSetPresenceChangeSystemEvents(tt.currSeqs, tt.prevSeqs, tt.currActiveSeqs, tt.prevActiveSeqs, currSyncable)
 
 			if len(createdSystemEvents) != tt.expectedCount {
@@ -254,105 +256,53 @@ func TestSystemEventCreatorTask_getActiveSetPresenceChangeSystemEvents(t *testin
 }
 
 func TestSystemEventCreatorTask_getMissedBlocksSystemEvents(t *testing.T) {
-	type dbcall struct {
-		param     int64
-		returnMap map[string]int64
-	}
+	testSyncable := &model.Syncable{Height: 100, Session: 50}
+	var lastSessionHeight int64 = 50
+	testErr := errors.New("test err")
 
 	tests := []struct {
 		description                string
-		missedForMaxThreshold      int64
-		missedForMaxTotalSessions  int64
 		missedConsecutiveThreshold int64
-		currSeqs                   []model.ValidatorSeq
-		currActiveSeqs             []model.ValidatorSessionSeq
-		syncable                   *model.Syncable
-		dbConsecutive              dbcall
-		dbMaxThreshold             dbcall
+		currSeqs                   []model.ValidatorSessionSeq
+		prevMissedCounts           map[string]int64
+		dbErr                      error
 
-		// errs                  []error
 		expectedKinds []model.SystemEventKind
 		expectedErr   error
 	}{
 		{
-			description:                "returns no system events when validator is in current active list",
-			missedForMaxThreshold:      2,
-			missedForMaxTotalSessions:  5,
+			description:                "returns no system events when validator is online",
 			missedConsecutiveThreshold: 2,
-			currSeqs:                   []model.ValidatorSeq{{StashAccount: testValidatorAddress}},
-			currActiveSeqs:             []model.ValidatorSessionSeq{{StashAccount: testValidatorAddress}},
-			syncable:                   &model.Syncable{Height: 100, Session: 50},
-			dbConsecutive:              dbcall{48, map[string]int64{testValidatorAddress: 2}},
-			dbMaxThreshold:             dbcall{45, map[string]int64{testValidatorAddress: 2}},
-		},
-		{
-			description:                "returns no system events when validator does not have any previous sequences in db",
-			missedForMaxThreshold:      2,
-			missedForMaxTotalSessions:  5,
-			missedConsecutiveThreshold: 2,
-			currSeqs:                   []model.ValidatorSeq{{StashAccount: testValidatorAddress}},
-			currActiveSeqs:             []model.ValidatorSessionSeq{},
-			syncable:                   &model.Syncable{Height: 100, Session: 50},
-			dbConsecutive:              dbcall{48, map[string]int64{}},
-			dbMaxThreshold:             dbcall{45, map[string]int64{}},
-		},
-		{
-			description:                "returns no system events when validator is not in current sequence list",
-			missedForMaxThreshold:      2,
-			missedForMaxTotalSessions:  5,
-			missedConsecutiveThreshold: 2,
-			currSeqs:                   []model.ValidatorSeq{},
-			currActiveSeqs:             []model.ValidatorSessionSeq{},
-			syncable:                   &model.Syncable{Height: 100, Session: 50},
-			dbConsecutive:              dbcall{48, map[string]int64{testValidatorAddress: 2}},
-			dbMaxThreshold:             dbcall{45, map[string]int64{testValidatorAddress: 2}},
+			currSeqs:                   []model.ValidatorSessionSeq{{StashAccount: testValidatorAddress, Online: true}},
+			prevMissedCounts:           map[string]int64{testValidatorAddress: 4},
 		},
 		{
 			description:                "returns no system events when validator missed counts are below threshold",
-			missedForMaxThreshold:      2,
-			missedForMaxTotalSessions:  5,
-			missedConsecutiveThreshold: 2,
-			currSeqs:                   []model.ValidatorSeq{{StashAccount: testValidatorAddress}},
-			currActiveSeqs:             []model.ValidatorSessionSeq{},
-			syncable:                   &model.Syncable{Height: 100, Session: 50},
-			dbConsecutive:              dbcall{48, map[string]int64{testValidatorAddress: 1}},
-			dbMaxThreshold:             dbcall{45, map[string]int64{testValidatorAddress: 1}},
+			missedConsecutiveThreshold: 3,
+			currSeqs:                   []model.ValidatorSessionSeq{{StashAccount: testValidatorAddress}},
+			prevMissedCounts:           map[string]int64{testValidatorAddress: 1},
 		},
 		{
-			description:                "returns one missed_n_consecutive system event when validator missed consecutive count = threshold",
-			missedForMaxThreshold:      3,
-			missedForMaxTotalSessions:  5,
+			description:                "returns one system event when validator missed consecutive count equals threshold",
 			missedConsecutiveThreshold: 2,
-			currSeqs:                   []model.ValidatorSeq{{StashAccount: testValidatorAddress}},
-			currActiveSeqs:             []model.ValidatorSessionSeq{},
-			syncable:                   &model.Syncable{Height: 100, Session: 50},
-			dbConsecutive:              dbcall{48, map[string]int64{testValidatorAddress: 2}},
-			dbMaxThreshold:             dbcall{45, map[string]int64{testValidatorAddress: 2}},
+			currSeqs:                   []model.ValidatorSessionSeq{{StashAccount: testValidatorAddress}},
+			dbErr:                      testErr,
+			prevMissedCounts:           map[string]int64{testValidatorAddress: 1},
+			expectedErr:                testErr,
+		},
+		{
+			description:                "returns error if db errors",
+			missedConsecutiveThreshold: 2,
+			currSeqs:                   []model.ValidatorSessionSeq{{StashAccount: testValidatorAddress}},
+			prevMissedCounts:           map[string]int64{testValidatorAddress: 1},
 			expectedKinds:              []model.SystemEventKind{model.SystemEventMissedNConsecutive},
 		},
 		{
-			description:                "returns one missed_n_of_m system event when validator missed threshold count = threshold",
-			missedForMaxThreshold:      3,
-			missedForMaxTotalSessions:  5,
+			description:                "returns multiple system events when many validators are offline",
 			missedConsecutiveThreshold: 2,
-			currSeqs:                   []model.ValidatorSeq{{StashAccount: testValidatorAddress}},
-			currActiveSeqs:             []model.ValidatorSessionSeq{},
-			syncable:                   &model.Syncable{Height: 100, Session: 50},
-			dbConsecutive:              dbcall{48, map[string]int64{testValidatorAddress: 1}},
-			dbMaxThreshold:             dbcall{45, map[string]int64{testValidatorAddress: 3}},
-			expectedKinds:              []model.SystemEventKind{model.SystemEventMissedNofM},
-		},
-		{
-			description:                "returns one missed_n_of_m system event when validator missed threshold count > threshold",
-			missedForMaxThreshold:      3,
-			missedForMaxTotalSessions:  5,
-			missedConsecutiveThreshold: 2,
-			currSeqs:                   []model.ValidatorSeq{{StashAccount: testValidatorAddress}},
-			currActiveSeqs:             []model.ValidatorSessionSeq{},
-			syncable:                   &model.Syncable{Height: 100, Session: 50},
-			dbConsecutive:              dbcall{48, map[string]int64{}},
-			dbMaxThreshold:             dbcall{45, map[string]int64{testValidatorAddress: 5}},
-			expectedKinds:              []model.SystemEventKind{model.SystemEventMissedNofM},
+			currSeqs:                   []model.ValidatorSessionSeq{{StashAccount: testValidatorAddress}, {StashAccount: "testValidatorAddress1"}, {StashAccount: "testValidatorAddress2", Online: true}},
+			prevMissedCounts:           map[string]int64{testValidatorAddress: 5, "testValidatorAddress1": 5, "testValidatorAddress2": 5},
+			expectedKinds:              []model.SystemEventKind{model.SystemEventMissedNConsecutive, model.SystemEventMissedNConsecutive},
 		},
 	}
 
@@ -360,16 +310,35 @@ func TestSystemEventCreatorTask_getMissedBlocksSystemEvents(t *testing.T) {
 		t.Run(tt.description, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
-			missedForMaxTotalSessions = tt.missedForMaxTotalSessions
 			missedConsecutiveThreshold = tt.missedConsecutiveThreshold
-			missedForMaxThreshold = tt.missedForMaxThreshold
+			systemEventStoreMock := mock.NewMockSystemEvents(ctrl)
 
-			validationSessionDbMock := mock.NewMockValidatorSessionSeq(ctrl)
-			validationSessionDbMock.EXPECT().GetCountsForAccounts(tt.dbConsecutive.param).Return(tt.dbConsecutive.returnMap, nil)
-			validationSessionDbMock.EXPECT().GetCountsForAccounts(tt.dbMaxThreshold.param).Return(tt.dbMaxThreshold.returnMap, nil)
+			task := NewSystemEventCreatorTask(testCfg, nil, systemEventStoreMock, nil, nil)
 
-			task := NewSystemEventCreatorTask(testCfg, nil, nil, validationSessionDbMock)
-			createdSystemEvents, err := task.getMissedBlocksSystemEvents(tt.currSeqs, tt.currActiveSeqs, tt.syncable)
+			kind := model.SystemEventMissedNConsecutive
+			for _, seq := range tt.currSeqs {
+				if seq.Online {
+					continue
+				}
+
+				dbReturn := []model.SystemEvent{}
+				if count, ok := tt.prevMissedCounts[seq.StashAccount]; ok {
+					data, err := json.Marshal(model.MissedNConsecutive{Missed: count})
+					if err != nil {
+						t.Errorf("unexpected error when marshalling data")
+						return
+					}
+					event := model.SystemEvent{Data: types.Jsonb{RawMessage: data}}
+					dbReturn = append(dbReturn, event)
+				}
+
+				systemEventStoreMock.EXPECT().FindByActor(seq.StashAccount, &kind, &lastSessionHeight).Return(dbReturn, tt.dbErr).Times(1)
+				if tt.dbErr != nil {
+					break
+				}
+			}
+
+			createdSystemEvents, err := task.getMissedBlocksSystemEvents(tt.currSeqs, lastSessionHeight, testSyncable)
 			if err == nil && tt.expectedErr != nil {
 				t.Errorf("should return error")
 				return

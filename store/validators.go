@@ -44,7 +44,6 @@ type ValidatorSessionSeq interface {
 	FindBySessionAndStashAccount(session int64, stash string) (*model.ValidatorSessionSeq, error)
 	FindLastSessionSeqByStashAccount(stashAccount string, limit int64) ([]model.ValidatorSessionSeq, error)
 	FindMostRecentSessionSeq() (*model.ValidatorSessionSeq, error)
-	GetCountsForAccounts(sinceSession int64) (map[string]int64, error)
 	SaveSessionSeq(*model.ValidatorSessionSeq) error
 	SummarizeSessionSeqs(interval types.SummaryInterval, activityPeriods []ActivityPeriodRow) ([]model.ValidatorSessionSeqSummary, error)
 }

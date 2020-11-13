@@ -26,16 +26,15 @@ var (
 	ErrActiveBalanceOutsideOfRange = errors.New("active balance is outside of specified buckets")
 	ErrCommissionOutsideOfRange    = errors.New("commission is outside of specified buckets")
 
-	missedForMaxThreshold      int64 = 10
-	missedForMaxTotalSessions  int64 = 100
-	missedConsecutiveThreshold int64 = 10
+	missedConsecutiveThreshold int64 = 1
 )
 
 // NewSystemEventCreatorTask creates system events
-func NewSystemEventCreatorTask(cfg *config.Config, syncablesDb store.Syncables, validatorSeqDb store.ValidatorSeq, validatorSessionSeqDb store.ValidatorSessionSeq) *systemEventCreatorTask {
+func NewSystemEventCreatorTask(cfg *config.Config, syncablesDb store.Syncables, systemEventDb store.SystemEvents, validatorSeqDb store.ValidatorSeq, validatorSessionSeqDb store.ValidatorSessionSeq) *systemEventCreatorTask {
 	return &systemEventCreatorTask{
 		cfg:                   cfg,
 		syncablesDb:           syncablesDb,
+		systemEventDb:         systemEventDb,
 		validatorSeqDb:        validatorSeqDb,
 		validatorSessionSeqDb: validatorSessionSeqDb,
 	}
@@ -44,6 +43,7 @@ func NewSystemEventCreatorTask(cfg *config.Config, syncablesDb store.Syncables, 
 type systemEventCreatorTask struct {
 	cfg                   *config.Config
 	syncablesDb           store.Syncables
+	systemEventDb         store.SystemEvents
 	validatorSeqDb        store.ValidatorSeq
 	validatorSessionSeqDb store.ValidatorSessionSeq
 }
@@ -82,7 +82,11 @@ func (t *systemEventCreatorTask) Run(ctx context.Context, p pipeline.Payload) er
 	if err != nil {
 		return err
 	}
-	prevSessionSeqs, err := t.getPrevSessionValidatorSequences(payload)
+	lastSessionHeight, err := t.getLastSessionHeight(payload)
+	if err != nil {
+		return err
+	}
+	prevSessionSeqs, err := t.validatorSeqDb.FindAllByHeight(lastSessionHeight)
 	if err != nil {
 		return err
 	}
@@ -93,7 +97,7 @@ func (t *systemEventCreatorTask) Run(ctx context.Context, p pipeline.Payload) er
 	}
 	payload.SystemEvents = append(payload.SystemEvents, activeSetPresenceChangeSystemEvents...)
 
-	missedBlocksSystemEvents, err := t.getMissedBlocksSystemEvents(currValidatorSeqs, currActiveSeqs, payload.Syncable)
+	missedBlocksSystemEvents, err := t.getMissedBlocksSystemEvents(currActiveSeqs, lastSessionHeight, payload.Syncable)
 	if err != nil {
 		return err
 	}
@@ -131,27 +135,21 @@ func (t *systemEventCreatorTask) getPrevValidatorSessionSequences(payload *paylo
 	return prevValidatorSessionSequences, nil
 }
 
-func (t *systemEventCreatorTask) getPrevSessionValidatorSequences(payload *payload) ([]model.ValidatorSeq, error) {
-	var prevSessionValidatorSequences []model.ValidatorSeq
+func (t *systemEventCreatorTask) getLastSessionHeight(payload *payload) (int64, error) {
 	lastSyncableInPrevSession, err := t.syncablesDb.FindLastInSession(payload.Syncable.Session - 1)
 	var lastSessionHeight int64
 
 	if err == store.ErrNotFound {
 		lastSessionHeight = t.cfg.FirstBlockHeight
 	} else if err != nil {
-		return nil, err
+		return lastSessionHeight, err
 	} else {
 		lastSessionHeight = lastSyncableInPrevSession.Height
 	}
-
-	if payload.CurrentHeight <= t.cfg.FirstBlockHeight {
-		return prevSessionValidatorSequences, nil
-	}
-
-	return t.validatorSeqDb.FindAllByHeight(lastSessionHeight)
+	return lastSessionHeight, nil
 }
 
-func (t *systemEventCreatorTask) getMissedBlocksSystemEvents(currSeqs []model.ValidatorSeq, currActiveSeqs []model.ValidatorSessionSeq, syncable *model.Syncable) ([]*model.SystemEvent, error) {
+func (t *systemEventCreatorTask) getMissedBlocksSystemEvents(currSeqs []model.ValidatorSessionSeq, lastSessionHeight int64, syncable *model.Syncable) ([]*model.SystemEvent, error) {
 	var systemEvents []*model.SystemEvent
 
 	since := syncable.Session - missedConsecutiveThreshold
@@ -159,51 +157,31 @@ func (t *systemEventCreatorTask) getMissedBlocksSystemEvents(currSeqs []model.Va
 		return systemEvents, nil
 	}
 
-	lastConsecutiveCounts, err := t.validatorSessionSeqDb.GetCountsForAccounts(since)
-	if err != nil {
-		return nil, err
-	}
-
-	since = syncable.Session - missedForMaxTotalSessions
-	lastThresholdCounts, err := t.validatorSessionSeqDb.GetCountsForAccounts(since)
-	if err != nil {
-		return nil, err
-	}
-
-	activeLookup := make(map[string]struct{}, len(currActiveSeqs))
-	for _, seq := range currActiveSeqs {
-		activeLookup[seq.StashAccount] = struct{}{}
-	}
-
-	for _, validatorSequence := range currSeqs {
-		stash := validatorSequence.StashAccount
-		// when validator is currently in active set, no need to check last records
-		if _, ok := activeLookup[stash]; ok {
+	var missed int64
+	for _, seq := range currSeqs {
+		if seq.Online {
 			continue
 		}
-
-		missedNofM, ok := lastThresholdCounts[stash]
-		// if not present in last sessions, then skip
-		if !ok {
-			continue
+		missed = 0
+		kind := model.SystemEventMissedNConsecutive
+		prevMissedEvents, err := t.systemEventDb.FindByActor(seq.StashAccount, &kind, &lastSessionHeight)
+		if err != nil {
+			return nil, err
 		}
-		if missedNofM >= missedForMaxThreshold {
-			newSystemEvent, err := t.newSystemEvent(stash, syncable, model.SystemEventMissedNofM, systemEventRawData{
-				"missed":             missedNofM,
-				"threshold":          missedForMaxThreshold,
-				"max_total_sessions": missedForMaxTotalSessions,
-			})
+		if len(prevMissedEvents) > 0 {
+			data := &model.MissedNConsecutive{}
+			err := json.Unmarshal(prevMissedEvents[0].Data.RawMessage, data)
 			if err != nil {
 				return nil, err
 			}
-
-			systemEvents = append(systemEvents, newSystemEvent)
+			missed = data.Missed
 		}
+		missed++
 
-		missedNconsecutive, _ := lastConsecutiveCounts[stash]
-		if missedNconsecutive == missedConsecutiveThreshold {
-			newSystemEvent, err := t.newSystemEvent(stash, syncable, model.SystemEventMissedNConsecutive, systemEventRawData{
-				"threshold": missedConsecutiveThreshold,
+		if missed >= missedConsecutiveThreshold {
+			newSystemEvent, err := t.newSystemEvent(seq.StashAccount, syncable, model.SystemEventMissedNConsecutive, model.MissedNConsecutive{
+				Missed:    missed,
+				Threshold: missedConsecutiveThreshold,
 			})
 			if err != nil {
 				return nil, err
@@ -386,7 +364,7 @@ func (t *systemEventCreatorTask) getRoundedChangeRate(currValue int64, prevValue
 	return roundedChangeRate
 }
 
-func (t *systemEventCreatorTask) newSystemEvent(stashAccount string, syncable *model.Syncable, kind model.SystemEventKind, data map[string]interface{}) (*model.SystemEvent, error) {
+func (t *systemEventCreatorTask) newSystemEvent(stashAccount string, syncable *model.Syncable, kind model.SystemEventKind, data interface{}) (*model.SystemEvent, error) {
 	marshaledData, err := json.Marshal(data)
 	if err != nil {
 		return nil, err
