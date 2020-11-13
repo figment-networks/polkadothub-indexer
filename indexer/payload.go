@@ -54,21 +54,17 @@ type payload struct {
 	// Sequencer stage
 	NewBlockSequence                 *model.BlockSeq
 	UpdatedBlockSequence             *model.BlockSeq
-	NewValidatorSequences            []model.ValidatorSeq
-	UpdatedValidatorSequences        []model.ValidatorSeq
+	ValidatorSequences               []model.ValidatorSeq
 	NewValidatorSessionSequences     []model.ValidatorSessionSeq
 	UpdatedValidatorSessionSequences []model.ValidatorSessionSeq
 	NewValidatorEraSequences         []model.ValidatorEraSeq
 	UpdatedValidatorEraSequences     []model.ValidatorEraSeq
-	NewEventSequences                []model.EventSeq
-	UpdatedEventSequences            []model.EventSeq
-	NewAccountEraSequences           []model.AccountEraSeq
-	UpdatedAccountEraSequences       []model.AccountEraSeq
-	NewTransactionSequences          []model.TransactionSeq
-	UpdatedTransactionSequences      []model.TransactionSeq
+	EventSequences                   []model.EventSeq
+	AccountEraSequences              []model.AccountEraSeq
+	TransactionSequences             []model.TransactionSeq
 
 	// Analyzer
-	SystemEvents []*model.SystemEvent
+	SystemEvents []model.SystemEvent
 }
 
 func (p *payload) MarkAsProcessed() {}

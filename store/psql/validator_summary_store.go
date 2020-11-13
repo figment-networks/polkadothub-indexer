@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/figment-networks/polkadothub-indexer/store/psql/queries"
+
 	"github.com/figment-networks/polkadothub-indexer/model"
 	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/types"
@@ -46,7 +48,7 @@ func (s *ValidatorSummaryStore) FindActivityPeriods(interval types.SummaryInterv
 	defer logQueryDuration(time.Now(), "ValidatorSummaryStore_FindActivityPeriods")
 
 	rows, err := s.db.
-		Raw(validatorSummaryActivityPeriodsQuery, fmt.Sprintf("1%s", interval), interval, indexVersion).
+		Raw(queries.ValidatorSummaryActivityPeriods, fmt.Sprintf("1%s", interval), interval, indexVersion).
 		Rows()
 
 	if err != nil {
@@ -71,7 +73,7 @@ func (s *ValidatorSummaryStore) FindSummaries(interval types.SummaryInterval, pe
 	var res []store.ValidatorSummaryRow
 
 	err := s.db.
-		Raw(allValidatorsSummaryForIntervalQuery, interval, period, interval).
+		Raw(queries.ValidatorSummaryForInterval, interval, period, interval).
 		Scan(&res).Error
 	return res, err
 }
@@ -82,7 +84,7 @@ func (s *ValidatorSummaryStore) FindSummaryByStashAccount(stashAccount string, i
 	var res []store.ValidatorSummaryRow
 
 	err := s.db.
-		Raw(validatorSummaryForIntervalQuery, interval, period, stashAccount, interval).
+		Raw(queries.ValidatorSummaryForIntervalAndStash, interval, period, stashAccount, interval).
 		Scan(&res).Error
 	return res, err
 }

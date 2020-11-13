@@ -3,7 +3,9 @@ package psql
 import (
 	"github.com/jinzhu/gorm"
 
+	"github.com/figment-networks/indexing-engine/store/bulk"
 	"github.com/figment-networks/polkadothub-indexer/model"
+	"github.com/figment-networks/polkadothub-indexer/store/psql/queries"
 )
 
 func NewTransactionSeqStore(db *gorm.DB) *TransactionSeqStore {
@@ -15,30 +17,17 @@ type TransactionSeqStore struct {
 	baseStore
 }
 
-// CreateTransactionSeq creates the validator aggregate
-func (s TransactionSeqStore) CreateTransactionSeq(val *model.TransactionSeq) error {
-	return s.Create(val)
-}
-
-// SaveTransactionSeq creates the validator aggregate
-func (s TransactionSeqStore) SaveTransactionSeq(val *model.TransactionSeq) error {
-	return s.Save(val)
-}
-
-// FindAllByHeightAndIndex finds all found sequences for indexes at given height, it returns map with all found sequences with indexes as keys
-func (s TransactionSeqStore) FindAllByHeightAndIndex(height int64, indexes []int64) (map[int64]*model.TransactionSeq, error) {
-	var results []*model.TransactionSeq
-
-	query := getFindAllByHeightAndIndexQuery(model.TransactionSeq{}.TableName())
-	err := s.db.
-		Raw(query, height, indexes).
-		Find(&results).
-		Error
-
-	resultMap := make(map[int64]*model.TransactionSeq, len(results))
-	for _, result := range results {
-		resultMap[result.Index] = result
-	}
-
-	return resultMap, checkErr(err)
+// BulkUpsert imports new records and updates existing ones
+func (s TransactionSeqStore) BulkUpsert(records []model.TransactionSeq) error {
+	return s.Import(queries.TransactionSeqInsert, len(records), func(i int) bulk.Row {
+		r := records[i]
+		return bulk.Row{
+			r.Height,
+			r.Time,
+			r.Index,
+			r.Hash,
+			r.Method,
+			r.Section,
+		}
+	})
 }

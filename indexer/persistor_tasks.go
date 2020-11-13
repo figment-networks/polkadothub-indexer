@@ -224,19 +224,7 @@ func (t *eventSeqPersistorTask) Run(ctx context.Context, p pipeline.Payload) err
 
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
 
-	for _, sequence := range payload.NewEventSequences {
-		if err := t.eventSeqDb.Create(&sequence); err != nil {
-			return err
-		}
-	}
-
-	for _, sequence := range payload.UpdatedEventSequences {
-		if err := t.eventSeqDb.Save(&sequence); err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return t.eventSeqDb.BulkUpsert(payload.EventSequences)
 }
 
 // NewAccountEraSeqPersistorTask is responsible for storing account era info to persistence layer
@@ -266,19 +254,7 @@ func (t *accountEraSeqPersistorTask) Run(ctx context.Context, p pipeline.Payload
 
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
 
-	for _, sequence := range payload.NewAccountEraSequences {
-		if err := t.accountEraSeqDb.Create(&sequence); err != nil {
-			return err
-		}
-	}
-
-	for _, sequence := range payload.UpdatedAccountEraSequences {
-		if err := t.accountEraSeqDb.Save(&sequence); err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return t.accountEraSeqDb.BulkUpsert(payload.AccountEraSequences)
 }
 
 // NewTransactionSeqPersistorTask is responsible for storing transaction info to persistence layer
@@ -306,19 +282,7 @@ func (t *transactionSeqPersistorTask) Run(ctx context.Context, p pipeline.Payloa
 
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
 
-	for _, sequence := range payload.NewTransactionSequences {
-		if err := t.transactionSeqDb.CreateTransactionSeq(&sequence); err != nil {
-			return err
-		}
-	}
-
-	for _, sequence := range payload.UpdatedTransactionSequences {
-		if err := t.transactionSeqDb.SaveTransactionSeq(&sequence); err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return t.transactionSeqDb.BulkUpsert(payload.TransactionSequences)
 }
 
 // NewValidatorSeqPersistorTask is responsible for storing transaction info to persistence layer
@@ -346,19 +310,7 @@ func (t *validatorSeqPersistorTask) Run(ctx context.Context, p pipeline.Payload)
 
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
 
-	for _, sequence := range payload.NewValidatorSequences {
-		if err := t.ValidatorSeqDb.CreateSeq(&sequence); err != nil {
-			return err
-		}
-	}
-
-	for _, sequence := range payload.UpdatedValidatorSequences {
-		if err := t.ValidatorSeqDb.SaveSeq(&sequence); err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return t.ValidatorSeqDb.BulkUpsertSeqs(payload.ValidatorSequences)
 }
 
 func NewSystemEventPersistorTask(systemEventDb store.SystemEvents) pipeline.Task {
@@ -382,11 +334,5 @@ func (t *systemEventPersistorTask) Run(ctx context.Context, p pipeline.Payload) 
 
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
 
-	for _, systemEvent := range payload.SystemEvents {
-		if err := t.systemEventDb.CreateOrUpdate(systemEvent); err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return t.systemEventDb.BulkUpsert(payload.SystemEvents)
 }

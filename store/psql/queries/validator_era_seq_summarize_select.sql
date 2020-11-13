@@ -1,7 +1,3 @@
-package psql
-
-const (
-	summarizeValidatorsForEraQuerySelect = `
 	stash_account,
 	DATE_TRUNC(?, time) AS time_bucket,
    	AVG(total_stake) AS total_stake_avg,
@@ -22,5 +18,3 @@ const (
 	AVG(stakers_count) AS stakers_count_avg,
    	MAX(stakers_count) AS stakers_count_max,
    	MIN(stakers_count) AS stakers_count_min
-`
-)

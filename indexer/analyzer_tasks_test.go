@@ -15,6 +15,7 @@ import (
 
 const (
 	testValidatorAddress = "test_address"
+	testDelegatorAddress = "test_del_address"
 )
 
 var (
@@ -65,11 +66,6 @@ func TestSystemEventCreatorTask_getValueChangeSystemEvents(t *testing.T) {
 		tt := tt
 		t.Run(tt.description, func(t *testing.T) {
 			t.Parallel()
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
-
-			validatorSeqStoreMock := mock.NewMockValidatorSeq(ctrl)
-
 			var activeBalanceBefore int64 = 1000
 			activeBalanceAfter := float64(activeBalanceBefore) + (float64(activeBalanceBefore) * tt.activeBalanceChangeRate / 100)
 
@@ -93,7 +89,7 @@ func TestSystemEventCreatorTask_getValueChangeSystemEvents(t *testing.T) {
 				},
 			}
 
-			task := NewSystemEventCreatorTask(testCfg, nil, nil, validatorSeqStoreMock, nil)
+			task := NewSystemEventCreatorTask(testCfg, nil, nil, nil, nil, nil)
 			createdSystemEvents, _ := task.getValueChangeSystemEvents(currHeightValidatorSequences, prevHeightValidatorSequences, currSyncable)
 
 			if len(createdSystemEvents) != tt.expectedCount {
@@ -238,7 +234,7 @@ func TestSystemEventCreatorTask_getActiveSetPresenceChangeSystemEvents(t *testin
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			task := NewSystemEventCreatorTask(testCfg, nil, nil, nil, nil)
+			task := NewSystemEventCreatorTask(testCfg, nil, nil, nil, nil, nil)
 			createdSystemEvents, _ := task.getActiveSetPresenceChangeSystemEvents(tt.currSeqs, tt.prevSeqs, tt.currActiveSeqs, tt.prevActiveSeqs, currSyncable)
 
 			if len(createdSystemEvents) != tt.expectedCount {
@@ -313,7 +309,7 @@ func TestSystemEventCreatorTask_getMissedBlocksSystemEvents(t *testing.T) {
 			missedConsecutiveThreshold = tt.missedConsecutiveThreshold
 			systemEventStoreMock := mock.NewMockSystemEvents(ctrl)
 
-			task := NewSystemEventCreatorTask(testCfg, nil, systemEventStoreMock, nil, nil)
+			task := NewSystemEventCreatorTask(testCfg, nil, nil, systemEventStoreMock, nil, nil)
 
 			kind := model.SystemEventMissedNConsecutive
 			for _, seq := range tt.currSeqs {
@@ -356,6 +352,187 @@ func TestSystemEventCreatorTask_getMissedBlocksSystemEvents(t *testing.T) {
 			for i, kind := range tt.expectedKinds {
 				if createdSystemEvents[i].Kind != kind {
 					t.Errorf("unexpected system event kind, want %v; got %v", kind, createdSystemEvents[i].Kind)
+				}
+			}
+		})
+	}
+}
+
+func TestSystemEventCreatorTask_getDelegationChangedSystemEvents(t *testing.T) {
+	currSyncable := &model.Syncable{
+		Height: 20,
+		Time:   *types.NewTimeFromTime(time.Date(2020, 11, 10, 23, 0, 0, 0, time.UTC)),
+	}
+
+	tests := []struct {
+		description      string
+		prevSeqs         []model.AccountEraSeq
+		currSeqs         []model.AccountEraSeq
+		expectedKinds    []model.SystemEventKind
+		expectedAccounts map[string][]string
+	}{
+		{
+			description: "returns no system events when delegator is both in prev and current lists",
+			prevSeqs: []model.AccountEraSeq{
+				{StashAccount: testDelegatorAddress, ValidatorStashAccount: testValidatorAddress},
+			},
+			currSeqs: []model.AccountEraSeq{
+				{StashAccount: testDelegatorAddress, ValidatorStashAccount: testValidatorAddress},
+			},
+		},
+		{
+			description: "returns delegation_joined event when delegator is not in prev but in current lists",
+			prevSeqs: []model.AccountEraSeq{
+				{StashAccount: testDelegatorAddress, ValidatorStashAccount: testValidatorAddress},
+			},
+			currSeqs: []model.AccountEraSeq{
+				{StashAccount: testDelegatorAddress, ValidatorStashAccount: testValidatorAddress},
+				{StashAccount: "addr2", ValidatorStashAccount: testValidatorAddress},
+			},
+			expectedKinds:    []model.SystemEventKind{model.SystemEventDelegationJoined},
+			expectedAccounts: map[string][]string{testValidatorAddress: []string{"addr2"}},
+		},
+		{
+			description: "returns multiple delegation_joined events when delegator is in prev list but not in current",
+			prevSeqs: []model.AccountEraSeq{
+				{StashAccount: testDelegatorAddress, ValidatorStashAccount: testValidatorAddress},
+				{StashAccount: testDelegatorAddress, ValidatorStashAccount: "validatorAddr2"},
+			},
+			currSeqs: []model.AccountEraSeq{
+				{StashAccount: testDelegatorAddress, ValidatorStashAccount: testValidatorAddress},
+				{StashAccount: "addr1", ValidatorStashAccount: testValidatorAddress},
+				{StashAccount: testDelegatorAddress, ValidatorStashAccount: "validatorAddr2"},
+				{StashAccount: "addr1", ValidatorStashAccount: "validatorAddr2"},
+			},
+			expectedKinds: []model.SystemEventKind{model.SystemEventDelegationJoined, model.SystemEventDelegationJoined},
+			expectedAccounts: map[string][]string{
+				testValidatorAddress: []string{"addr1"},
+				"validatorAddr2":     []string{"addr1"},
+			},
+		},
+		{
+			description: "returns delegation_joined event with multiple delegators in data",
+			prevSeqs: []model.AccountEraSeq{
+				{StashAccount: testDelegatorAddress, ValidatorStashAccount: testValidatorAddress},
+			},
+			currSeqs: []model.AccountEraSeq{
+				{StashAccount: testDelegatorAddress, ValidatorStashAccount: testValidatorAddress},
+				{StashAccount: "addr", ValidatorStashAccount: testValidatorAddress},
+				{StashAccount: "addr2", ValidatorStashAccount: testValidatorAddress},
+				{StashAccount: "addr3", ValidatorStashAccount: testValidatorAddress},
+			},
+			expectedKinds:    []model.SystemEventKind{model.SystemEventDelegationJoined},
+			expectedAccounts: map[string][]string{testValidatorAddress: []string{"addr", "addr2", "addr3"}},
+		},
+		{
+			description: "returns delegation_left event when delegator is in prev list but not in current",
+			prevSeqs: []model.AccountEraSeq{
+				{StashAccount: testDelegatorAddress, ValidatorStashAccount: testValidatorAddress},
+				{StashAccount: "addr2", ValidatorStashAccount: testValidatorAddress},
+			},
+			currSeqs: []model.AccountEraSeq{
+				{StashAccount: testDelegatorAddress, ValidatorStashAccount: testValidatorAddress},
+			},
+			expectedKinds:    []model.SystemEventKind{model.SystemEventDelegationLeft},
+			expectedAccounts: map[string][]string{testValidatorAddress: []string{"addr2"}},
+		},
+		{
+			description: "returns delegation_left event with multiple delegators in data",
+			prevSeqs: []model.AccountEraSeq{
+				{StashAccount: testDelegatorAddress, ValidatorStashAccount: testValidatorAddress},
+				{StashAccount: "addr", ValidatorStashAccount: testValidatorAddress},
+				{StashAccount: "addr2", ValidatorStashAccount: testValidatorAddress},
+				{StashAccount: "addr3", ValidatorStashAccount: testValidatorAddress},
+			},
+			currSeqs: []model.AccountEraSeq{
+				{StashAccount: testDelegatorAddress, ValidatorStashAccount: testValidatorAddress},
+			},
+
+			expectedKinds:    []model.SystemEventKind{model.SystemEventDelegationLeft},
+			expectedAccounts: map[string][]string{testValidatorAddress: []string{"addr", "addr2", "addr3"}},
+		},
+		{
+			description: "returns multiple delegation_left events when delegator is in prev list but not in current",
+			prevSeqs: []model.AccountEraSeq{
+				{StashAccount: testDelegatorAddress, ValidatorStashAccount: testValidatorAddress},
+				{StashAccount: "addr2", ValidatorStashAccount: testValidatorAddress},
+				{StashAccount: testDelegatorAddress, ValidatorStashAccount: "validatorAddr2"},
+				{StashAccount: "addr2", ValidatorStashAccount: "validatorAddr2"},
+			},
+			currSeqs: []model.AccountEraSeq{
+				{StashAccount: testDelegatorAddress, ValidatorStashAccount: testValidatorAddress},
+				{StashAccount: testDelegatorAddress, ValidatorStashAccount: "validatorAddr2"},
+			},
+			expectedKinds: []model.SystemEventKind{model.SystemEventDelegationLeft, model.SystemEventDelegationLeft},
+			expectedAccounts: map[string][]string{
+				testValidatorAddress: []string{"addr2"},
+				"validatorAddr2":     []string{"addr2"},
+			},
+		},
+		{
+			description: "returns delegation_left and delegation_joined events",
+			prevSeqs: []model.AccountEraSeq{
+				{StashAccount: testDelegatorAddress, ValidatorStashAccount: testValidatorAddress},
+				{StashAccount: testDelegatorAddress, ValidatorStashAccount: "validatorAddr2"},
+				{StashAccount: "addr2", ValidatorStashAccount: "validatorAddr2"},
+			},
+			currSeqs: []model.AccountEraSeq{
+				{StashAccount: testDelegatorAddress, ValidatorStashAccount: testValidatorAddress},
+				{StashAccount: testDelegatorAddress, ValidatorStashAccount: "validatorAddr2"},
+				{StashAccount: testDelegatorAddress, ValidatorStashAccount: testValidatorAddress},
+				{StashAccount: "addr3", ValidatorStashAccount: testValidatorAddress},
+			},
+			expectedKinds: []model.SystemEventKind{model.SystemEventDelegationJoined, model.SystemEventDelegationLeft},
+			expectedAccounts: map[string][]string{
+				testValidatorAddress: []string{"addr3"},
+				"validatorAddr2":     []string{"addr2"},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.description, func(t *testing.T) {
+			t.Parallel()
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			task := NewSystemEventCreatorTask(testCfg, nil, nil, nil, nil, nil)
+			createdSystemEvents, _ := task.getDelegationChangedSystemEvents(tt.currSeqs, tt.prevSeqs, currSyncable)
+
+			if len(createdSystemEvents) != len(tt.expectedKinds) {
+				t.Errorf("unexpected system event count, want %v; got %v", len(tt.expectedKinds), len(createdSystemEvents))
+				return
+			}
+
+			for i, event := range createdSystemEvents {
+				if event.Kind != tt.expectedKinds[i] {
+					t.Errorf("unexpected system event kind, want %v; got %v", tt.expectedKinds[i], event.Kind)
+				}
+
+				data := &model.DelegationChangeData{}
+				err := json.Unmarshal(event.Data.RawMessage, data)
+				if err != nil {
+					t.Errorf("unexpected err when unmarshalling data: %v", err)
+					return
+				}
+
+				if len(data.StashAccounts) != len(tt.expectedAccounts[event.Actor]) {
+					t.Errorf("unexpected stash accounts count, want %v; got %v", len(tt.expectedAccounts[event.Actor]), len(data.StashAccounts))
+					return
+				}
+
+				for _, expected := range tt.expectedAccounts[event.Actor] {
+					var found bool
+					for _, stash := range data.StashAccounts {
+						if stash == expected {
+							found = true
+							break
+						}
+					}
+					if !found {
+						t.Errorf("missing stash account in data, want %v", expected)
+					}
 				}
 			}
 		})

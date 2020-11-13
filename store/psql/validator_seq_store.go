@@ -3,7 +3,9 @@ package psql
 import (
 	"time"
 
+	"github.com/figment-networks/indexing-engine/store/bulk"
 	"github.com/figment-networks/polkadothub-indexer/model"
+	"github.com/figment-networks/polkadothub-indexer/store/psql/queries"
 	"github.com/jinzhu/gorm"
 )
 
@@ -16,14 +18,18 @@ type ValidatorSeqStore struct {
 	baseStore
 }
 
-// CreateSeq creates the validator aggregate
-func (s ValidatorSeqStore) CreateSeq(val *model.ValidatorSeq) error {
-	return s.Create(val)
-}
-
-// SaveSeq creates the validator aggregate
-func (s ValidatorSeqStore) SaveSeq(val *model.ValidatorSeq) error {
-	return s.Save(val)
+// BulkUpsertSeqs imports new records and updates existing ones
+func (s ValidatorSeqStore) BulkUpsertSeqs(records []model.ValidatorSeq) error {
+	return s.Import(queries.ValidatorSeqInsert, len(records), func(i int) bulk.Row {
+		r := records[i]
+		return bulk.Row{
+			r.Height,
+			r.Time,
+			r.StashAccount,
+			r.ActiveBalance.String(),
+			r.Commission.String(),
+		}
+	})
 }
 
 // FindAllByHeight returns all validators for provided height
