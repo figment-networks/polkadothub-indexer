@@ -857,6 +857,21 @@ func (mr *MockSyncablesMockRecorder) CreateOrUpdate(arg0 interface{}) *gomock.Ca
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOrUpdate", reflect.TypeOf((*MockSyncables)(nil).CreateOrUpdate), arg0)
 }
 
+// FindAllByLastInSessionOrEra mocks base method
+func (m *MockSyncables) FindAllByLastInSessionOrEra(arg0 int64, arg1, arg2 bool) ([]model.Syncable, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindAllByLastInSessionOrEra", arg0, arg1, arg2)
+	ret0, _ := ret[0].([]model.Syncable)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindAllByLastInSessionOrEra indicates an expected call of FindAllByLastInSessionOrEra
+func (mr *MockSyncablesMockRecorder) FindAllByLastInSessionOrEra(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindAllByLastInSessionOrEra", reflect.TypeOf((*MockSyncables)(nil).FindAllByLastInSessionOrEra), arg0, arg1, arg2)
+}
+
 // FindByHeight mocks base method
 func (m *MockSyncables) FindByHeight(arg0 int64) (*model.Syncable, error) {
 	m.ctrl.T.Helper()
@@ -1035,21 +1050,6 @@ func (mr *MockSyncablesMockRecorder) SetProcessedAtForRange(arg0, arg1, arg2 int
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetProcessedAtForRange", reflect.TypeOf((*MockSyncables)(nil).SetProcessedAtForRange), arg0, arg1, arg2)
 }
 
-<<<<<<< HEAD
-// FindAllByLastInSessionOrEra mocks base method
-func (m *MockSyncables) FindAllByLastInSessionOrEra(arg0 int64, arg1, arg2 bool) ([]model.Syncable, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetProcessedAtForRange", arg0, arg1, arg2)
-	ret0, _ := ret[0].([]model.Syncable)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// FindAllByLastInSessionOrEra indicates an expected call of FindAllByLastInSessionOrEra
-func (mr *MockSyncablesMockRecorder) FindAllByLastInSessionOrEra(arg0, arg1, arg2 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindAllByLastInSessionOrEra", reflect.TypeOf((*MockSyncables)(nil).FindAllByLastInSessionOrEra), arg0, arg1, arg2)
-=======
 // MockSystemEvents is a mock of SystemEvents interface
 type MockSystemEvents struct {
 	ctrl     *gomock.Controller
@@ -1085,7 +1085,6 @@ func (m *MockSystemEvents) CreateOrUpdate(arg0 *model.SystemEvent) error {
 func (mr *MockSystemEventsMockRecorder) CreateOrUpdate(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOrUpdate", reflect.TypeOf((*MockSystemEvents)(nil).CreateOrUpdate), arg0)
->>>>>>> Create analyzer stage, track balance change events, add some tests
 }
 
 // FindByActor mocks base method
