@@ -21,12 +21,13 @@ type getByHeightUseCase struct {
 	eventDb       store.Events
 	reportDb      store.Reports
 	syncableDb    store.Syncables
+	systemEventDb store.SystemEvents
 	transactionDb store.Transactions
 	validatorDb   store.Validators
 }
 
 func NewGetByHeightUseCase(cfg *config.Config, cli *client.Client, accountDb store.Accounts, blockDb store.Blocks, databaseDb store.Database, eventDb store.Events, reportDb store.Reports,
-	syncableDb store.Syncables, transactionDb store.Transactions, validatorDb store.Validators) *getByHeightUseCase {
+	syncableDb store.Syncables, systemEventDb store.SystemEvents, transactionDb store.Transactions, validatorDb store.Validators) *getByHeightUseCase {
 	return &getByHeightUseCase{
 		cfg:    cfg,
 		client: cli,
@@ -37,6 +38,7 @@ func NewGetByHeightUseCase(cfg *config.Config, cli *client.Client, accountDb sto
 		eventDb:       eventDb,
 		reportDb:      reportDb,
 		syncableDb:    syncableDb,
+		systemEventDb: systemEventDb,
 		transactionDb: transactionDb,
 		validatorDb:   validatorDb,
 	}
@@ -66,7 +68,7 @@ func (uc *getByHeightUseCase) Execute(height *int64) (SeqListView, error) {
 			return SeqListView{}, err
 		}
 
-		indexingPipeline, err := indexer.NewPipeline(uc.cfg, uc.client, uc.accountDb, uc.blockDb, uc.databaseDb, uc.eventDb, uc.reportDb, uc.syncableDb, uc.transactionDb, uc.validatorDb)
+		indexingPipeline, err := indexer.NewPipeline(uc.cfg, uc.client, uc.accountDb, uc.blockDb, uc.databaseDb, uc.eventDb, uc.reportDb, uc.syncableDb, uc.systemEventDb, uc.transactionDb, uc.validatorDb)
 		if err != nil {
 			return SeqListView{}, err
 		}

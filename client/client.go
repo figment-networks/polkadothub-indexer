@@ -30,6 +30,7 @@ func New(connStr string) (*Client, error) {
 		ValidatorPerformance: NewValidatorPerformanceClient(conn),
 		Staking:              NewStakingClient(conn),
 		Event:                NewEventClient(conn),
+		Validator:            NewValidatorClient(conn),
 	}, nil
 }
 
@@ -44,6 +45,7 @@ type Client struct {
 	ValidatorPerformance ValidatorPerformanceClient
 	Staking              StakingClient
 	Event                EventClient
+	Validator            ValidatorClient
 }
 
 func (c *Client) Close() error {

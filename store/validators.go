@@ -16,6 +16,14 @@ type ValidatorAgg interface {
 	SaveAgg(*model.ValidatorAgg) error
 }
 
+type ValidatorSeq interface {
+	CreateSeq(*model.ValidatorSeq) error
+	DeleteSeqsOlderThan(purgeThreshold time.Time) (*int64, error)
+	FindAllByHeight(height int64) ([]model.ValidatorSeq, error)
+	FindMostRecentSeq() (*model.ValidatorSeq, error)
+	SaveSeq(*model.ValidatorSeq) error
+}
+
 type ValidatorEraSeq interface {
 	CreateEraSeq(*model.ValidatorEraSeq) error
 	DeleteEraSeqsOlderThan(purgeThreshold time.Time) (*int64, error)
@@ -32,6 +40,7 @@ type ValidatorSessionSeq interface {
 	CreateSessionSeq(*model.ValidatorSessionSeq) error
 	DeleteSessionSeqsOlderThan(purgeThreshold time.Time) (*int64, error)
 	FindSessionSeqsByHeight(h int64) ([]model.ValidatorSessionSeq, error)
+	FindBySession(h int64) ([]model.ValidatorSessionSeq, error)
 	FindBySessionAndStashAccount(session int64, stash string) (*model.ValidatorSessionSeq, error)
 	FindLastSessionSeqByStashAccount(stashAccount string, limit int64) ([]model.ValidatorSessionSeq, error)
 	FindMostRecentSessionSeq() (*model.ValidatorSessionSeq, error)

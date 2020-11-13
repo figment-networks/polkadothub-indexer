@@ -9,12 +9,13 @@ import (
 	"github.com/figment-networks/polkadothub-indexer/usecase/block"
 	"github.com/figment-networks/polkadothub-indexer/usecase/chain"
 	"github.com/figment-networks/polkadothub-indexer/usecase/health"
+	"github.com/figment-networks/polkadothub-indexer/usecase/system_event"
 	"github.com/figment-networks/polkadothub-indexer/usecase/transaction"
 	"github.com/figment-networks/polkadothub-indexer/usecase/validator"
 )
 
 func NewHttpHandlers(cfg *config.Config, cli *client.Client, accountDb store.Accounts, blockDb store.Blocks, databaseDb store.Database, eventDb store.Events, reportDb store.Reports,
-	syncableDb store.Syncables, transactionDb store.Transactions, validatorDb store.Validators,
+	syncableDb store.Syncables, systemEventDb store.SystemEvents, transactionDb store.Transactions, validatorDb store.Validators,
 ) *HttpHandlers {
 	return &HttpHandlers{
 		Health:                     health.NewHealthHttpHandler(),
@@ -25,7 +26,8 @@ func NewHttpHandlers(cfg *config.Config, cli *client.Client, accountDb store.Acc
 		GetTransactionsByHeight:    transaction.NewGetByHeightHttpHandler(cli, syncableDb),
 		GetAccountByHeight:         account.NewGetByHeightHttpHandler(cli, syncableDb),
 		GetAccountDetails:          account.NewGetDetailsHttpHandler(cli, accountDb, eventDb, syncableDb),
-		GetValidatorsByHeight:      validator.NewGetByHeightHttpHandler(cfg, cli, accountDb, blockDb, databaseDb, eventDb, reportDb, syncableDb, transactionDb, validatorDb),
+		GetSystemEventsForAddress:  system_event.NewGetForAddressHttpHandler(cli, systemEventDb),
+		GetValidatorsByHeight:      validator.NewGetByHeightHttpHandler(cfg, cli, accountDb, blockDb, databaseDb, eventDb, reportDb, syncableDb, systemEventDb, transactionDb, validatorDb),
 		GetValidatorByStashAccount: validator.NewGetByStashAccountHttpHandler(accountDb, validatorDb),
 		GetValidatorSummary:        validator.NewGetSummaryHttpHandler(syncableDb, validatorDb),
 		GetValidatorsForMinHeight:  validator.NewGetForMinHeightHttpHandler(syncableDb, validatorDb),
@@ -41,6 +43,7 @@ type HttpHandlers struct {
 	GetTransactionsByHeight    types.HttpHandler
 	GetAccountByHeight         types.HttpHandler
 	GetAccountDetails          types.HttpHandler
+	GetSystemEventsForAddress  types.HttpHandler
 	GetValidatorsByHeight      types.HttpHandler
 	GetValidatorByStashAccount types.HttpHandler
 	GetValidatorSummary        types.HttpHandler

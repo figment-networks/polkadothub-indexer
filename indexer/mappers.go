@@ -9,12 +9,14 @@ import (
 	"github.com/figment-networks/polkadothub-proxy/grpc/event/eventpb"
 	"github.com/figment-networks/polkadothub-proxy/grpc/staking/stakingpb"
 	"github.com/figment-networks/polkadothub-proxy/grpc/transaction/transactionpb"
+	"github.com/figment-networks/polkadothub-proxy/grpc/validator/validatorpb"
 	"github.com/figment-networks/polkadothub-proxy/grpc/validatorperformance/validatorperformancepb"
 	"github.com/pkg/errors"
 )
 
 var (
 	ErrBlockSequenceNotValid            = errors.New("block sequence not valid")
+	ErrValidatorSequenceNotValid        = errors.New("validator sequence not valid")
 	ErrValidatorSessionSequenceNotValid = errors.New("validator session sequence not valid")
 	ErrValidatorEraSequenceNotValid     = errors.New("validator era sequence not valid")
 	ErrAccountEraSequenceNotValid       = errors.New("account era sequence not valid")
@@ -39,6 +41,39 @@ func ToBlockSequence(syncable *model.Syncable, rawBlock *blockpb.Block, blockPar
 	}
 
 	return e, nil
+}
+
+func ToValidatorSequence(syncable *model.Syncable, rawValidators []*validatorpb.Validator) ([]model.ValidatorSeq, error) {
+	var validators []model.ValidatorSeq
+	for _, rawValidator := range rawValidators {
+		balance, err := types.NewQuantityFromString(rawValidator.GetBalance())
+		if err != nil {
+			return nil, err
+		}
+
+		commission, err := types.NewQuantityFromString(rawValidator.GetCommission())
+		if err != nil {
+			return nil, err
+		}
+
+		e := model.ValidatorSeq{
+			Sequence: &model.Sequence{
+				Height: syncable.Height,
+				Time:   syncable.Time,
+			},
+
+			StashAccount:  rawValidator.GetStashAccount(),
+			ActiveBalance: balance,
+			Commission:    commission,
+		}
+
+		if !e.Valid() {
+			return nil, ErrValidatorSequenceNotValid
+		}
+
+		validators = append(validators, e)
+	}
+	return validators, nil
 }
 
 func ToValidatorSessionSequence(syncable *model.Syncable, firstHeight int64, rawValidatorPerformance []*validatorperformancepb.Validator) ([]model.ValidatorSessionSeq, error) {

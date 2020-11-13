@@ -20,6 +20,8 @@ const (
 	EventSeqPersistorTaskName            = "EventSeqPersistor"
 	AccountEraSeqPersistorTaskName       = "AccountEraSeqPersistor"
 	TransactionSeqPersistorTaskName      = "TransactionSeqPersistor"
+	ValidatorSeqPersistorTaskName        = "ValidatorSeqPersistor"
+	SystemEventPersistorTaskName         = "SystemEventPersistor"
 )
 
 // NewSyncerPersistorTask is responsible for storing syncable to persistence layer
@@ -312,6 +314,76 @@ func (t *transactionSeqPersistorTask) Run(ctx context.Context, p pipeline.Payloa
 
 	for _, sequence := range payload.UpdatedTransactionSequences {
 		if err := t.transactionSeqDb.SaveTransactionSeq(&sequence); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// NewValidatorSeqPersistorTask is responsible for storing transaction info to persistence layer
+func NewValidatorSeqPersistorTask(ValidatorSeqDb store.ValidatorSeq) pipeline.Task {
+	return &validatorSeqPersistorTask{
+		ValidatorSeqDb: ValidatorSeqDb,
+	}
+}
+
+type validatorSeqPersistorTask struct {
+	ValidatorSeqDb store.ValidatorSeq
+}
+
+func (t *validatorSeqPersistorTask) GetName() string {
+	return ValidatorSeqPersistorTaskName
+}
+
+func (t *validatorSeqPersistorTask) Run(ctx context.Context, p pipeline.Payload) error {
+	defer metric.LogIndexerTaskDuration(time.Now(), t.GetName())
+
+	payload, ok := p.(*payload)
+	if !ok {
+		return fmt.Errorf("Interface is not a  *payload type (%T)", p)
+	}
+
+	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
+
+	for _, sequence := range payload.NewValidatorSequences {
+		if err := t.ValidatorSeqDb.CreateSeq(&sequence); err != nil {
+			return err
+		}
+	}
+
+	for _, sequence := range payload.UpdatedValidatorSequences {
+		if err := t.ValidatorSeqDb.SaveSeq(&sequence); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func NewSystemEventPersistorTask(systemEventDb store.SystemEvents) pipeline.Task {
+	return &systemEventPersistorTask{
+		systemEventDb: systemEventDb,
+	}
+}
+
+type systemEventPersistorTask struct {
+	systemEventDb store.SystemEvents
+}
+
+func (t *systemEventPersistorTask) GetName() string {
+	return SystemEventPersistorTaskName
+}
+
+func (t *systemEventPersistorTask) Run(ctx context.Context, p pipeline.Payload) error {
+	defer metric.LogIndexerTaskDuration(time.Now(), t.GetName())
+
+	payload := p.(*payload)
+
+	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
+
+	for _, systemEvent := range payload.SystemEvents {
+		if err := t.systemEventDb.CreateOrUpdate(systemEvent); err != nil {
 			return err
 		}
 	}

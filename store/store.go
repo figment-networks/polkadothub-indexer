@@ -34,12 +34,18 @@ type Syncables interface {
 	FindMostRecenter
 }
 
+type SystemEvents interface {
+	CreateOrUpdate(*model.SystemEvent) error
+	FindByActor(actorAddress string, kind *model.SystemEventKind, minHeight *int64) ([]model.SystemEvent, error)
+}
+
 type Transactions interface {
 	TransactionSeq
 }
 
 type Validators interface {
 	ValidatorAgg
+	ValidatorSeq
 	ValidatorEraSeq
 	ValidatorSessionSeq
 	ValidatorSummary
