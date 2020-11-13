@@ -941,21 +941,6 @@ func (mr *MockSystemEventsMockRecorder) FindByActor(arg0, arg1, arg2 interface{}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByActor", reflect.TypeOf((*MockSystemEvents)(nil).FindByActor), arg0, arg1, arg2)
 }
 
-// FindByActor mocks base method
-func (m *MockSystemEvents) FindByActor(arg0 string, arg1 *model.SystemEventKind, arg2 *int64) ([]model.SystemEvent, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindByActor", arg0, arg1, arg2)
-	ret0, _ := ret[0].([]model.SystemEvent)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// FindByActor indicates an expected call of FindByActor
-func (mr *MockSystemEventsMockRecorder) FindByActor(arg0, arg1, arg2 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByActor", reflect.TypeOf((*MockSystemEvents)(nil).FindByActor), arg0, arg1, arg2)
-}
-
 // MockTransactionSeq is a mock of TransactionSeq interface
 type MockTransactionSeq struct {
 	ctrl     *gomock.Controller

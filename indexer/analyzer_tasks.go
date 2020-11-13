@@ -30,7 +30,7 @@ var (
 )
 
 // NewSystemEventCreatorTask creates system events
-func NewSystemEventCreatorTask(cfg *config.Config, accountEraSeqDb store.AccountEraSeq, systemEventDb store.SystemEvents, syncablesDb store.Syncables, validatorSeqDb store.ValidatorSeq, validatorSessionSeqDb store.ValidatorSessionSeq,
+func NewSystemEventCreatorTask(cfg *config.Config, accountEraSeqDb store.AccountEraSeq, syncablesDb store.Syncables, systemEventDb store.SystemEvents, validatorSeqDb store.ValidatorSeq, validatorSessionSeqDb store.ValidatorSessionSeq,
 ) *systemEventCreatorTask {
 	return &systemEventCreatorTask{
 		cfg:                   cfg,
@@ -134,6 +134,20 @@ func (t *systemEventCreatorTask) getPrevHeightValidatorSequences(payload *payloa
 	}
 
 	return prevValidatorSeqs, nil
+}
+
+func (t *systemEventCreatorTask) getPrevEraAccountSequences(payload *payload) ([]model.AccountEraSeq, error) {
+	var prevEraAccountSequences []model.AccountEraSeq
+
+	if payload.CurrentHeight > t.cfg.FirstBlockHeight && payload.Syncable.Era > 1 {
+		var err error
+		prevEraAccountSequences, err = t.accountEraSeqDb.FindByEra(payload.Syncable.Era - 1)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return prevEraAccountSequences, nil
 }
 
 func (t *systemEventCreatorTask) getPrevValidatorSessionSequences(payload *payload) ([]model.ValidatorSessionSeq, error) {
@@ -463,11 +477,7 @@ func (t *systemEventCreatorTask) getRoundedChangeRate(currValue int64, prevValue
 	return roundedChangeRate
 }
 
-<<<<<<< HEAD
-func (t *systemEventCreatorTask) newSystemEvent(stashAccount string, syncable *model.Syncable, kind model.SystemEventKind, data interface{}) (*model.SystemEvent, error) {
-=======
 func (t *systemEventCreatorTask) newSystemEvent(stashAccount string, syncable *model.Syncable, kind model.SystemEventKind, data interface{}) (model.SystemEvent, error) {
->>>>>>> Refactor system events, and bulk insert, cleanup and fix tests
 	marshaledData, err := json.Marshal(data)
 	if err != nil {
 		return model.SystemEvent{}, err
