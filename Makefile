@@ -14,7 +14,7 @@ mockgen:
 
 
 # Build the binary
-build:
+build: queries
 	go build \
 		-ldflags "\
 			-X github.com/figment-networks/polkadothub-indexer/cli.gitCommit=${GIT_COMMIT} \
