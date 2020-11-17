@@ -313,7 +313,7 @@ func (t *systemEventCreatorTask) getDelegationChangedSystemEvents(currSeqs, prev
 		prevDelegationsforValidator[seq.ValidatorStashAccount] = delegations
 	}
 
-	currDelegationsforValidator := make(map[string]delgationLookup, len(prevSeqs))
+	currDelegationsforValidator := make(map[string]delgationLookup, len(currSeqs))
 	for _, seq := range currSeqs {
 		delegations, ok := currDelegationsforValidator[seq.ValidatorStashAccount]
 		if !ok {
