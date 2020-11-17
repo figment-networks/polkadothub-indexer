@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"strings"
 	"time"
 
 	"github.com/figment-networks/indexing-engine/pipeline"
@@ -303,47 +304,65 @@ type delgationLookup map[string]struct{}
 func (t *systemEventCreatorTask) getDelegationChangedSystemEvents(currSeqs, prevSeqs []model.AccountEraSeq, syncable *model.Syncable) ([]model.SystemEvent, error) {
 	var systemEvents []model.SystemEvent
 
-	prevDelegationsforValidator := make(map[string]delgationLookup, len(prevSeqs))
+	lookupKey := func(account model.AccountEraSeq) string {
+		return fmt.Sprintf("%v:%v", account.ValidatorStashAccount, account.StashAccount)
+	}
+	splitKey := func(key string) (string, string) {
+		parts := strings.Split(key, ":")
+		return parts[0], parts[1]
+	}
+
+	prevValidatorLookup := make(map[string]struct{})
+	prevMcurr := make(map[string]struct{}, len(prevSeqs)) // set of prev minus current
 	for _, seq := range prevSeqs {
-		delegations, ok := prevDelegationsforValidator[seq.ValidatorStashAccount]
-		if !ok {
-			delegations = make(delgationLookup)
-		}
-		delegations[seq.StashAccount] = struct{}{}
-		prevDelegationsforValidator[seq.ValidatorStashAccount] = delegations
+		prevMcurr[lookupKey(seq)] = struct{}{}
+		prevValidatorLookup[seq.ValidatorStashAccount] = struct{}{}
 	}
 
-	currDelegationsforValidator := make(map[string]delgationLookup, len(currSeqs))
+	joinedDelegations := make(map[string][]string)
+	currValidatorLookup := make(map[string]struct{})
+	var v, d string
 	for _, seq := range currSeqs {
-		delegations, ok := currDelegationsforValidator[seq.ValidatorStashAccount]
-		if !ok {
-			delegations = make(delgationLookup)
+		v = seq.ValidatorStashAccount
+		d = seq.StashAccount
+
+		currValidatorLookup[v] = struct{}{}
+		if _, ok := prevValidatorLookup[v]; !ok {
+			// validator not present in previous session, don't create delegation events
+			continue
 		}
-		delegations[seq.StashAccount] = struct{}{}
-		currDelegationsforValidator[seq.ValidatorStashAccount] = delegations
+
+		key := lookupKey(seq)
+		if _, ok := prevMcurr[key]; ok {
+			delete(prevMcurr, key)
+			continue
+		}
+
+		joined, ok := joinedDelegations[v]
+		if !ok {
+			joined = []string{}
+		}
+		joinedDelegations[v] = append(joined, d)
 	}
 
-	var joined []string
-	for v, currDelegations := range currDelegationsforValidator {
-		prevDelegations, ok := prevDelegationsforValidator[v]
+	leftDelegations := make(map[string][]string)
+	for key := range prevMcurr {
+		v, d = splitKey(key)
+		if _, ok := currValidatorLookup[v]; !ok {
+			// validator not present in current session, don't create delegation events
+			continue
+		}
+
+		left, ok := leftDelegations[v]
 		if !ok {
-			// validator wasnt active in previous era
-			continue
+			left = []string{}
 		}
+		leftDelegations[v] = append(left, d)
+	}
 
-		joined = []string{}
-		for d := range currDelegations {
-			if _, ok = prevDelegations[d]; !ok {
-				joined = append(joined, d)
-			}
-		}
-
-		if len(joined) == 0 {
-			continue
-		}
-
+	for v, d := range joinedDelegations {
 		newSystemEvent, err := t.newSystemEvent(v, syncable, model.SystemEventDelegationJoined, model.DelegationChangeData{
-			StashAccounts: joined,
+			StashAccounts: d,
 		})
 		if err != nil {
 			return nil, err
@@ -351,27 +370,9 @@ func (t *systemEventCreatorTask) getDelegationChangedSystemEvents(currSeqs, prev
 		systemEvents = append(systemEvents, newSystemEvent)
 	}
 
-	var left []string
-	for v, prevDelegations := range prevDelegationsforValidator {
-		currDelegations, ok := currDelegationsforValidator[v]
-		if !ok {
-			// validator wasnt active in current era
-			continue
-		}
-
-		left = []string{}
-		for d := range prevDelegations {
-			if _, ok = currDelegations[d]; !ok {
-				left = append(left, d)
-			}
-		}
-
-		if len(left) == 0 {
-			continue
-		}
-
+	for v, d := range leftDelegations {
 		newSystemEvent, err := t.newSystemEvent(v, syncable, model.SystemEventDelegationLeft, model.DelegationChangeData{
-			StashAccounts: left,
+			StashAccounts: d,
 		})
 		if err != nil {
 			return nil, err
