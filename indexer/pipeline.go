@@ -15,8 +15,9 @@ import (
 )
 
 const (
-	CtxReport  = "context_report"
-	maxRetries = 3
+	CtxReport     = "context_report"
+	maxRetries    = 3
+	StageAnalyzer = "AnalyzerStage"
 )
 
 var (
@@ -38,7 +39,9 @@ type indexingPipeline struct {
 	syncableDb store.Syncables
 }
 
-func NewPipeline(cfg *config.Config, cli *client.Client, accountDb store.Accounts, blockDb store.Blocks, databaseDb store.Database, eventDb store.Events, reportDb store.Reports, syncableDb store.Syncables, transactionDb store.Transactions, validatorDb store.Validators) (*indexingPipeline, error) {
+func NewPipeline(cfg *config.Config, cli *client.Client, accountDb store.Accounts, blockDb store.Blocks, databaseDb store.Database, eventDb store.Events, reportDb store.Reports,
+	syncableDb store.Syncables, systemEventDb store.SystemEvents, transactionDb store.Transactions, validatorDb store.Validators,
+) (*indexingPipeline, error) {
 	p := pipeline.NewCustom(NewPayloadFactory())
 
 	// Setup logger
@@ -46,7 +49,11 @@ func NewPipeline(cfg *config.Config, cli *client.Client, accountDb store.Account
 
 	// Fetcher stage
 	p.AddStage(
-		pipeline.NewStageWithTasks(pipeline.StageFetcher, pipeline.RetryingTask(NewFetcherTask(cli.Height), isTransient, maxRetries)),
+		pipeline.NewStageWithTasks(
+			pipeline.StageFetcher,
+			pipeline.RetryingTask(NewFetcherTask(cli.Height), isTransient, maxRetries),
+			pipeline.RetryingTask(NewValidatorFetcherTask(cli.Validator), isTransient, maxRetries),
+		),
 	)
 
 	// Syncer stage
@@ -67,6 +74,7 @@ func NewPipeline(cfg *config.Config, cli *client.Client, accountDb store.Account
 		pipeline.NewAsyncStageWithTasks(
 			pipeline.StageSequencer,
 			pipeline.RetryingTask(NewBlockSeqCreatorTask(blockDb), isTransient, maxRetries),
+			pipeline.RetryingTask(NewValidatorSeqCreatorTask(validatorDb), isTransient, maxRetries),
 			pipeline.RetryingTask(NewValidatorSessionSeqCreatorTask(cfg, syncableDb, validatorDb), isTransient, maxRetries),
 			pipeline.RetryingTask(NewValidatorEraSeqCreatorTask(cfg, syncableDb, validatorDb), isTransient, maxRetries),
 			pipeline.RetryingTask(NewEventSeqCreatorTask(eventDb), isTransient, maxRetries),
@@ -83,18 +91,28 @@ func NewPipeline(cfg *config.Config, cli *client.Client, accountDb store.Account
 		),
 	)
 
+	// Set analyzer stage
+	p.AddStage(
+		pipeline.NewStageWithTasks(
+			StageAnalyzer,
+			pipeline.RetryingTask(NewSystemEventCreatorTask(cfg, syncableDb, systemEventDb, validatorDb, validatorDb), isTransient, maxRetries),
+		),
+	)
+
 	// Set persistor stage
 	p.AddStage(
 		pipeline.NewAsyncStageWithTasks(
 			pipeline.StagePersistor,
 			pipeline.RetryingTask(NewSyncerPersistorTask(syncableDb), isTransient, maxRetries),
 			pipeline.RetryingTask(NewBlockSeqPersistorTask(blockDb), isTransient, maxRetries),
+			pipeline.RetryingTask(NewValidatorSeqPersistorTask(validatorDb), isTransient, maxRetries),
 			pipeline.RetryingTask(NewValidatorSessionSeqPersistorTask(validatorDb), isTransient, maxRetries),
 			pipeline.RetryingTask(NewValidatorEraSeqPersistorTask(validatorDb), isTransient, maxRetries),
 			pipeline.RetryingTask(NewValidatorAggPersistorTask(validatorDb), isTransient, maxRetries),
 			pipeline.RetryingTask(NewEventSeqPersistorTask(eventDb), isTransient, maxRetries),
 			pipeline.RetryingTask(NewAccountEraSeqPersistorTask(accountDb), isTransient, maxRetries),
 			pipeline.RetryingTask(NewTransactionSeqPersistorTask(transactionDb), isTransient, maxRetries),
+			pipeline.RetryingTask(NewSystemEventPersistorTask(systemEventDb), isTransient, 3),
 		),
 	)
 

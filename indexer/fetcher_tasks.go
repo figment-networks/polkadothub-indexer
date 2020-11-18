@@ -8,13 +8,15 @@ import (
 	"github.com/figment-networks/polkadothub-proxy/grpc/height/heightpb"
 
 	"github.com/figment-networks/indexing-engine/pipeline"
+	"github.com/figment-networks/polkadothub-indexer/client"
 	"github.com/figment-networks/polkadothub-indexer/metric"
 	"github.com/figment-networks/polkadothub-indexer/types"
 	"github.com/figment-networks/polkadothub-indexer/utils/logger"
 )
 
 const (
-	FetcherTaskName = "Fetcher"
+	FetcherTaskName          = "Fetcher"
+	ValidatorFetcherTaskName = "ValidatorFetcher"
 )
 
 type HeightMeta struct {
@@ -60,7 +62,7 @@ func (t *FetcherTask) Run(ctx context.Context, p pipeline.Payload) error {
 
 	logger.DebugJSON(resp,
 		logger.Field("process", "pipeline"),
-		logger.Field("stage", "fetcher"),
+		logger.Field("stage", pipeline.StageFetcher),
 		logger.Field("request", "getAll"),
 		logger.Field("height", payload.CurrentHeight),
 	)
@@ -83,5 +85,40 @@ func (t *FetcherTask) Run(ctx context.Context, p pipeline.Payload) error {
 		LastInEra:     meta.GetLastInEra(),
 	}
 
+	return nil
+}
+
+func NewValidatorFetcherTask(client client.ValidatorClient) pipeline.Task {
+	return &ValidatorFetcherTask{
+		client: client,
+	}
+}
+
+type ValidatorFetcherTask struct {
+	client client.ValidatorClient
+}
+
+func (t *ValidatorFetcherTask) GetName() string {
+	return ValidatorFetcherTaskName
+}
+
+func (t *ValidatorFetcherTask) Run(ctx context.Context, p pipeline.Payload) error {
+	defer metric.LogIndexerTaskDuration(time.Now(), t.GetName())
+
+	payload := p.(*payload)
+	validators, err := t.client.GetByHeight(payload.CurrentHeight)
+	if err != nil {
+		return err
+	}
+
+	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StageFetcher, t.GetName(), payload.CurrentHeight))
+	logger.DebugJSON(validators.GetValidators(),
+		logger.Field("process", "pipeline"),
+		logger.Field("stage", pipeline.StageFetcher),
+		logger.Field("request", "validator"),
+		logger.Field("height", payload.CurrentHeight),
+	)
+
+	payload.RawValidators = validators.GetValidators()
 	return nil
 }

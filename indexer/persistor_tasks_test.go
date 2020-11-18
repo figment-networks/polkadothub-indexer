@@ -515,3 +515,80 @@ func TestAccountEraSequencePersistor_Run(t *testing.T) {
 		})
 	}
 }
+
+func TestValidatorSeqPersistor_Run(t *testing.T) {
+	seqTime := *types.NewTimeFromTime(time.Date(2020, 11, 10, 23, 0, 0, 0, time.UTC))
+
+	seqs := []model.ValidatorSeq{
+		{Sequence: &model.Sequence{Time: seqTime, Height: 20}, StashAccount: "acct1", ActiveBalance: types.NewQuantityFromInt64(100)},
+		{Sequence: &model.Sequence{Time: seqTime, Height: 20}, StashAccount: "acct2", ActiveBalance: types.NewQuantityFromInt64(200)},
+		{Sequence: &model.Sequence{Time: seqTime, Height: 20}, StashAccount: "acct3", ActiveBalance: types.NewQuantityFromInt64(300)},
+	}
+
+	tests := []struct {
+		description string
+		expectErr   error
+	}{
+		{"calls db with all validator sequences", nil},
+		{"returns error if database errors", fmt.Errorf("db err")},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(fmt.Sprintf("[new] %v", tt.description), func(t *testing.T) {
+			t.Parallel()
+
+			ctrl := gomock.NewController(t)
+			ctx := context.Background()
+
+			dbMock := mock.NewMockValidatorSeq(ctrl)
+
+			task := NewValidatorSeqPersistorTask(dbMock)
+
+			pl := &payload{
+				NewValidatorSequences: seqs,
+			}
+
+			for _, s := range seqs {
+				createSeq := s
+				dbMock.EXPECT().CreateSeq(&createSeq).Return(tt.expectErr).Times(1)
+				if tt.expectErr != nil {
+					// don't expect any more calls
+					break
+				}
+			}
+
+			if err := task.Run(ctx, pl); err != tt.expectErr {
+				t.Errorf("want %v; got %v", tt.expectErr, err)
+			}
+		})
+
+		t.Run(fmt.Sprintf("[updated] %v", tt.description), func(t *testing.T) {
+			t.Parallel()
+
+			ctrl := gomock.NewController(t)
+			ctx := context.Background()
+
+			dbMock := mock.NewMockValidatorSeq(ctrl)
+
+			task := NewValidatorSeqPersistorTask(dbMock)
+
+			pl := &payload{
+				UpdatedValidatorSequences: seqs,
+			}
+
+			for _, s := range seqs {
+				saveSeq := s
+				dbMock.EXPECT().SaveSeq(&saveSeq).Return(tt.expectErr).Times(1)
+				if tt.expectErr != nil {
+					// don't expect any more calls
+					break
+				}
+			}
+
+			if err := task.Run(ctx, pl); err != tt.expectErr {
+				t.Errorf("want %v; got %v", tt.expectErr, err)
+			}
+		})
+	}
+}

@@ -15,6 +15,7 @@ import (
 
 const (
 	BlockSeqCreatorTaskName            = "BlockSeqCreator"
+	ValidatorSeqCreatorTaskName        = "ValidatorSeqCreator"
 	ValidatorSessionSeqCreatorTaskName = "ValidatorSessionSeqCreator"
 	ValidatorEraSeqCreatorTaskName     = "ValidatorEraSeqCreator"
 	EventSeqCreatorTaskName            = "EventSeqCreator"
@@ -67,6 +68,60 @@ func (t *blockSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) error
 	blockSeq.Update(*mappedBlockSeq)
 	payload.UpdatedBlockSequence = blockSeq
 
+	return nil
+}
+
+// NewValidatorSeqCreatorTask creates validator sequences
+func NewValidatorSeqCreatorTask(validatorSeqDb store.ValidatorSeq) *validatorSeqCreatorTask {
+	return &validatorSeqCreatorTask{
+		validatorSeqDb: validatorSeqDb,
+	}
+}
+
+type validatorSeqCreatorTask struct {
+	validatorSeqDb store.ValidatorSeq
+}
+
+func (t *validatorSeqCreatorTask) GetName() string {
+	return ValidatorSeqCreatorTaskName
+}
+
+func (t *validatorSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) error {
+	defer metric.LogIndexerTaskDuration(time.Now(), t.GetName())
+
+	payload := p.(*payload)
+
+	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StageSequencer, t.GetName(), payload.CurrentHeight))
+
+	mappedValidatorSeqs, err := ToValidatorSequence(payload.Syncable, payload.RawValidators)
+	if err != nil {
+		return err
+	}
+
+	existing, err := t.validatorSeqDb.FindAllByHeight(payload.CurrentHeight)
+	if err != nil {
+		return err
+	}
+	seqLookup := make(map[string]model.ValidatorSeq, len(existing))
+	for _, seq := range existing {
+		seqLookup[seq.StashAccount] = seq
+	}
+
+	var newValidatorSeqs []model.ValidatorSeq
+	var updatedValidatorSeqs []model.ValidatorSeq
+	for _, rawValidatorSeq := range mappedValidatorSeqs {
+		seq, exists := seqLookup[rawValidatorSeq.StashAccount]
+		if !exists {
+			newValidatorSeqs = append(newValidatorSeqs, rawValidatorSeq)
+			continue
+		}
+
+		seq.Update(rawValidatorSeq)
+		updatedValidatorSeqs = append(updatedValidatorSeqs, seq)
+	}
+
+	payload.NewValidatorSequences = newValidatorSeqs
+	payload.UpdatedValidatorSequences = updatedValidatorSeqs
 	return nil
 }
 

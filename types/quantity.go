@@ -6,6 +6,10 @@ import (
 	"math/big"
 )
 
+var (
+	zero big.Int
+)
+
 type Quantity struct {
 	big.Int
 }
@@ -23,12 +27,27 @@ func NewQuantityFromBytes(bytes []byte) Quantity {
 	return Quantity{Int: *b.SetBytes(bytes)}
 }
 
+// NewQuantityFromString creates a new Quantity from a string
+func NewQuantityFromString(val string) (Quantity, error) {
+	b := new(big.Int)
+	b, ok := b.SetString(val, 10)
+	if !ok {
+		return Quantity{}, fmt.Errorf("could not create quantity from string '%v'", val)
+	}
+	return Quantity{Int: *b}, nil
+}
+
 func (b *Quantity) Valid() bool {
 	return b.Int.Sign() >= 0
 }
 
 func (b *Quantity) Equals(o Quantity) bool {
 	return b.Int.String() == o.Int.String()
+}
+
+// IsZero returns true iff b equals zero
+func (b *Quantity) IsZero() bool {
+	return b.Int.CmpAbs(&zero) == 0
 }
 
 // Value implement sql.Scanner
