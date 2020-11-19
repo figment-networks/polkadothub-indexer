@@ -1194,18 +1194,18 @@ func (m *MockValidatorEraSeq) EXPECT() *MockValidatorEraSeqMockRecorder {
 	return m.recorder
 }
 
-// CreateEraSeq mocks base method
-func (m *MockValidatorEraSeq) CreateEraSeq(arg0 *model.ValidatorEraSeq) error {
+// BulkUpsertEraSeqs mocks base method
+func (m *MockValidatorEraSeq) BulkUpsertEraSeqs(arg0 []model.ValidatorEraSeq) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateEraSeq", arg0)
+	ret := m.ctrl.Call(m, "BulkUpsertEraSeqs", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// CreateEraSeq indicates an expected call of CreateEraSeq
-func (mr *MockValidatorEraSeqMockRecorder) CreateEraSeq(arg0 interface{}) *gomock.Call {
+// BulkUpsertEraSeqs indicates an expected call of BulkUpsertEraSeqs
+func (mr *MockValidatorEraSeqMockRecorder) BulkUpsertEraSeqs(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateEraSeq", reflect.TypeOf((*MockValidatorEraSeq)(nil).CreateEraSeq), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BulkUpsertEraSeqs", reflect.TypeOf((*MockValidatorEraSeq)(nil).BulkUpsertEraSeqs), arg0)
 }
 
 // DeleteEraSeqsOlderThan mocks base method
@@ -1298,20 +1298,6 @@ func (mr *MockValidatorEraSeqMockRecorder) FindMostRecentEraSeq() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindMostRecentEraSeq", reflect.TypeOf((*MockValidatorEraSeq)(nil).FindMostRecentEraSeq))
 }
 
-// SaveEraSeq mocks base method
-func (m *MockValidatorEraSeq) SaveEraSeq(arg0 *model.ValidatorEraSeq) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SaveEraSeq", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// SaveEraSeq indicates an expected call of SaveEraSeq
-func (mr *MockValidatorEraSeqMockRecorder) SaveEraSeq(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveEraSeq", reflect.TypeOf((*MockValidatorEraSeq)(nil).SaveEraSeq), arg0)
-}
-
 // SummarizeEraSeqs mocks base method
 func (m *MockValidatorEraSeq) SummarizeEraSeqs(arg0 types.SummaryInterval, arg1 []store.ActivityPeriodRow) ([]model.ValidatorEraSeqSummary, error) {
 	m.ctrl.T.Helper()
@@ -1350,18 +1336,18 @@ func (m *MockValidatorSessionSeq) EXPECT() *MockValidatorSessionSeqMockRecorder 
 	return m.recorder
 }
 
-// CreateSessionSeq mocks base method
-func (m *MockValidatorSessionSeq) CreateSessionSeq(arg0 *model.ValidatorSessionSeq) error {
+// BulkUpsertSessionSeqs mocks base method
+func (m *MockValidatorSessionSeq) BulkUpsertSessionSeqs(arg0 []model.ValidatorSessionSeq) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateSessionSeq", arg0)
+	ret := m.ctrl.Call(m, "BulkUpsertSessionSeqs", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// CreateSessionSeq indicates an expected call of CreateSessionSeq
-func (mr *MockValidatorSessionSeqMockRecorder) CreateSessionSeq(arg0 interface{}) *gomock.Call {
+// BulkUpsertSessionSeqs indicates an expected call of BulkUpsertSessionSeqs
+func (mr *MockValidatorSessionSeqMockRecorder) BulkUpsertSessionSeqs(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSessionSeq", reflect.TypeOf((*MockValidatorSessionSeq)(nil).CreateSessionSeq), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BulkUpsertSessionSeqs", reflect.TypeOf((*MockValidatorSessionSeq)(nil).BulkUpsertSessionSeqs), arg0)
 }
 
 // DeleteSessionSeqsOlderThan mocks base method
@@ -1452,20 +1438,6 @@ func (m *MockValidatorSessionSeq) FindSessionSeqsByHeight(arg0 int64) ([]model.V
 func (mr *MockValidatorSessionSeqMockRecorder) FindSessionSeqsByHeight(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindSessionSeqsByHeight", reflect.TypeOf((*MockValidatorSessionSeq)(nil).FindSessionSeqsByHeight), arg0)
-}
-
-// SaveSessionSeq mocks base method
-func (m *MockValidatorSessionSeq) SaveSessionSeq(arg0 *model.ValidatorSessionSeq) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SaveSessionSeq", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// SaveSessionSeq indicates an expected call of SaveSessionSeq
-func (mr *MockValidatorSessionSeqMockRecorder) SaveSessionSeq(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveSessionSeq", reflect.TypeOf((*MockValidatorSessionSeq)(nil).SaveSessionSeq), arg0)
 }
 
 // SummarizeSessionSeqs mocks base method

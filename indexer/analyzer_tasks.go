@@ -108,7 +108,6 @@ func (t *sessionSystemEventCreatorTask) Run(ctx context.Context, p pipeline.Payl
 
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", "Analyzer", t.GetName(), payload.CurrentHeight))
 
-	currActiveSeqs := append(payload.NewValidatorSessionSequences, payload.UpdatedValidatorSessionSequences...)
 	prevSessionActiveSeqs, err := t.getPrevValidatorSessionSequences(payload)
 	if err != nil {
 		return err
@@ -122,13 +121,13 @@ func (t *sessionSystemEventCreatorTask) Run(ctx context.Context, p pipeline.Payl
 		return err
 	}
 
-	activeSetPresenceChangeSystemEvents, err := t.getActiveSetPresenceChangeSystemEvents(payload.ValidatorSequences, prevSessionSeqs, currActiveSeqs, prevSessionActiveSeqs, payload.Syncable)
+	activeSetPresenceChangeSystemEvents, err := t.getActiveSetPresenceChangeSystemEvents(payload.ValidatorSequences, prevSessionSeqs, payload.ValidatorSessionSequences, prevSessionActiveSeqs, payload.Syncable)
 	if err != nil {
 		return err
 	}
 	payload.SystemEvents = append(payload.SystemEvents, activeSetPresenceChangeSystemEvents...)
 
-	missedBlocksSystemEvents, err := t.getMissedBlocksSystemEvents(currActiveSeqs, lastSessionHeight, payload.Syncable)
+	missedBlocksSystemEvents, err := t.getMissedBlocksSystemEvents(payload.ValidatorSessionSequences, lastSessionHeight, payload.Syncable)
 	if err != nil {
 		return err
 	}

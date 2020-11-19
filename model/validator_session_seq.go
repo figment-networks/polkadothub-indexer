@@ -22,7 +22,3 @@ func (s *ValidatorSessionSeq) Valid() bool {
 func (s *ValidatorSessionSeq) Equal(m ValidatorSessionSeq) bool {
 	return s.SessionSequence.Equal(*m.SessionSequence)
 }
-
-func (s *ValidatorSessionSeq) Update(m ValidatorSessionSeq) {
-	s.Online = m.Online
-}

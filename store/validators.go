@@ -24,26 +24,24 @@ type ValidatorSeq interface {
 }
 
 type ValidatorEraSeq interface {
-	CreateEraSeq(*model.ValidatorEraSeq) error
+	BulkUpsertEraSeqs(records []model.ValidatorEraSeq) error
 	DeleteEraSeqsOlderThan(purgeThreshold time.Time) (*int64, error)
 	FindByEraAndStashAccount(era int64, stash string) (*model.ValidatorEraSeq, error)
 	FindEraSeqsByHeight(h int64) ([]model.ValidatorEraSeq, error)
 	FindByEra(era int64) ([]model.ValidatorEraSeq, error)
 	FindMostRecentEraSeq() (*model.ValidatorEraSeq, error)
 	FindLastEraSeqByStashAccount(stashAccount string, limit int64) ([]model.ValidatorEraSeq, error)
-	SaveEraSeq(*model.ValidatorEraSeq) error
 	SummarizeEraSeqs(interval types.SummaryInterval, activityPeriods []ActivityPeriodRow) ([]model.ValidatorEraSeqSummary, error)
 }
 
 type ValidatorSessionSeq interface {
-	CreateSessionSeq(*model.ValidatorSessionSeq) error
+	BulkUpsertSessionSeqs(records []model.ValidatorSessionSeq) error
 	DeleteSessionSeqsOlderThan(purgeThreshold time.Time) (*int64, error)
 	FindSessionSeqsByHeight(h int64) ([]model.ValidatorSessionSeq, error)
 	FindBySession(h int64) ([]model.ValidatorSessionSeq, error)
 	FindBySessionAndStashAccount(session int64, stash string) (*model.ValidatorSessionSeq, error)
 	FindLastSessionSeqByStashAccount(stashAccount string, limit int64) ([]model.ValidatorSessionSeq, error)
 	FindMostRecentSessionSeq() (*model.ValidatorSessionSeq, error)
-	SaveSessionSeq(*model.ValidatorSessionSeq) error
 	SummarizeSessionSeqs(interval types.SummaryInterval, activityPeriods []ActivityPeriodRow) ([]model.ValidatorSessionSeqSummary, error)
 }
 
