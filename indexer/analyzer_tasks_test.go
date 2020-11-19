@@ -89,7 +89,7 @@ func TestSystemEventCreatorTask_getValueChangeSystemEvents(t *testing.T) {
 				},
 			}
 
-			task := NewSystemEventCreatorTask(testCfg, nil, nil, nil, nil, nil)
+			task := NewSystemEventCreatorTask(testCfg, nil)
 			createdSystemEvents, _ := task.getValueChangeSystemEvents(currHeightValidatorSequences, prevHeightValidatorSequences, currSyncable)
 
 			if len(createdSystemEvents) != tt.expectedCount {
@@ -234,7 +234,7 @@ func TestSystemEventCreatorTask_getActiveSetPresenceChangeSystemEvents(t *testin
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			task := NewSystemEventCreatorTask(testCfg, nil, nil, nil, nil, nil)
+			task := NewSessionSystemEventCreatorTask(testCfg, nil, nil, nil, nil)
 			createdSystemEvents, _ := task.getActiveSetPresenceChangeSystemEvents(tt.currSeqs, tt.prevSeqs, tt.currActiveSeqs, tt.prevActiveSeqs, currSyncable)
 
 			if len(createdSystemEvents) != tt.expectedCount {
@@ -309,7 +309,7 @@ func TestSystemEventCreatorTask_getMissedBlocksSystemEvents(t *testing.T) {
 			missedConsecutiveThreshold = tt.missedConsecutiveThreshold
 			systemEventStoreMock := mock.NewMockSystemEvents(ctrl)
 
-			task := NewSystemEventCreatorTask(testCfg, nil, nil, systemEventStoreMock, nil, nil)
+			task := NewSessionSystemEventCreatorTask(testCfg, nil, systemEventStoreMock, nil, nil)
 
 			kind := model.SystemEventMissedNConsecutive
 			for _, seq := range tt.currSeqs {
@@ -497,7 +497,7 @@ func TestSystemEventCreatorTask_getDelegationChangedSystemEvents(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			task := NewSystemEventCreatorTask(testCfg, nil, nil, nil, nil, nil)
+			task := NewEraSystemEventCreatorTask(testCfg, nil)
 			createdSystemEvents, _ := task.getDelegationChangedSystemEvents(tt.currSeqs, tt.prevSeqs, currSyncable)
 
 			if len(createdSystemEvents) != len(tt.expectedKinds) {

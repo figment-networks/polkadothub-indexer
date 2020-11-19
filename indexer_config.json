@@ -9,22 +9,22 @@
           "id": 2,
           "targets": [2,4],
           "parallel": true
-      },
-      {
-          "id": 3,
-          "targets": [4],
+        },
+        {
+            "id": 3,
+            "targets": [4],
+            "parallel": true
+        },
+        {
+          "id": 4,
+          "targets": [7],
           "parallel": true
-      },
-      {
-        "id": 4,
-        "targets": [7],
-        "parallel": true
-      },
-      {
-        "id": 5,
-        "targets": [8, 9],
-        "parallel": true
-      }
+        },
+        {
+          "id": 5,
+          "targets": [8,9,10,11],
+          "parallel": true
+        }
     ],
     "shared_tasks": [
         "MainSyncer",
@@ -116,13 +116,34 @@
       {
         "id": 9,
         "name": "index_system_events",
-        "desc": "Creates and persists system events",
+        "desc": "Creates and persists system events that happen per height",
         "tasks": [
           "Fetcher",
           "ValidatorFetcher",
           "ValidatorSeqCreator",
-          "validatorSessionSeqCreator",
           "SystemEventCreator",
+          "SystemEventPersistor"
+        ]
+      },
+      {
+        "id": 10,
+        "name": "index_session_system_events",
+        "desc": "Creates and persists system events that happen end of session",
+        "tasks": [
+          "Fetcher",
+          "ValidatorSessionSeqCreator",
+          "SessionSystemEventCreator",
+          "SystemEventPersistor"
+        ]
+      },
+      {
+        "id": 11,
+        "name": "index_era_system_events",
+        "desc": "Creates and persists system events that happen end of era",
+        "tasks": [
+          "Fetcher",
+          "AccountEraSeqCreator",
+          "EraSystemEventCreator",
           "SystemEventPersistor"
         ]
       }
