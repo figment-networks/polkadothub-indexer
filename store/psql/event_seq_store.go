@@ -3,6 +3,9 @@ package psql
 import (
 	"time"
 
+	"github.com/figment-networks/indexing-engine/store/bulk"
+	"github.com/figment-networks/polkadothub-indexer/store/psql/queries"
+
 	"github.com/jinzhu/gorm"
 
 	"github.com/figment-networks/polkadothub-indexer/model"
@@ -15,6 +18,23 @@ func NewEventSeqStore(db *gorm.DB) *EventSeqStore {
 // EventSeqStore handles operations on events
 type EventSeqStore struct {
 	baseStore
+}
+
+// BulkUpsert imports new records and updates existing ones
+func (s EventSeqStore) BulkUpsert(records []model.EventSeq) error {
+	return s.Import(queries.EventSeqInsert, len(records), func(i int) bulk.Row {
+		r := records[i]
+		return bulk.Row{
+			r.Height,
+			r.Time,
+			r.Index,
+			r.ExtrinsicIndex,
+			r.Data,
+			r.Phase,
+			r.Method,
+			r.Section,
+		}
+	})
 }
 
 // FindByHeightAndStashAccount finds event by height and index
@@ -33,24 +53,6 @@ func (s EventSeqStore) FindByHeightAndIndex(height int64, index int64) (*model.E
 		Error
 
 	return &result, checkErr(err)
-}
-
-// FindAllByHeightAndIndex finds all found sequences for indexes at given height, it returns map with all found sequences with indexes as keys
-func (s EventSeqStore) FindAllByHeightAndIndex(height int64, indexes []int64) (map[int64]*model.EventSeq, error) {
-	var results []*model.EventSeq
-	query := getFindAllByHeightAndIndexQuery(model.EventSeq{}.TableName())
-
-	err := s.db.
-		Raw(query, height, indexes).
-		Find(&results).
-		Error
-
-	resultMap := make(map[int64]*model.EventSeq, len(results))
-	for _, result := range results {
-		resultMap[result.Index] = result
-	}
-
-	return resultMap, checkErr(err)
 }
 
 // FindByHeight finds event sequences by height
@@ -124,10 +126,10 @@ func (s EventSeqStore) findForEventSeqWithTxHashQuery(section, method, address s
 	tx := s.db
 	if method == "Transfer" {
 		tx = s.db.
-			Raw(eventSeqWithTxHashForSrcAndTargetQuery, section, method, address, address)
+			Raw(queries.EventSeqWithTxHashForSrcAndTarget, section, method, address, address)
 	} else {
 		tx = s.db.
-			Raw(eventSeqWithTxHashForSrcQuery, section, method, address)
+			Raw(queries.EventSeqWithTxHashForSrc, section, method, address)
 	}
 
 	rows, err := tx.Rows()

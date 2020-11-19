@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/figment-networks/polkadothub-indexer/store/psql/queries"
+
 	"github.com/figment-networks/polkadothub-indexer/model"
 	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/types"
@@ -69,7 +71,7 @@ func (s *BlockSummaryStore) FindActivityPeriods(interval types.SummaryInterval, 
 	defer logQueryDuration(time.Now(), "BlockSummaryStore_FindActivityPeriods")
 
 	rows, err := s.db.
-		Raw(blockSummaryActivityPeriodsQuery, fmt.Sprintf("1%s", interval), interval, indexVersion).
+		Raw(queries.BlockSummaryActivityPeriods, fmt.Sprintf("1%s", interval), interval, indexVersion).
 		Rows()
 
 	if err != nil {
@@ -93,7 +95,7 @@ func (s *BlockSummaryStore) FindSummaries(interval types.SummaryInterval, period
 	defer logQueryDuration(time.Now(), "BlockSummaryStore_FindSummary")
 
 	rows, err := s.db.
-		Raw(allBlocksSummaryForIntervalQuery, interval, period, interval).
+		Raw(queries.BlockSummaryForInterval, interval, period, interval).
 		Rows()
 
 	if err != nil {

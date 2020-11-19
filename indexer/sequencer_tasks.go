@@ -98,30 +98,7 @@ func (t *validatorSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) e
 		return err
 	}
 
-	existing, err := t.validatorSeqDb.FindAllByHeight(payload.CurrentHeight)
-	if err != nil {
-		return err
-	}
-	seqLookup := make(map[string]model.ValidatorSeq, len(existing))
-	for _, seq := range existing {
-		seqLookup[seq.StashAccount] = seq
-	}
-
-	var newValidatorSeqs []model.ValidatorSeq
-	var updatedValidatorSeqs []model.ValidatorSeq
-	for _, rawValidatorSeq := range mappedValidatorSeqs {
-		seq, exists := seqLookup[rawValidatorSeq.StashAccount]
-		if !exists {
-			newValidatorSeqs = append(newValidatorSeqs, rawValidatorSeq)
-			continue
-		}
-
-		seq.Update(rawValidatorSeq)
-		updatedValidatorSeqs = append(updatedValidatorSeqs, seq)
-	}
-
-	payload.NewValidatorSequences = newValidatorSeqs
-	payload.UpdatedValidatorSequences = updatedValidatorSeqs
+	payload.ValidatorSequences = mappedValidatorSeqs
 	return nil
 }
 
@@ -294,32 +271,7 @@ func (t *eventSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) error
 		return err
 	}
 
-	txIndexes := make([]int64, len(mappedEventSeqs))
-	for i, seq := range mappedEventSeqs {
-		txIndexes[i] = seq.Index
-	}
-
-	seqLookup, err := t.eventSeqDb.FindAllByHeightAndIndex(payload.CurrentHeight, txIndexes)
-	if err != nil {
-		return err
-	}
-
-	var newEventSeqs []model.EventSeq
-	var updatedEventSeqs []model.EventSeq
-	for _, rawEventSeq := range mappedEventSeqs {
-		seq, exists := seqLookup[rawEventSeq.Index]
-		if !exists {
-			newEventSeqs = append(newEventSeqs, rawEventSeq)
-			continue
-		}
-
-		seq.Update(rawEventSeq)
-		updatedEventSeqs = append(updatedEventSeqs, *seq)
-	}
-
-	payload.NewEventSequences = newEventSeqs
-	payload.UpdatedEventSequences = updatedEventSeqs
-
+	payload.EventSequences = mappedEventSeqs
 	return nil
 }
 
@@ -366,31 +318,14 @@ func (t *accountEraSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) 
 		firstHeightInEra = lastSyncableInPrevEra.Height + 1
 	}
 
-	var newAccountEraSeqs []model.AccountEraSeq
-	var updatedAccountEraSeqs []model.AccountEraSeq
 	for _, stakingValidator := range payload.RawStaking.GetValidators() {
 		mappedAccountEraSeqs, err := ToAccountEraSequence(payload.Syncable, firstHeightInEra, stakingValidator)
 		if err != nil {
 			return err
 		}
 
-		for _, mappedAccountEraSeq := range mappedAccountEraSeqs {
-			validatorEraSeq, err := t.accountEraSeqDb.FindByEraAndStashAccounts(payload.Syncable.Era, mappedAccountEraSeq.StashAccount, mappedAccountEraSeq.StashAccount)
-			if err != nil {
-				if err == store.ErrNotFound {
-					newAccountEraSeqs = append(newAccountEraSeqs, mappedAccountEraSeq)
-					continue
-				} else {
-					return err
-				}
-			}
-
-			validatorEraSeq.Update(mappedAccountEraSeq)
-			updatedAccountEraSeqs = append(updatedAccountEraSeqs, *validatorEraSeq)
-		}
+		payload.AccountEraSequences = append(payload.AccountEraSequences, mappedAccountEraSeqs...)
 	}
-	payload.NewAccountEraSequences = newAccountEraSeqs
-	payload.UpdatedAccountEraSequences = updatedAccountEraSeqs
 
 	return nil
 }
@@ -422,31 +357,7 @@ func (t *transactionSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload)
 		return err
 	}
 
-	txIndexes := make([]int64, len(mappedTxSeqs))
-	for i, seq := range mappedTxSeqs {
-		txIndexes[i] = seq.Index
-	}
-
-	seqLookup, err := t.transactionSeqDb.FindAllByHeightAndIndex(payload.CurrentHeight, txIndexes)
-	if err != nil {
-		return err
-	}
-
-	var newTxSeqs []model.TransactionSeq
-	var updatedTxSeqs []model.TransactionSeq
-	for _, rawSeq := range mappedTxSeqs {
-		seq, exists := seqLookup[rawSeq.Index]
-		if !exists {
-			newTxSeqs = append(newTxSeqs, rawSeq)
-			continue
-		}
-
-		seq.Update(rawSeq)
-		updatedTxSeqs = append(updatedTxSeqs, *seq)
-	}
-
-	payload.NewTransactionSequences = newTxSeqs
-	payload.UpdatedTransactionSequences = updatedTxSeqs
+	payload.TransactionSequences = mappedTxSeqs
 
 	return nil
 }

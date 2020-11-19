@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/figment-networks/polkadothub-indexer/model"
 	"github.com/figment-networks/polkadothub-indexer/store"
+	"github.com/figment-networks/polkadothub-indexer/store/psql/queries"
 	"github.com/figment-networks/polkadothub-indexer/types"
 	"github.com/figment-networks/polkadothub-indexer/utils/logger"
-	"github.com/jinzhu/gorm"
 
-	"github.com/figment-networks/polkadothub-indexer/model"
+	"github.com/jinzhu/gorm"
 )
 
 func NewBlockSeqStore(db *gorm.DB) *BlockSeqStore {
@@ -62,7 +63,7 @@ func (s *BlockSeqStore) GetAvgRecentTimes(limit int64) store.GetAvgRecentTimesRe
 	defer logQueryDuration(time.Now(), "BlockSeqStore_GetAvgRecentTimes")
 
 	var res store.GetAvgRecentTimesResult
-	s.db.Raw(blockTimesForRecentBlocksQuery, limit).Scan(&res)
+	s.db.Raw(queries.BlockSeqTimes, limit).Scan(&res)
 
 	return res
 }
@@ -118,7 +119,7 @@ func (s *BlockSeqStore) Summarize(interval types.SummaryInterval, activityPeriod
 
 	tx := s.db.
 		Table(model.BlockSeq{}.TableName()).
-		Select(summarizeBlocksQuerySelect, interval).
+		Select(queries.BlockSeqSummarize, interval).
 		Order("time_bucket").
 		Group("time_bucket")
 

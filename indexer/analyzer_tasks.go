@@ -30,9 +30,11 @@ var (
 )
 
 // NewSystemEventCreatorTask creates system events
-func NewSystemEventCreatorTask(cfg *config.Config, syncablesDb store.Syncables, systemEventDb store.SystemEvents, validatorSeqDb store.ValidatorSeq, validatorSessionSeqDb store.ValidatorSessionSeq) *systemEventCreatorTask {
+func NewSystemEventCreatorTask(cfg *config.Config, accountEraSeqDb store.AccountEraSeq, syncablesDb store.Syncables, systemEventDb store.SystemEvents, validatorSeqDb store.ValidatorSeq, validatorSessionSeqDb store.ValidatorSessionSeq,
+) *systemEventCreatorTask {
 	return &systemEventCreatorTask{
 		cfg:                   cfg,
+		accountEraSeqDb:       accountEraSeqDb,
 		syncablesDb:           syncablesDb,
 		systemEventDb:         systemEventDb,
 		validatorSeqDb:        validatorSeqDb,
@@ -41,14 +43,14 @@ func NewSystemEventCreatorTask(cfg *config.Config, syncablesDb store.Syncables, 
 }
 
 type systemEventCreatorTask struct {
-	cfg                   *config.Config
+	cfg *config.Config
+
+	accountEraSeqDb       store.AccountEraSeq
 	syncablesDb           store.Syncables
 	systemEventDb         store.SystemEvents
 	validatorSeqDb        store.ValidatorSeq
 	validatorSessionSeqDb store.ValidatorSessionSeq
 }
-
-type systemEventRawData map[string]interface{}
 
 func (t *systemEventCreatorTask) GetName() string {
 	return TaskNameSystemEventCreator
@@ -61,13 +63,12 @@ func (t *systemEventCreatorTask) Run(ctx context.Context, p pipeline.Payload) er
 
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", "Analyzer", t.GetName(), payload.CurrentHeight))
 
-	currValidatorSeqs := append(payload.NewValidatorSequences, payload.UpdatedValidatorSequences...)
 	prevHeightValidatorSeqs, err := t.getPrevHeightValidatorSequences(payload)
 	if err != nil {
 		return err
 	}
 
-	valueChangeSystemEvents, err := t.getValueChangeSystemEvents(currValidatorSeqs, prevHeightValidatorSeqs, payload.Syncable)
+	valueChangeSystemEvents, err := t.getValueChangeSystemEvents(payload.ValidatorSequences, prevHeightValidatorSeqs, payload.Syncable)
 	if err != nil {
 		return err
 	}
@@ -91,7 +92,7 @@ func (t *systemEventCreatorTask) Run(ctx context.Context, p pipeline.Payload) er
 		return err
 	}
 
-	activeSetPresenceChangeSystemEvents, err := t.getActiveSetPresenceChangeSystemEvents(currValidatorSeqs, prevSessionSeqs, currActiveSeqs, prevSessionActiveSeqs, payload.Syncable)
+	activeSetPresenceChangeSystemEvents, err := t.getActiveSetPresenceChangeSystemEvents(payload.ValidatorSequences, prevSessionSeqs, currActiveSeqs, prevSessionActiveSeqs, payload.Syncable)
 	if err != nil {
 		return err
 	}
@@ -103,6 +104,20 @@ func (t *systemEventCreatorTask) Run(ctx context.Context, p pipeline.Payload) er
 	}
 	payload.SystemEvents = append(payload.SystemEvents, missedBlocksSystemEvents...)
 
+	if !payload.Syncable.LastInEra {
+		return nil
+	}
+
+	prevEraAccountSeqs, err := t.getPrevEraAccountSequences(payload)
+	if err != nil {
+		return err
+	}
+	delegationChangedSystemEvents, err := t.getDelegationChangedSystemEvents(payload.AccountEraSequences, prevEraAccountSeqs, payload.Syncable)
+	if err != nil {
+		return err
+	}
+
+	payload.SystemEvents = append(payload.SystemEvents, delegationChangedSystemEvents...)
 	return nil
 }
 
@@ -119,6 +134,20 @@ func (t *systemEventCreatorTask) getPrevHeightValidatorSequences(payload *payloa
 	}
 
 	return prevValidatorSeqs, nil
+}
+
+func (t *systemEventCreatorTask) getPrevEraAccountSequences(payload *payload) ([]model.AccountEraSeq, error) {
+	var prevEraAccountSequences []model.AccountEraSeq
+
+	if payload.CurrentHeight > t.cfg.FirstBlockHeight && payload.Syncable.Era > 1 {
+		var err error
+		prevEraAccountSequences, err = t.accountEraSeqDb.FindByEra(payload.Syncable.Era - 1)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return prevEraAccountSequences, nil
 }
 
 func (t *systemEventCreatorTask) getPrevValidatorSessionSequences(payload *payload) ([]model.ValidatorSessionSeq, error) {
@@ -149,8 +178,8 @@ func (t *systemEventCreatorTask) getLastSessionHeight(payload *payload) (int64, 
 	return lastSessionHeight, nil
 }
 
-func (t *systemEventCreatorTask) getMissedBlocksSystemEvents(currSeqs []model.ValidatorSessionSeq, lastSessionHeight int64, syncable *model.Syncable) ([]*model.SystemEvent, error) {
-	var systemEvents []*model.SystemEvent
+func (t *systemEventCreatorTask) getMissedBlocksSystemEvents(currSeqs []model.ValidatorSessionSeq, lastSessionHeight int64, syncable *model.Syncable) ([]model.SystemEvent, error) {
+	var systemEvents []model.SystemEvent
 
 	since := syncable.Session - missedConsecutiveThreshold
 	if since < 0 {
@@ -193,8 +222,8 @@ func (t *systemEventCreatorTask) getMissedBlocksSystemEvents(currSeqs []model.Va
 	return systemEvents, nil
 }
 
-func (t *systemEventCreatorTask) getActiveSetPresenceChangeSystemEvents(currSeqs, prevSeqs []model.ValidatorSeq, currActiveSeqs, prevActiveSeqs []model.ValidatorSessionSeq, syncable *model.Syncable) ([]*model.SystemEvent, error) {
-	var systemEvents []*model.SystemEvent
+func (t *systemEventCreatorTask) getActiveSetPresenceChangeSystemEvents(currSeqs, prevSeqs []model.ValidatorSeq, currActiveSeqs, prevActiveSeqs []model.ValidatorSessionSeq, syncable *model.Syncable) ([]model.SystemEvent, error) {
+	var systemEvents []model.SystemEvent
 	active := "a"
 	waiting := "w"
 
@@ -217,7 +246,7 @@ func (t *systemEventCreatorTask) getActiveSetPresenceChangeSystemEvents(currSeqs
 			s.is = active
 		} else {
 			lookup[seq.StashAccount] = &status{is: active}
-			newSystemEvent, err := t.newSystemEvent(seq.StashAccount, syncable, model.SystemEventJoinedActiveSet, systemEventRawData{})
+			newSystemEvent, err := t.newSystemEvent(seq.StashAccount, syncable, model.SystemEventJoinedActiveSet, nil)
 			if err != nil {
 				return nil, err
 			}
@@ -232,13 +261,13 @@ func (t *systemEventCreatorTask) getActiveSetPresenceChangeSystemEvents(currSeqs
 			if s.is == s.was {
 				continue
 			} else if s.is == active {
-				newSystemEvent, err := t.newSystemEvent(seq.StashAccount, syncable, model.SystemEventJoinedActiveSet, systemEventRawData{})
+				newSystemEvent, err := t.newSystemEvent(seq.StashAccount, syncable, model.SystemEventJoinedActiveSet, nil)
 				if err != nil {
 					return nil, err
 				}
 				systemEvents = append(systemEvents, newSystemEvent)
 			} else {
-				newSystemEvent, err := t.newSystemEvent(seq.StashAccount, syncable, model.SystemEventJoinedWaitingSet, systemEventRawData{})
+				newSystemEvent, err := t.newSystemEvent(seq.StashAccount, syncable, model.SystemEventJoinedWaitingSet, nil)
 				if err != nil {
 					return nil, err
 				}
@@ -246,7 +275,7 @@ func (t *systemEventCreatorTask) getActiveSetPresenceChangeSystemEvents(currSeqs
 			}
 		} else {
 			lookup[seq.StashAccount] = &status{is: waiting}
-			newSystemEvent, err := t.newSystemEvent(seq.StashAccount, syncable, model.SystemEventJoinedWaitingSet, systemEventRawData{})
+			newSystemEvent, err := t.newSystemEvent(seq.StashAccount, syncable, model.SystemEventJoinedWaitingSet, nil)
 			if err != nil {
 				return nil, err
 			}
@@ -259,7 +288,7 @@ func (t *systemEventCreatorTask) getActiveSetPresenceChangeSystemEvents(currSeqs
 		if s.is != "" {
 			continue
 		}
-		newSystemEvent, err := t.newSystemEvent(seq.StashAccount, syncable, model.SystemEventLeftSet, systemEventRawData{})
+		newSystemEvent, err := t.newSystemEvent(seq.StashAccount, syncable, model.SystemEventLeftSet, nil)
 		if err != nil {
 			return nil, err
 		}
@@ -269,8 +298,92 @@ func (t *systemEventCreatorTask) getActiveSetPresenceChangeSystemEvents(currSeqs
 	return systemEvents, nil
 }
 
-func (t *systemEventCreatorTask) getValueChangeSystemEvents(currValidatorSeqs, prevValidatorSeqs []model.ValidatorSeq, syncable *model.Syncable) ([]*model.SystemEvent, error) {
-	var systemEvents []*model.SystemEvent
+type delgationLookup map[string]struct{}
+
+func (t *systemEventCreatorTask) getDelegationChangedSystemEvents(currSeqs, prevSeqs []model.AccountEraSeq, syncable *model.Syncable) ([]model.SystemEvent, error) {
+	var systemEvents []model.SystemEvent
+
+	prevDelegationsforValidator := make(map[string]delgationLookup, len(prevSeqs))
+	for _, seq := range prevSeqs {
+		delegations, ok := prevDelegationsforValidator[seq.ValidatorStashAccount]
+		if !ok {
+			delegations = make(delgationLookup)
+		}
+		delegations[seq.StashAccount] = struct{}{}
+		prevDelegationsforValidator[seq.ValidatorStashAccount] = delegations
+	}
+
+	currDelegationsforValidator := make(map[string]delgationLookup, len(currSeqs))
+	for _, seq := range currSeqs {
+		delegations, ok := currDelegationsforValidator[seq.ValidatorStashAccount]
+		if !ok {
+			delegations = make(delgationLookup)
+		}
+		delegations[seq.StashAccount] = struct{}{}
+		currDelegationsforValidator[seq.ValidatorStashAccount] = delegations
+	}
+
+	var joined []string
+	for v, currDelegations := range currDelegationsforValidator {
+		prevDelegations, ok := prevDelegationsforValidator[v]
+		if !ok {
+			// validator wasnt active in previous era
+			continue
+		}
+
+		joined = []string{}
+		for d := range currDelegations {
+			if _, ok = prevDelegations[d]; !ok {
+				joined = append(joined, d)
+			}
+		}
+
+		if len(joined) == 0 {
+			continue
+		}
+
+		newSystemEvent, err := t.newSystemEvent(v, syncable, model.SystemEventDelegationJoined, model.DelegationChangeData{
+			StashAccounts: joined,
+		})
+		if err != nil {
+			return nil, err
+		}
+		systemEvents = append(systemEvents, newSystemEvent)
+	}
+
+	var left []string
+	for v, prevDelegations := range prevDelegationsforValidator {
+		currDelegations, ok := currDelegationsforValidator[v]
+		if !ok {
+			// validator wasnt active in current era
+			continue
+		}
+
+		left = []string{}
+		for d := range prevDelegations {
+			if _, ok = currDelegations[d]; !ok {
+				left = append(left, d)
+			}
+		}
+
+		if len(left) == 0 {
+			continue
+		}
+
+		newSystemEvent, err := t.newSystemEvent(v, syncable, model.SystemEventDelegationLeft, model.DelegationChangeData{
+			StashAccounts: left,
+		})
+		if err != nil {
+			return nil, err
+		}
+		systemEvents = append(systemEvents, newSystemEvent)
+	}
+
+	return systemEvents, nil
+}
+
+func (t *systemEventCreatorTask) getValueChangeSystemEvents(currValidatorSeqs, prevValidatorSeqs []model.ValidatorSeq, syncable *model.Syncable) ([]model.SystemEvent, error) {
+	var systemEvents []model.SystemEvent
 
 	prevHeightLookup := make(map[string]model.ValidatorSeq, len(prevValidatorSeqs))
 	for _, seq := range prevValidatorSeqs {
@@ -303,7 +416,7 @@ func (t *systemEventCreatorTask) getValueChangeSystemEvents(currValidatorSeqs, p
 	return systemEvents, nil
 }
 
-func (t *systemEventCreatorTask) getActiveBalanceChange(currValidatorSeq model.ValidatorSeq, prevValidatorSeq model.ValidatorSeq, syncable *model.Syncable) (*model.SystemEvent, error) {
+func (t *systemEventCreatorTask) getActiveBalanceChange(currValidatorSeq model.ValidatorSeq, prevValidatorSeq model.ValidatorSeq, syncable *model.Syncable) (model.SystemEvent, error) {
 	currValue := currValidatorSeq.ActiveBalance.Int64()
 	prevValue := prevValidatorSeq.ActiveBalance.Int64()
 	roundedChangeRate := t.getRoundedChangeRate(currValue, prevValue)
@@ -317,17 +430,17 @@ func (t *systemEventCreatorTask) getActiveBalanceChange(currValidatorSeq model.V
 	} else if roundedAbsChangeRate >= 10 {
 		kind = model.SystemEventActiveBalanceChange3
 	} else {
-		return nil, ErrActiveBalanceOutsideOfRange
+		return model.SystemEvent{}, ErrActiveBalanceOutsideOfRange
 	}
 
-	return t.newSystemEvent(currValidatorSeq.StashAccount, syncable, kind, systemEventRawData{
-		"before": prevValue,
-		"after":  currValue,
-		"change": roundedChangeRate,
+	return t.newSystemEvent(currValidatorSeq.StashAccount, syncable, kind, model.PercentChangeData{
+		Before: prevValue,
+		After:  currValue,
+		Change: roundedChangeRate,
 	})
 }
 
-func (t *systemEventCreatorTask) getCommissionChange(currValidatorSeq model.ValidatorSeq, prevValidatorSeq model.ValidatorSeq, syncable *model.Syncable) (*model.SystemEvent, error) {
+func (t *systemEventCreatorTask) getCommissionChange(currValidatorSeq model.ValidatorSeq, prevValidatorSeq model.ValidatorSeq, syncable *model.Syncable) (model.SystemEvent, error) {
 	currValue := currValidatorSeq.Commission.Int64()
 	prevValue := prevValidatorSeq.Commission.Int64()
 	roundedChangeRate := t.getRoundedChangeRate(currValue, prevValue)
@@ -341,13 +454,13 @@ func (t *systemEventCreatorTask) getCommissionChange(currValidatorSeq model.Vali
 	} else if roundedAbsChangeRate >= 10 {
 		kind = model.SystemEventCommissionChange3
 	} else {
-		return nil, ErrCommissionOutsideOfRange
+		return model.SystemEvent{}, ErrCommissionOutsideOfRange
 	}
 
-	return t.newSystemEvent(currValidatorSeq.StashAccount, syncable, kind, systemEventRawData{
-		"before": prevValue,
-		"after":  currValue,
-		"change": roundedChangeRate,
+	return t.newSystemEvent(currValidatorSeq.StashAccount, syncable, kind, model.PercentChangeData{
+		Before: prevValue,
+		After:  currValue,
+		Change: roundedChangeRate,
 	})
 }
 
@@ -364,13 +477,13 @@ func (t *systemEventCreatorTask) getRoundedChangeRate(currValue int64, prevValue
 	return roundedChangeRate
 }
 
-func (t *systemEventCreatorTask) newSystemEvent(stashAccount string, syncable *model.Syncable, kind model.SystemEventKind, data interface{}) (*model.SystemEvent, error) {
+func (t *systemEventCreatorTask) newSystemEvent(stashAccount string, syncable *model.Syncable, kind model.SystemEventKind, data interface{}) (model.SystemEvent, error) {
 	marshaledData, err := json.Marshal(data)
 	if err != nil {
-		return nil, err
+		return model.SystemEvent{}, err
 	}
 
-	return &model.SystemEvent{
+	return model.SystemEvent{
 		Height: syncable.Height,
 		Time:   syncable.Time,
 		Actor:  stashAccount,

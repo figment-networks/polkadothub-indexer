@@ -1,4 +1,4 @@
-.PHONY: mockgen build test docker docker-build docker-push
+.PHONY: setup queries mockgen  build  test docker docker-build docker-push
 
 GIT_COMMIT   ?= $(shell git rev-parse HEAD)
 GO_VERSION   ?= $(shell go version | awk {'print $$3'})
@@ -14,11 +14,20 @@ mockgen:
 
 
 # Build the binary
-build:
+build: queries
 	go build \
 		-ldflags "\
 			-X github.com/figment-networks/polkadothub-indexer/cli.gitCommit=${GIT_COMMIT} \
 			-X github.com/figment-networks/polkadothub-indexer/cli.goVersion=${GO_VERSION}"
+
+# Embed SQL queries
+queries:
+	@echo "[sqlembed] generating queries.go"
+	@sqlembed -path=./store/psql/queries -package=queries > ./store/psql/queries/queries.go
+
+# Install third-party tools
+setup:
+	go get -u github.com/sosedoff/sqlembed
 
 # Run tests
 test:

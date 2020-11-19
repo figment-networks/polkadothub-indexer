@@ -36,33 +36,18 @@ func (m *MockAccountEraSeq) EXPECT() *MockAccountEraSeqMockRecorder {
 	return m.recorder
 }
 
-// Create mocks base method
-func (m *MockAccountEraSeq) Create(arg0 interface{}) error {
+// BulkUpsert mocks base method
+func (m *MockAccountEraSeq) BulkUpsert(arg0 []model.AccountEraSeq) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Create", arg0)
+	ret := m.ctrl.Call(m, "BulkUpsert", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// Create indicates an expected call of Create
-func (mr *MockAccountEraSeqMockRecorder) Create(arg0 interface{}) *gomock.Call {
+// BulkUpsert indicates an expected call of BulkUpsert
+func (mr *MockAccountEraSeqMockRecorder) BulkUpsert(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockAccountEraSeq)(nil).Create), arg0)
-}
-
-// DeleteOlderThan mocks base method
-func (m *MockAccountEraSeq) DeleteOlderThan(arg0 time.Time) (*int64, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteOlderThan", arg0)
-	ret0, _ := ret[0].(*int64)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// DeleteOlderThan indicates an expected call of DeleteOlderThan
-func (mr *MockAccountEraSeqMockRecorder) DeleteOlderThan(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteOlderThan", reflect.TypeOf((*MockAccountEraSeq)(nil).DeleteOlderThan), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BulkUpsert", reflect.TypeOf((*MockAccountEraSeq)(nil).BulkUpsert), arg0)
 }
 
 // FindByEra mocks base method
@@ -78,66 +63,6 @@ func (m *MockAccountEraSeq) FindByEra(arg0 int64) ([]model.AccountEraSeq, error)
 func (mr *MockAccountEraSeqMockRecorder) FindByEra(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByEra", reflect.TypeOf((*MockAccountEraSeq)(nil).FindByEra), arg0)
-}
-
-// FindByEraAndStashAccount mocks base method
-func (m *MockAccountEraSeq) FindByEraAndStashAccount(arg0 int64, arg1 string) (*model.AccountEraSeq, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindByEraAndStashAccount", arg0, arg1)
-	ret0, _ := ret[0].(*model.AccountEraSeq)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// FindByEraAndStashAccount indicates an expected call of FindByEraAndStashAccount
-func (mr *MockAccountEraSeqMockRecorder) FindByEraAndStashAccount(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByEraAndStashAccount", reflect.TypeOf((*MockAccountEraSeq)(nil).FindByEraAndStashAccount), arg0, arg1)
-}
-
-// FindByEraAndStashAccounts mocks base method
-func (m *MockAccountEraSeq) FindByEraAndStashAccounts(arg0 int64, arg1, arg2 string) (*model.AccountEraSeq, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindByEraAndStashAccounts", arg0, arg1, arg2)
-	ret0, _ := ret[0].(*model.AccountEraSeq)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// FindByEraAndStashAccounts indicates an expected call of FindByEraAndStashAccounts
-func (mr *MockAccountEraSeqMockRecorder) FindByEraAndStashAccounts(arg0, arg1, arg2 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByEraAndStashAccounts", reflect.TypeOf((*MockAccountEraSeq)(nil).FindByEraAndStashAccounts), arg0, arg1, arg2)
-}
-
-// FindByHeight mocks base method
-func (m *MockAccountEraSeq) FindByHeight(arg0 int64) ([]model.AccountEraSeq, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindByHeight", arg0)
-	ret0, _ := ret[0].([]model.AccountEraSeq)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// FindByHeight indicates an expected call of FindByHeight
-func (mr *MockAccountEraSeqMockRecorder) FindByHeight(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByHeight", reflect.TypeOf((*MockAccountEraSeq)(nil).FindByHeight), arg0)
-}
-
-// FindByHeightAndStashAccounts mocks base method
-func (m *MockAccountEraSeq) FindByHeightAndStashAccounts(arg0 int64, arg1, arg2 string) (*model.AccountEraSeq, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindByHeightAndStashAccounts", arg0, arg1, arg2)
-	ret0, _ := ret[0].(*model.AccountEraSeq)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// FindByHeightAndStashAccounts indicates an expected call of FindByHeightAndStashAccounts
-func (mr *MockAccountEraSeqMockRecorder) FindByHeightAndStashAccounts(arg0, arg1, arg2 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByHeightAndStashAccounts", reflect.TypeOf((*MockAccountEraSeq)(nil).FindByHeightAndStashAccounts), arg0, arg1, arg2)
 }
 
 // FindLastByStashAccount mocks base method
@@ -168,49 +93,6 @@ func (m *MockAccountEraSeq) FindLastByValidatorStashAccount(arg0 string) ([]mode
 func (mr *MockAccountEraSeqMockRecorder) FindLastByValidatorStashAccount(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindLastByValidatorStashAccount", reflect.TypeOf((*MockAccountEraSeq)(nil).FindLastByValidatorStashAccount), arg0)
-}
-
-// FindMostRecent mocks base method
-func (m *MockAccountEraSeq) FindMostRecent() (*model.AccountEraSeq, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindMostRecent")
-	ret0, _ := ret[0].(*model.AccountEraSeq)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// FindMostRecent indicates an expected call of FindMostRecent
-func (mr *MockAccountEraSeqMockRecorder) FindMostRecent() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindMostRecent", reflect.TypeOf((*MockAccountEraSeq)(nil).FindMostRecent))
-}
-
-// Save mocks base method
-func (m *MockAccountEraSeq) Save(arg0 interface{}) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Save", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Save indicates an expected call of Save
-func (mr *MockAccountEraSeqMockRecorder) Save(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Save", reflect.TypeOf((*MockAccountEraSeq)(nil).Save), arg0)
-}
-
-// Update mocks base method
-func (m *MockAccountEraSeq) Update(arg0 interface{}) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Update", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Update indicates an expected call of Update
-func (mr *MockAccountEraSeqMockRecorder) Update(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockAccountEraSeq)(nil).Update), arg0)
 }
 
 // MockBlockSeq is a mock of BlockSeq interface
@@ -540,33 +422,18 @@ func (m *MockEventSeq) EXPECT() *MockEventSeqMockRecorder {
 	return m.recorder
 }
 
-// Create mocks base method
-func (m *MockEventSeq) Create(arg0 interface{}) error {
+// BulkUpsert mocks base method
+func (m *MockEventSeq) BulkUpsert(arg0 []model.EventSeq) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Create", arg0)
+	ret := m.ctrl.Call(m, "BulkUpsert", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// Create indicates an expected call of Create
-func (mr *MockEventSeqMockRecorder) Create(arg0 interface{}) *gomock.Call {
+// BulkUpsert indicates an expected call of BulkUpsert
+func (mr *MockEventSeqMockRecorder) BulkUpsert(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockEventSeq)(nil).Create), arg0)
-}
-
-// FindAllByHeightAndIndex mocks base method
-func (m *MockEventSeq) FindAllByHeightAndIndex(arg0 int64, arg1 []int64) (map[int64]*model.EventSeq, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindAllByHeightAndIndex", arg0, arg1)
-	ret0, _ := ret[0].(map[int64]*model.EventSeq)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// FindAllByHeightAndIndex indicates an expected call of FindAllByHeightAndIndex
-func (mr *MockEventSeqMockRecorder) FindAllByHeightAndIndex(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindAllByHeightAndIndex", reflect.TypeOf((*MockEventSeq)(nil).FindAllByHeightAndIndex), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BulkUpsert", reflect.TypeOf((*MockEventSeq)(nil).BulkUpsert), arg0)
 }
 
 // FindBalanceDeposits mocks base method
@@ -657,34 +524,6 @@ func (m *MockEventSeq) FindWithdrawn(arg0 string) ([]model.EventSeqWithTxHash, e
 func (mr *MockEventSeqMockRecorder) FindWithdrawn(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindWithdrawn", reflect.TypeOf((*MockEventSeq)(nil).FindWithdrawn), arg0)
-}
-
-// Save mocks base method
-func (m *MockEventSeq) Save(arg0 interface{}) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Save", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Save indicates an expected call of Save
-func (mr *MockEventSeqMockRecorder) Save(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Save", reflect.TypeOf((*MockEventSeq)(nil).Save), arg0)
-}
-
-// Update mocks base method
-func (m *MockEventSeq) Update(arg0 interface{}) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Update", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Update indicates an expected call of Update
-func (mr *MockEventSeqMockRecorder) Update(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockEventSeq)(nil).Update), arg0)
 }
 
 // MockReports is a mock of Reports interface
@@ -1073,18 +912,18 @@ func (m *MockSystemEvents) EXPECT() *MockSystemEventsMockRecorder {
 	return m.recorder
 }
 
-// CreateOrUpdate mocks base method
-func (m *MockSystemEvents) CreateOrUpdate(arg0 *model.SystemEvent) error {
+// BulkUpsert mocks base method
+func (m *MockSystemEvents) BulkUpsert(arg0 []model.SystemEvent) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateOrUpdate", arg0)
+	ret := m.ctrl.Call(m, "BulkUpsert", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// CreateOrUpdate indicates an expected call of CreateOrUpdate
-func (mr *MockSystemEventsMockRecorder) CreateOrUpdate(arg0 interface{}) *gomock.Call {
+// BulkUpsert indicates an expected call of BulkUpsert
+func (mr *MockSystemEventsMockRecorder) BulkUpsert(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOrUpdate", reflect.TypeOf((*MockSystemEvents)(nil).CreateOrUpdate), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BulkUpsert", reflect.TypeOf((*MockSystemEvents)(nil).BulkUpsert), arg0)
 }
 
 // FindByActor mocks base method
@@ -1125,47 +964,18 @@ func (m *MockTransactionSeq) EXPECT() *MockTransactionSeqMockRecorder {
 	return m.recorder
 }
 
-// CreateTransactionSeq mocks base method
-func (m *MockTransactionSeq) CreateTransactionSeq(arg0 *model.TransactionSeq) error {
+// BulkUpsert mocks base method
+func (m *MockTransactionSeq) BulkUpsert(arg0 []model.TransactionSeq) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateTransactionSeq", arg0)
+	ret := m.ctrl.Call(m, "BulkUpsert", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// CreateTransactionSeq indicates an expected call of CreateTransactionSeq
-func (mr *MockTransactionSeqMockRecorder) CreateTransactionSeq(arg0 interface{}) *gomock.Call {
+// BulkUpsert indicates an expected call of BulkUpsert
+func (mr *MockTransactionSeqMockRecorder) BulkUpsert(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateTransactionSeq", reflect.TypeOf((*MockTransactionSeq)(nil).CreateTransactionSeq), arg0)
-}
-
-// FindAllByHeightAndIndex mocks base method
-func (m *MockTransactionSeq) FindAllByHeightAndIndex(arg0 int64, arg1 []int64) (map[int64]*model.TransactionSeq, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindAllByHeightAndIndex", arg0, arg1)
-	ret0, _ := ret[0].(map[int64]*model.TransactionSeq)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// FindAllByHeightAndIndex indicates an expected call of FindAllByHeightAndIndex
-func (mr *MockTransactionSeqMockRecorder) FindAllByHeightAndIndex(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindAllByHeightAndIndex", reflect.TypeOf((*MockTransactionSeq)(nil).FindAllByHeightAndIndex), arg0, arg1)
-}
-
-// SaveTransactionSeq mocks base method
-func (m *MockTransactionSeq) SaveTransactionSeq(arg0 *model.TransactionSeq) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SaveTransactionSeq", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// SaveTransactionSeq indicates an expected call of SaveTransactionSeq
-func (mr *MockTransactionSeqMockRecorder) SaveTransactionSeq(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveTransactionSeq", reflect.TypeOf((*MockTransactionSeq)(nil).SaveTransactionSeq), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BulkUpsert", reflect.TypeOf((*MockTransactionSeq)(nil).BulkUpsert), arg0)
 }
 
 // MockValidatorAgg is a mock of ValidatorAgg interface
@@ -1302,18 +1112,18 @@ func (m *MockValidatorSeq) EXPECT() *MockValidatorSeqMockRecorder {
 	return m.recorder
 }
 
-// CreateSeq mocks base method
-func (m *MockValidatorSeq) CreateSeq(arg0 *model.ValidatorSeq) error {
+// BulkUpsertSeqs mocks base method
+func (m *MockValidatorSeq) BulkUpsertSeqs(arg0 []model.ValidatorSeq) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateSeq", arg0)
+	ret := m.ctrl.Call(m, "BulkUpsertSeqs", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// CreateSeq indicates an expected call of CreateSeq
-func (mr *MockValidatorSeqMockRecorder) CreateSeq(arg0 interface{}) *gomock.Call {
+// BulkUpsertSeqs indicates an expected call of BulkUpsertSeqs
+func (mr *MockValidatorSeqMockRecorder) BulkUpsertSeqs(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSeq", reflect.TypeOf((*MockValidatorSeq)(nil).CreateSeq), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BulkUpsertSeqs", reflect.TypeOf((*MockValidatorSeq)(nil).BulkUpsertSeqs), arg0)
 }
 
 // DeleteSeqsOlderThan mocks base method
@@ -1359,20 +1169,6 @@ func (m *MockValidatorSeq) FindMostRecentSeq() (*model.ValidatorSeq, error) {
 func (mr *MockValidatorSeqMockRecorder) FindMostRecentSeq() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindMostRecentSeq", reflect.TypeOf((*MockValidatorSeq)(nil).FindMostRecentSeq))
-}
-
-// SaveSeq mocks base method
-func (m *MockValidatorSeq) SaveSeq(arg0 *model.ValidatorSeq) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SaveSeq", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// SaveSeq indicates an expected call of SaveSeq
-func (mr *MockValidatorSeqMockRecorder) SaveSeq(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveSeq", reflect.TypeOf((*MockValidatorSeq)(nil).SaveSeq), arg0)
 }
 
 // MockValidatorEraSeq is a mock of ValidatorEraSeq interface

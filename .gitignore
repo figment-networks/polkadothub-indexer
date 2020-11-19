@@ -5,3 +5,4 @@ tmp/*
 .env*
 Procfile
 config.json
+.store/psql/queries/queries.go

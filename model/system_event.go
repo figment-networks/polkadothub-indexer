@@ -13,6 +13,8 @@ const (
 	SystemEventJoinedWaitingSet     SystemEventKind = "joined_waiting_set"
 	SystemEventLeftSet              SystemEventKind = "left_set"
 	SystemEventMissedNConsecutive   SystemEventKind = "missed_n_consecutive"
+	SystemEventDelegationLeft       SystemEventKind = "delegation_left"
+	SystemEventDelegationJoined     SystemEventKind = "delegation_joined"
 )
 
 type SystemEventKind string
@@ -31,16 +33,27 @@ type SystemEvent struct {
 	Data   types.Jsonb     `json:"data"`
 }
 
-// MissedNConsecutive is data format for missed_n_consecutive system events
+// DelegationChangeData is data format for delegation system events
+type DelegationChangeData struct {
+	StashAccounts []string `json:"stash_accounts"`
+}
+
+// PercentChangeData is data format for change system events
+type PercentChangeData struct {
+	Before int64   `json:"before"`
+	After  int64   `json:"after"`
+	Change float64 `json:"change"`
+}
+
+// MissedNofMData is data format for missedNofM system events
+type MissedNofMData struct {
+	Missed           int64 `json:"missed"`
+	Threshold        int64 `json:"threshold"`
+	MaxTotalSessions int64 `json:"max_total_sessions"`
+}
+
+// MissedNConsecutive is data format for missedNofM system events
 type MissedNConsecutive struct {
 	Missed    int64 `json:"missed"`
 	Threshold int64 `json:"threshold"`
-}
-
-func (o SystemEvent) Update(m SystemEvent) {
-	o.Height = m.Height
-	o.Time = m.Time
-	o.Actor = m.Actor
-	o.Kind = m.Kind
-	o.Data = m.Data
 }

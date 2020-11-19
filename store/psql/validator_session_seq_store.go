@@ -3,6 +3,8 @@ package psql
 import (
 	"time"
 
+	"github.com/figment-networks/polkadothub-indexer/store/psql/queries"
+
 	"github.com/figment-networks/polkadothub-indexer/model"
 	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/types"
@@ -137,7 +139,7 @@ func (s *ValidatorSessionSeqStore) SummarizeSessionSeqs(interval types.SummaryIn
 
 	tx := s.db.
 		Table(model.ValidatorSessionSeq{}.TableName()).
-		Select(summarizeValidatorsForSessionQuerySelect, interval).
+		Select(queries.ValidatorSessionSeqSummarizeSelect, interval).
 		Order("time_bucket").
 		Group("stash_account, time_bucket")
 
