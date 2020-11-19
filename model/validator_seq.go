@@ -22,9 +22,7 @@ func (ValidatorSeq) TableName() string {
 func (vs *ValidatorSeq) Valid() bool {
 	return vs.Sequence.Valid() &&
 		vs.StashAccount != "" &&
-		vs.ActiveBalance.Valid() &&
-		vs.Commission.Valid()
-
+		vs.ActiveBalance.Valid()
 }
 
 func (vs *ValidatorSeq) Equal(m ValidatorSeq) bool {

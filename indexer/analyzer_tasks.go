@@ -63,11 +63,11 @@ func (t *systemEventCreatorTask) Run(ctx context.Context, p pipeline.Payload) er
 		return err
 	}
 
-	valueChangeSystemEvents, err := t.getValueChangeSystemEvents(payload.ValidatorSequences, prevHeightValidatorSeqs, payload.Syncable)
+	balanceChangeSystemEvents, err := t.getActiveBalanceChangeSystemEvents(payload.ValidatorSequences, prevHeightValidatorSeqs, payload.Syncable)
 	if err != nil {
 		return err
 	}
-	payload.SystemEvents = append(payload.SystemEvents, valueChangeSystemEvents...)
+	payload.SystemEvents = append(payload.SystemEvents, balanceChangeSystemEvents...)
 	return nil
 }
 
@@ -116,12 +116,12 @@ func (t *sessionSystemEventCreatorTask) Run(ctx context.Context, p pipeline.Payl
 	if err != nil {
 		return err
 	}
-	prevSessionSeqs, err := t.validatorSeqDb.FindAllByHeight(lastSessionHeight)
+	prevSeqs, err := t.validatorSeqDb.FindAllByHeight(lastSessionHeight)
 	if err != nil {
 		return err
 	}
 
-	activeSetPresenceChangeSystemEvents, err := t.getActiveSetPresenceChangeSystemEvents(payload.ValidatorSequences, prevSessionSeqs, payload.ValidatorSessionSequences, prevSessionActiveSeqs, payload.Syncable)
+	activeSetPresenceChangeSystemEvents, err := t.getActiveSetPresenceChangeSystemEvents(payload.ValidatorSequences, prevSeqs, payload.ValidatorSessionSequences, prevSessionActiveSeqs, payload.Syncable)
 	if err != nil {
 		return err
 	}
@@ -137,17 +137,19 @@ func (t *sessionSystemEventCreatorTask) Run(ctx context.Context, p pipeline.Payl
 }
 
 // NewEraSystemEventCreatorTask creates system events
-func NewEraSystemEventCreatorTask(cfg *config.Config, accountEraSeqDb store.AccountEraSeq) *eraSystemEventCreatorTask {
+func NewEraSystemEventCreatorTask(cfg *config.Config, accountEraSeqDb store.AccountEraSeq, validatorEraSeqDb store.ValidatorEraSeq) *eraSystemEventCreatorTask {
 	return &eraSystemEventCreatorTask{
-		cfg:             cfg,
-		accountEraSeqDb: accountEraSeqDb,
+		cfg:               cfg,
+		accountEraSeqDb:   accountEraSeqDb,
+		validatorEraSeqDb: validatorEraSeqDb,
 	}
 }
 
 type eraSystemEventCreatorTask struct {
 	cfg *config.Config
 
-	accountEraSeqDb store.AccountEraSeq
+	accountEraSeqDb   store.AccountEraSeq
+	validatorEraSeqDb store.ValidatorEraSeq
 }
 
 func (t *eraSystemEventCreatorTask) GetName() string {
@@ -173,8 +175,20 @@ func (t *eraSystemEventCreatorTask) Run(ctx context.Context, p pipeline.Payload)
 	if err != nil {
 		return err
 	}
-
 	payload.SystemEvents = append(payload.SystemEvents, delegationChangedSystemEvents...)
+
+	prevEraValidatorSeqs, err := t.getPrevValidatorEraSequences(payload)
+	if err != nil {
+		return err
+	}
+
+	commissionChangeSystemEvents, err := t.getCommissionChangeSystemEvents(payload.ValidatorEraSequences, prevEraValidatorSeqs, payload.Syncable)
+	if err != nil {
+		return err
+	}
+
+	payload.SystemEvents = append(payload.SystemEvents, commissionChangeSystemEvents...)
+
 	return nil
 }
 
@@ -439,7 +453,21 @@ func (t *eraSystemEventCreatorTask) getDelegationChangedSystemEvents(currSeqs, p
 	return systemEvents, nil
 }
 
-func (t *systemEventCreatorTask) getValueChangeSystemEvents(currValidatorSeqs, prevValidatorSeqs []model.ValidatorSeq, syncable *model.Syncable) ([]model.SystemEvent, error) {
+func (t *eraSystemEventCreatorTask) getPrevValidatorEraSequences(payload *payload) ([]model.ValidatorEraSeq, error) {
+	var prevEraSequences []model.ValidatorEraSeq
+
+	if payload.CurrentHeight > t.cfg.FirstBlockHeight {
+		var err error
+		prevEraSequences, err = t.validatorEraSeqDb.FindByEra(payload.Syncable.Era - 1)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return prevEraSequences, nil
+}
+
+func (t *systemEventCreatorTask) getActiveBalanceChangeSystemEvents(currValidatorSeqs, prevValidatorSeqs []model.ValidatorSeq, syncable *model.Syncable) ([]model.SystemEvent, error) {
 	var systemEvents []model.SystemEvent
 
 	prevHeightLookup := make(map[string]model.ValidatorSeq, len(prevValidatorSeqs))
@@ -458,16 +486,6 @@ func (t *systemEventCreatorTask) getValueChangeSystemEvents(currValidatorSeqs, p
 				logger.Debug(fmt.Sprintf("active balance change for address %s occured [kind=%s]", validatorSequence.StashAccount, newSystemEvent.Kind))
 				systemEvents = append(systemEvents, newSystemEvent)
 			}
-
-			newSystemEvent, err = t.getCommissionChange(validatorSequence, prevValidatorSequence, syncable)
-			if err != nil {
-				if err != ErrCommissionOutsideOfRange {
-					return nil, err
-				}
-			} else {
-				logger.Debug(fmt.Sprintf("commission change for address %s occured [kind=%s]", validatorSequence.StashAccount, newSystemEvent.Kind))
-				systemEvents = append(systemEvents, newSystemEvent)
-			}
 		}
 	}
 	return systemEvents, nil
@@ -476,7 +494,7 @@ func (t *systemEventCreatorTask) getValueChangeSystemEvents(currValidatorSeqs, p
 func (t *systemEventCreatorTask) getActiveBalanceChange(currValidatorSeq model.ValidatorSeq, prevValidatorSeq model.ValidatorSeq, syncable *model.Syncable) (model.SystemEvent, error) {
 	currValue := currValidatorSeq.ActiveBalance.Int64()
 	prevValue := prevValidatorSeq.ActiveBalance.Int64()
-	roundedChangeRate := t.getRoundedChangeRate(currValue, prevValue)
+	roundedChangeRate := getRoundedChangeRate(currValue, prevValue)
 	roundedAbsChangeRate := math.Abs(roundedChangeRate)
 
 	var kind model.SystemEventKind
@@ -497,10 +515,34 @@ func (t *systemEventCreatorTask) getActiveBalanceChange(currValidatorSeq model.V
 	})
 }
 
-func (t *systemEventCreatorTask) getCommissionChange(currValidatorSeq model.ValidatorSeq, prevValidatorSeq model.ValidatorSeq, syncable *model.Syncable) (model.SystemEvent, error) {
-	currValue := currValidatorSeq.Commission.Int64()
-	prevValue := prevValidatorSeq.Commission.Int64()
-	roundedChangeRate := t.getRoundedChangeRate(currValue, prevValue)
+func (t *eraSystemEventCreatorTask) getCommissionChangeSystemEvents(currSeqs, prevSeqs []model.ValidatorEraSeq, syncable *model.Syncable) ([]model.SystemEvent, error) {
+	var systemEvents []model.SystemEvent
+
+	prevHeightLookup := make(map[string]model.ValidatorEraSeq, len(prevSeqs))
+	for _, seq := range prevSeqs {
+		prevHeightLookup[seq.StashAccount] = seq
+	}
+
+	for _, validatorSequence := range currSeqs {
+		if prevValidatorSequence, ok := prevHeightLookup[validatorSequence.StashAccount]; ok {
+			newSystemEvent, err := t.getCommissionChange(validatorSequence, prevValidatorSequence, syncable)
+			if err != nil {
+				if err != ErrCommissionOutsideOfRange {
+					return nil, err
+				}
+			} else {
+				logger.Debug(fmt.Sprintf("commission change for address %s occured [kind=%s]", validatorSequence.StashAccount, newSystemEvent.Kind))
+				systemEvents = append(systemEvents, newSystemEvent)
+			}
+		}
+	}
+	return systemEvents, nil
+}
+
+func (t *eraSystemEventCreatorTask) getCommissionChange(currSeq, prevSeq model.ValidatorEraSeq, syncable *model.Syncable) (model.SystemEvent, error) {
+	currValue := currSeq.Commission
+	prevValue := prevSeq.Commission
+	roundedChangeRate := getRoundedChangeRate(currValue, prevValue)
 	roundedAbsChangeRate := math.Abs(roundedChangeRate)
 
 	var kind model.SystemEventKind
@@ -514,14 +556,14 @@ func (t *systemEventCreatorTask) getCommissionChange(currValidatorSeq model.Vali
 		return model.SystemEvent{}, ErrCommissionOutsideOfRange
 	}
 
-	return newSystemEvent(currValidatorSeq.StashAccount, syncable, kind, model.PercentChangeData{
+	return newSystemEvent(currSeq.StashAccount, syncable, kind, model.PercentChangeData{
 		Before: prevValue,
 		After:  currValue,
 		Change: roundedChangeRate,
 	})
 }
 
-func (t *systemEventCreatorTask) getRoundedChangeRate(currValue int64, prevValue int64) float64 {
+func getRoundedChangeRate(currValue int64, prevValue int64) float64 {
 	var changeRate float64
 
 	if prevValue == 0 {

@@ -24,7 +24,7 @@ var (
 	}
 )
 
-func TestSystemEventCreatorTask_getValueChangeSystemEvents(t *testing.T) {
+func TestSystemEventCreatorTask_getActiveBalanceChangeSystemEvents(t *testing.T) {
 	currSyncable := &model.Syncable{
 		Height: 20,
 		Time:   *types.NewTimeFromTime(time.Date(2020, 11, 10, 23, 0, 0, 0, time.UTC)),
@@ -38,28 +38,18 @@ func TestSystemEventCreatorTask_getValueChangeSystemEvents(t *testing.T) {
 	tests := []struct {
 		description             string
 		activeBalanceChangeRate float64
-		commissionChangeRate    float64
 		expectedCount           int
 		expectedKind            model.SystemEventKind
 	}{
-		{"returns no system events when active balance haven't changed", 0, 0, 0, ""},
-		{"returns no system events when active balance change smaller than 0.1", 0.09, 0, 0, ""},
-		{"returns one activeBalanceChange1 system event when active balance change is 0.1", 0.1, 0, 1, model.SystemEventActiveBalanceChange1},
-		{"returns one activeBalanceChange1 system events when active balance change is 0.9", 0.9, 0, 1, model.SystemEventActiveBalanceChange1},
-		{"returns one activeBalanceChange2 system events when active balance change is 1", 1, 0, 1, model.SystemEventActiveBalanceChange2},
-		{"returns one activeBalanceChange2 system events when active balance change is 9", 9, 0, 1, model.SystemEventActiveBalanceChange2},
-		{"returns one activeBalanceChange3 system events when active balance change is 10", 10, 0, 1, model.SystemEventActiveBalanceChange3},
-		{"returns one activeBalanceChange3 system events when active balance change is 100", 100, 0, 1, model.SystemEventActiveBalanceChange3},
-		{"returns one activeBalanceChange3 system events when active balance change is 200", 200, 0, 1, model.SystemEventActiveBalanceChange3},
-
-		{"returns no system events when commission haven't changed", 0, 0, 0, ""},
-		{"returns no system events when commission change smaller than 0.1", 0, 0.09, 0, ""},
-		{"returns one commissionChange1 system event when commission change is 0.1", 0, 0.1, 1, model.SystemEventCommissionChange1},
-		{"returns one commissionChange1 system events when commission change is 0.9", 0, 0.9, 1, model.SystemEventCommissionChange1},
-		{"returns one commissionChange2 system events when commission change is 1", 0, 1, 1, model.SystemEventCommissionChange2},
-		{"returns one commissionChange2 system events when commission change is 9", 0, 9, 1, model.SystemEventCommissionChange2},
-		{"returns one commissionChange3 system events when commission change is 10", 0, 10, 1, model.SystemEventCommissionChange3},
-		{"returns one commissionChange3 system events when commission change is 100", 0, 100, 1, model.SystemEventCommissionChange3},
+		{"returns no system events when active balance haven't changed", 0, 0, ""},
+		{"returns no system events when active balance change smaller than 0.1", 0.09, 0, ""},
+		{"returns one activeBalanceChange1 system event when active balance change is 0.1", 0.1, 1, model.SystemEventActiveBalanceChange1},
+		{"returns one activeBalanceChange1 system events when active balance change is 0.9", 0.9, 1, model.SystemEventActiveBalanceChange1},
+		{"returns one activeBalanceChange2 system events when active balance change is 1", 1, 1, model.SystemEventActiveBalanceChange2},
+		{"returns one activeBalanceChange2 system events when active balance change is 9", 9, 1, model.SystemEventActiveBalanceChange2},
+		{"returns one activeBalanceChange3 system events when active balance change is 10", 10, 1, model.SystemEventActiveBalanceChange3},
+		{"returns one activeBalanceChange3 system events when active balance change is 100", 100, 1, model.SystemEventActiveBalanceChange3},
+		{"returns one activeBalanceChange3 system events when active balance change is 200", 200, 1, model.SystemEventActiveBalanceChange3},
 	}
 
 	for _, tt := range tests {
@@ -69,15 +59,11 @@ func TestSystemEventCreatorTask_getValueChangeSystemEvents(t *testing.T) {
 			var activeBalanceBefore int64 = 1000
 			activeBalanceAfter := float64(activeBalanceBefore) + (float64(activeBalanceBefore) * tt.activeBalanceChangeRate / 100)
 
-			var commissionBefore int64 = 1000
-			commissionAfter := float64(commissionBefore) + (float64(commissionBefore) * tt.commissionChangeRate / 100)
-
 			prevHeightValidatorSequences := []model.ValidatorSeq{
 				model.ValidatorSeq{
 					Sequence:      currSeq,
 					StashAccount:  testValidatorAddress,
 					ActiveBalance: types.NewQuantityFromInt64(activeBalanceBefore),
-					Commission:    types.NewQuantityFromInt64(commissionBefore),
 				},
 			}
 			currHeightValidatorSequences := []model.ValidatorSeq{
@@ -85,12 +71,77 @@ func TestSystemEventCreatorTask_getValueChangeSystemEvents(t *testing.T) {
 					Sequence:      currSeq,
 					StashAccount:  testValidatorAddress,
 					ActiveBalance: types.NewQuantityFromInt64(int64(activeBalanceAfter)),
-					Commission:    types.NewQuantityFromInt64(int64(commissionAfter)),
 				},
 			}
 
 			task := NewSystemEventCreatorTask(testCfg, nil)
-			createdSystemEvents, _ := task.getValueChangeSystemEvents(currHeightValidatorSequences, prevHeightValidatorSequences, currSyncable)
+			createdSystemEvents, _ := task.getActiveBalanceChangeSystemEvents(currHeightValidatorSequences, prevHeightValidatorSequences, currSyncable)
+
+			if len(createdSystemEvents) != tt.expectedCount {
+				t.Errorf("unexpected system event count, want %v; got %v", tt.expectedCount, len(createdSystemEvents))
+				return
+			}
+
+			if len(createdSystemEvents) > 0 && createdSystemEvents[0].Kind != tt.expectedKind {
+				t.Errorf("unexpected system event kind, want %v; got %v", tt.expectedKind, createdSystemEvents[0].Kind)
+			}
+		})
+	}
+}
+
+func TestSystemEventCreatorTask_getCommissionChangeSystemEvents(t *testing.T) {
+	currSyncable := &model.Syncable{
+		Height: 20,
+		Time:   *types.NewTimeFromTime(time.Date(2020, 11, 10, 23, 0, 0, 0, time.UTC)),
+	}
+
+	currSeq := &model.EraSequence{
+		StartHeight: currSyncable.Height - 10,
+		EndHeight:   currSyncable.Height,
+		Time:        currSyncable.Time,
+	}
+
+	tests := []struct {
+		description          string
+		commissionChangeRate float64
+		expectedCount        int
+		expectedKind         model.SystemEventKind
+	}{
+		{"returns no system events when commission haven't changed", 0, 0, ""},
+		{"returns no system events when commission change smaller than 0.1", 0.09, 0, ""},
+		{"returns one commissionChange1 system event when commission change is 0.1", 0.1, 1, model.SystemEventCommissionChange1},
+		{"returns one commissionChange1 system events when commission change is 0.9", 0.9, 1, model.SystemEventCommissionChange1},
+		{"returns one commissionChange2 system events when commission change is 1", 1, 1, model.SystemEventCommissionChange2},
+		{"returns one commissionChange2 system events when commission change is 9", 9, 1, model.SystemEventCommissionChange2},
+		{"returns one commissionChange3 system events when commission change is 10", 10, 1, model.SystemEventCommissionChange3},
+		{"returns one commissionChange3 system events when commission change is 100", 100, 1, model.SystemEventCommissionChange3},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.description, func(t *testing.T) {
+			t.Parallel()
+
+			var commissionBefore int64 = 1000
+			commissionAfter := float64(commissionBefore) + (float64(commissionBefore) * tt.commissionChangeRate / 100)
+
+			prevHeightValidatorSequences := []model.ValidatorEraSeq{
+				model.ValidatorEraSeq{
+					EraSequence:  currSeq,
+					StashAccount: testValidatorAddress,
+					Commission:   commissionBefore,
+				},
+			}
+			currHeightValidatorSequences := []model.ValidatorEraSeq{
+				model.ValidatorEraSeq{
+					EraSequence:  currSeq,
+					StashAccount: testValidatorAddress,
+					Commission:   int64(commissionAfter),
+				},
+			}
+
+			task := NewEraSystemEventCreatorTask(testCfg, nil, nil)
+			createdSystemEvents, _ := task.getCommissionChangeSystemEvents(currHeightValidatorSequences, prevHeightValidatorSequences, currSyncable)
 
 			if len(createdSystemEvents) != tt.expectedCount {
 				t.Errorf("unexpected system event count, want %v; got %v", tt.expectedCount, len(createdSystemEvents))
@@ -497,7 +548,7 @@ func TestSystemEventCreatorTask_getDelegationChangedSystemEvents(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			task := NewEraSystemEventCreatorTask(testCfg, nil)
+			task := NewEraSystemEventCreatorTask(testCfg, nil, nil)
 			createdSystemEvents, _ := task.getDelegationChangedSystemEvents(tt.currSeqs, tt.prevSeqs, currSyncable)
 
 			if len(createdSystemEvents) != len(tt.expectedKinds) {

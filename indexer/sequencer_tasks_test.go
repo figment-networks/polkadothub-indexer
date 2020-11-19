@@ -33,14 +33,13 @@ func TestValidatorSeqCreator_Run(t *testing.T) {
 		{
 			description: "updates payload.ValidatorSequences",
 			raw: []*validatorpb.Validator{
-				{StashAccount: "validator1", Balance: "100", Commission: "900"},
+				{StashAccount: "validator1", Balance: "100"},
 			},
 			expect: []model.ValidatorSeq{
 				{
 					Sequence:      seq,
 					StashAccount:  "validator1",
 					ActiveBalance: types.NewQuantityFromInt64(100),
-					Commission:    types.NewQuantityFromInt64(900),
 				},
 			},
 
@@ -49,7 +48,7 @@ func TestValidatorSeqCreator_Run(t *testing.T) {
 		{
 			description: "return error if sequence is invalid",
 			raw: []*validatorpb.Validator{
-				{StashAccount: "validator1", Balance: "9288", Commission: "food"},
+				{StashAccount: "validator1", Balance: "foood"},
 			},
 			expect:    []model.ValidatorSeq{},
 			expectErr: true,

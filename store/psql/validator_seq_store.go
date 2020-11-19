@@ -27,7 +27,6 @@ func (s ValidatorSeqStore) BulkUpsertSeqs(records []model.ValidatorSeq) error {
 			r.Time,
 			r.StashAccount,
 			r.ActiveBalance.String(),
-			r.Commission.String(),
 		}
 	})
 }
