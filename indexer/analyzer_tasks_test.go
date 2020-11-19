@@ -162,119 +162,62 @@ func TestSystemEventCreatorTask_getActiveSetPresenceChangeSystemEvents(t *testin
 	}
 
 	tests := []struct {
-		description    string
-		prevSeqs       []model.ValidatorSeq // contains waiting and active
-		currSeqs       []model.ValidatorSeq // contains waiting and active
-		prevActiveSeqs []model.ValidatorSessionSeq
-		currActiveSeqs []model.ValidatorSessionSeq
-		expectedCount  int
-		expectedKinds  []model.SystemEventKind
+		description   string
+		prevSeqs      []model.ValidatorSessionSeq
+		currSeqs      []model.ValidatorSessionSeq
+		expectedCount int
+		expectedKinds []model.SystemEventKind
 	}{
 		{
-			description: "returns no system events when validator is both in all prev and current lists",
-			prevSeqs: []model.ValidatorSeq{
+			description: "returns no system events when validator is both in prev and current lists",
+			prevSeqs: []model.ValidatorSessionSeq{
 				{StashAccount: testValidatorAddress},
 			},
-			currSeqs: []model.ValidatorSeq{
-				{StashAccount: testValidatorAddress},
-			},
-			prevActiveSeqs: []model.ValidatorSessionSeq{
-				{StashAccount: testValidatorAddress},
-			},
-			currActiveSeqs: []model.ValidatorSessionSeq{
+			currSeqs: []model.ValidatorSessionSeq{
 				{StashAccount: testValidatorAddress},
 			},
 			expectedCount: 0,
 		},
 		{
-			description: "returns no system events when validator is both in prev and current waiting lists",
-			prevSeqs: []model.ValidatorSeq{
-				{StashAccount: testValidatorAddress},
-			},
-			currSeqs: []model.ValidatorSeq{
-				{StashAccount: testValidatorAddress},
-			},
-			prevActiveSeqs: []model.ValidatorSessionSeq{},
-			currActiveSeqs: []model.ValidatorSessionSeq{},
-			expectedCount:  0,
+			description:   "returns no system events when validator is not in any list",
+			prevSeqs:      []model.ValidatorSessionSeq{},
+			currSeqs:      []model.ValidatorSessionSeq{},
+			expectedCount: 0,
 		},
 		{
-			description:    "returns no system events when validator is not in any list",
-			prevSeqs:       []model.ValidatorSeq{},
-			currSeqs:       []model.ValidatorSeq{},
-			prevActiveSeqs: []model.ValidatorSessionSeq{},
-			currActiveSeqs: []model.ValidatorSessionSeq{},
-			expectedCount:  0,
-		},
-		{
-			description: "returns one joined_waiting_set system events when validator is not in prev lists and is in current list",
-			prevSeqs:    []model.ValidatorSeq{},
-			currSeqs: []model.ValidatorSeq{
-				{StashAccount: testValidatorAddress},
-			},
-			prevActiveSeqs: []model.ValidatorSessionSeq{},
-			currActiveSeqs: []model.ValidatorSessionSeq{},
-			expectedCount:  1,
-			expectedKinds:  []model.SystemEventKind{model.SystemEventJoinedWaitingSet},
-		},
-		{
-			description: "returns one joined_active_set system events when validator is not in prev active set and is in current active set",
-			prevSeqs: []model.ValidatorSeq{
-				{StashAccount: testValidatorAddress},
-			},
-			currSeqs: []model.ValidatorSeq{
-				{StashAccount: testValidatorAddress},
-			},
-			prevActiveSeqs: []model.ValidatorSessionSeq{},
-			currActiveSeqs: []model.ValidatorSessionSeq{
-				{StashAccount: testValidatorAddress},
-			},
+			description:   "returns one joined_set system events when validator is not in prev lists and is in current list",
+			prevSeqs:      []model.ValidatorSessionSeq{},
+			currSeqs:      []model.ValidatorSessionSeq{{StashAccount: testValidatorAddress}},
 			expectedCount: 1,
-			expectedKinds: []model.SystemEventKind{model.SystemEventJoinedActiveSet},
+			expectedKinds: []model.SystemEventKind{model.SystemEventJoinedSet},
 		},
 		{
-			description:    "returns one joined_waiting_set system events when validator is in prev active set and not in current active set but still in current",
-			prevSeqs:       []model.ValidatorSeq{{StashAccount: testValidatorAddress}},
-			currSeqs:       []model.ValidatorSeq{{StashAccount: testValidatorAddress}},
-			prevActiveSeqs: []model.ValidatorSessionSeq{{StashAccount: testValidatorAddress}},
-			currActiveSeqs: []model.ValidatorSessionSeq{},
-			expectedCount:  1,
-			expectedKinds:  []model.SystemEventKind{model.SystemEventJoinedWaitingSet},
+			description:   "returns one left_set system events when validator is in prev set and not in current set",
+			prevSeqs:      []model.ValidatorSessionSeq{{StashAccount: testValidatorAddress}},
+			currSeqs:      []model.ValidatorSessionSeq{},
+			expectedCount: 1,
+			expectedKinds: []model.SystemEventKind{model.SystemEventLeftSet},
 		},
 		{
-			description: "returns one left_set system events when validator is in prev and is not in current lists",
-			prevSeqs: []model.ValidatorSeq{
-				{StashAccount: testValidatorAddress},
-			},
-			currSeqs:       []model.ValidatorSeq{},
-			prevActiveSeqs: []model.ValidatorSessionSeq{},
-			currActiveSeqs: []model.ValidatorSessionSeq{},
-			expectedCount:  1,
-			expectedKinds:  []model.SystemEventKind{model.SystemEventLeftSet},
+			description:   "returns 2 joined_set system events when validators are not in prev but are in current lists",
+			prevSeqs:      []model.ValidatorSessionSeq{},
+			currSeqs:      []model.ValidatorSessionSeq{{StashAccount: testValidatorAddress}, {StashAccount: "testValidatorAddress2"}},
+			expectedCount: 2,
+			expectedKinds: []model.SystemEventKind{model.SystemEventJoinedSet, model.SystemEventJoinedSet},
 		},
 		{
-			description:    "returns one left_set system events when validator is in active prev and is not in current lists",
-			prevSeqs:       []model.ValidatorSeq{{StashAccount: testValidatorAddress}},
-			currSeqs:       []model.ValidatorSeq{},
-			prevActiveSeqs: []model.ValidatorSessionSeq{{StashAccount: testValidatorAddress}},
-			currActiveSeqs: []model.ValidatorSessionSeq{},
-			expectedCount:  1,
-			expectedKinds:  []model.SystemEventKind{model.SystemEventLeftSet},
+			description:   "returns 2 left_set system events when validators are in prev but are not in current lists",
+			prevSeqs:      []model.ValidatorSessionSeq{{StashAccount: testValidatorAddress}, {StashAccount: "testValidatorAddress2"}},
+			currSeqs:      []model.ValidatorSessionSeq{},
+			expectedCount: 2,
+			expectedKinds: []model.SystemEventKind{model.SystemEventLeftSet, model.SystemEventLeftSet},
 		},
 		{
-			description: "returns 2 joined_waiting_set system events when validators are not in prev but are in current lists",
-			prevSeqs: []model.ValidatorSeq{
-				{StashAccount: testValidatorAddress},
-			},
-			currSeqs: []model.ValidatorSeq{
-				{StashAccount: testValidatorAddress},
-				{StashAccount: "addr2"},
-				{StashAccount: "addr3"},
-			},
-			prevActiveSeqs: []model.ValidatorSessionSeq{},
-			currActiveSeqs: []model.ValidatorSessionSeq{},
-			expectedCount:  2,
-			expectedKinds:  []model.SystemEventKind{model.SystemEventJoinedWaitingSet, model.SystemEventJoinedWaitingSet},
+			description:   "returns left and joined set events",
+			prevSeqs:      []model.ValidatorSessionSeq{{StashAccount: testValidatorAddress}, {StashAccount: "testValidatorAddress2"}},
+			currSeqs:      []model.ValidatorSessionSeq{{StashAccount: testValidatorAddress}, {StashAccount: "testValidatorAddress3"}},
+			expectedCount: 2,
+			expectedKinds: []model.SystemEventKind{model.SystemEventLeftSet, model.SystemEventJoinedSet},
 		},
 	}
 
@@ -286,7 +229,7 @@ func TestSystemEventCreatorTask_getActiveSetPresenceChangeSystemEvents(t *testin
 			defer ctrl.Finish()
 
 			task := NewSessionSystemEventCreatorTask(testCfg, nil, nil, nil, nil)
-			createdSystemEvents, _ := task.getActiveSetPresenceChangeSystemEvents(tt.currSeqs, tt.prevSeqs, tt.currActiveSeqs, tt.prevActiveSeqs, currSyncable)
+			createdSystemEvents, _ := task.getActiveSetPresenceChangeSystemEvents(tt.currSeqs, tt.prevSeqs, currSyncable)
 
 			if len(createdSystemEvents) != tt.expectedCount {
 				t.Errorf("unexpected system event count, want %v; got %v", tt.expectedCount, len(createdSystemEvents))

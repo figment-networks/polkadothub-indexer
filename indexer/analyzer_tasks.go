@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"sort"
 	"strings"
 	"time"
 
@@ -108,7 +109,7 @@ func (t *sessionSystemEventCreatorTask) Run(ctx context.Context, p pipeline.Payl
 
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", "Analyzer", t.GetName(), payload.CurrentHeight))
 
-	prevSessionActiveSeqs, err := t.getPrevValidatorSessionSequences(payload)
+	prevSeqs, err := t.getPrevValidatorSessionSequences(payload)
 	if err != nil {
 		return err
 	}
@@ -116,12 +117,8 @@ func (t *sessionSystemEventCreatorTask) Run(ctx context.Context, p pipeline.Payl
 	if err != nil {
 		return err
 	}
-	prevSeqs, err := t.validatorSeqDb.FindAllByHeight(lastSessionHeight)
-	if err != nil {
-		return err
-	}
 
-	activeSetPresenceChangeSystemEvents, err := t.getActiveSetPresenceChangeSystemEvents(payload.ValidatorSequences, prevSeqs, payload.ValidatorSessionSequences, prevSessionActiveSeqs, payload.Syncable)
+	activeSetPresenceChangeSystemEvents, err := t.getActiveSetPresenceChangeSystemEvents(payload.ValidatorSessionSequences, prevSeqs, payload.Syncable)
 	if err != nil {
 		return err
 	}
@@ -293,77 +290,37 @@ func (t *sessionSystemEventCreatorTask) getMissedBlocksSystemEvents(currSeqs []m
 	return systemEvents, nil
 }
 
-func (t *sessionSystemEventCreatorTask) getActiveSetPresenceChangeSystemEvents(currSeqs, prevSeqs []model.ValidatorSeq, currActiveSeqs, prevActiveSeqs []model.ValidatorSessionSeq, syncable *model.Syncable) ([]model.SystemEvent, error) {
+func (t *sessionSystemEventCreatorTask) getActiveSetPresenceChangeSystemEvents(currSeqs, prevSeqs []model.ValidatorSessionSeq, syncable *model.Syncable) ([]model.SystemEvent, error) {
 	var systemEvents []model.SystemEvent
-	active := "a"
-	waiting := "w"
 
-	type status struct {
-		was string
-		is  string
-	}
+	sort.Slice(currSeqs, func(i, j int) bool {
+		return currSeqs[i].StashAccount < currSeqs[j].StashAccount
+	})
 
-	lookup := make(map[string]*status)
-	for _, seq := range prevActiveSeqs {
-		lookup[seq.StashAccount] = &status{was: active}
-	}
-	for _, seq := range prevSeqs {
-		if _, ok := lookup[seq.StashAccount]; !ok {
-			lookup[seq.StashAccount] = &status{was: waiting}
-		}
-	}
-	for _, seq := range currActiveSeqs {
-		if s, ok := lookup[seq.StashAccount]; ok {
-			s.is = active
-		} else {
-			lookup[seq.StashAccount] = &status{is: active}
-			newSystemEvent, err := newSystemEvent(seq.StashAccount, syncable, model.SystemEventJoinedActiveSet, nil)
+	sort.Slice(prevSeqs, func(i, j int) bool {
+		return prevSeqs[i].StashAccount < prevSeqs[j].StashAccount
+	})
+
+	var i, j int
+	for i < len(currSeqs) || j < len(prevSeqs) {
+		if (i >= len(currSeqs)) || (j < len(prevSeqs) && prevSeqs[j].StashAccount < currSeqs[i].StashAccount) {
+			newSystemEvent, err := newSystemEvent(prevSeqs[j].StashAccount, syncable, model.SystemEventLeftSet, nil)
 			if err != nil {
 				return nil, err
 			}
 			systemEvents = append(systemEvents, newSystemEvent)
-		}
-	}
-	for _, seq := range currSeqs {
-		if s, ok := lookup[seq.StashAccount]; ok {
-			if s.is == "" {
-				s.is = waiting
-			}
-			if s.is == s.was {
-				continue
-			} else if s.is == active {
-				newSystemEvent, err := newSystemEvent(seq.StashAccount, syncable, model.SystemEventJoinedActiveSet, nil)
-				if err != nil {
-					return nil, err
-				}
-				systemEvents = append(systemEvents, newSystemEvent)
-			} else {
-				newSystemEvent, err := newSystemEvent(seq.StashAccount, syncable, model.SystemEventJoinedWaitingSet, nil)
-				if err != nil {
-					return nil, err
-				}
-				systemEvents = append(systemEvents, newSystemEvent)
-			}
-		} else {
-			lookup[seq.StashAccount] = &status{is: waiting}
-			newSystemEvent, err := newSystemEvent(seq.StashAccount, syncable, model.SystemEventJoinedWaitingSet, nil)
+			j++
+		} else if j >= len(prevSeqs) || prevSeqs[j].StashAccount > currSeqs[i].StashAccount {
+			newSystemEvent, err := newSystemEvent(currSeqs[i].StashAccount, syncable, model.SystemEventJoinedSet, nil)
 			if err != nil {
 				return nil, err
 			}
 			systemEvents = append(systemEvents, newSystemEvent)
+			i++
+		} else {
+			i++
+			j++
 		}
-	}
-
-	for _, seq := range prevSeqs {
-		s, _ := lookup[seq.StashAccount]
-		if s.is != "" {
-			continue
-		}
-		newSystemEvent, err := newSystemEvent(seq.StashAccount, syncable, model.SystemEventLeftSet, nil)
-		if err != nil {
-			return nil, err
-		}
-		systemEvents = append(systemEvents, newSystemEvent)
 	}
 
 	return systemEvents, nil
