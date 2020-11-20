@@ -40,7 +40,7 @@ const (
 	TransactionSeqInsert = `INSERT INTO transaction_sequences (   height,   time,   index,   hash,   method,   section ) VALUES @values  ON CONFLICT (height, index) DO UPDATE SET   hash     = excluded.hash,   method   = excluded.method,   section  = excluded.section `
 	
 	// store/psql/queries/validator_era_seq_insert.sql
-	ValidatorEraSeqInsert = `INSERT INTO validator_era_sequences (   era,   start_height,   end_height,   time,   stash_account,   controller_account,   session_accounts,   index,   total_stake,   own_stake,   stakers_stake,   reward_points,   commission,   stakers_count ) VALUES @values  ON CONFLICT (era, stash_account) DO UPDATE SET   b.controller_account = m.controller_account,   b.session_accounts = m.session_accounts,   b.index = m.index,   b.total_stake = m.total_stake,   b.own_stake = m.own_stake,   b.stakers_stake = m.stakers_stake,   b.reward_points = m.reward_points,   b.commission = m.commission,   b.stakers_count = m.stakers_count `
+	ValidatorEraSeqInsert = `INSERT INTO validator_era_sequences (   era,   start_height,   end_height,   time,   stash_account,   controller_account,   session_accounts,   index,   total_stake,   own_stake,   stakers_stake,   reward_points,   commission,   stakers_count ) VALUES @values  ON CONFLICT (era, stash_account) DO UPDATE SET   controller_account = excluded.controller_account,   session_accounts = excluded.session_accounts,   index = excluded.index,   total_stake = excluded.total_stake,   own_stake = excluded.own_stake,   stakers_stake = excluded.stakers_stake,   reward_points = excluded.reward_points,   commission = excluded.commission,   stakers_count = excluded.stakers_count `
 	
 	// store/psql/queries/validator_era_seq_summarize_select.sql
 	ValidatorEraSeqSummarizeSelect = `	stash_account, 	DATE_TRUNC(?, time) AS time_bucket,    	AVG(total_stake) AS total_stake_avg,    	MAX(total_stake) AS total_stake_max,    	MIN(total_stake) AS total_stake_min, 	AVG(own_stake) AS own_stake_avg,    	MAX(own_stake) AS own_stake_max,    	MIN(own_stake) AS own_stake_min, 	AVG(stakers_stake) AS stakers_stake_avg,    	MAX(stakers_stake) AS stakers_stake_max,    	MIN(stakers_stake) AS stakers_stake_min, 	AVG(reward_points) AS reward_points_avg,    	MAX(reward_points) AS reward_points_max,    	MIN(reward_points) AS reward_points_min, 	AVG(commission) AS commission_avg,    	MAX(commission) AS commission_max,    	MIN(commission) AS commission_min, 	AVG(stakers_count) AS stakers_count_avg,    	MAX(stakers_count) AS stakers_count_max,    	MIN(stakers_count) AS stakers_count_min`
@@ -52,7 +52,7 @@ const (
 	ValidatorSessionSeqGetCounts = `	stash_account, 	COUNT(*) AS count`
 	
 	// store/psql/queries/validator_session_seq_insert.sql
-	ValidatorSessionSeqInsert = `INSERT INTO validator_session_sequences (   session,   start_height,   end_height,   time,   stash_account,   online ) VALUES @values  ON CONFLICT (session, stash_account) DO UPDATE SET   b.online = m.online `
+	ValidatorSessionSeqInsert = `INSERT INTO validator_session_sequences (   session,   start_height,   end_height,   time,   stash_account,   online ) VALUES @values  ON CONFLICT (session, stash_account) DO UPDATE SET   online = excluded.online `
 	
 	// store/psql/queries/validator_session_seq_summarize_select.sql
 	ValidatorSessionSeqSummarizeSelect = `	stash_account, 	DATE_TRUNC(?, time) AS time_bucket,    	AVG(online::INT) AS uptime_avg,    	MAX(online::INT) AS uptime_max,    	MIN(online::INT) AS uptime_min`

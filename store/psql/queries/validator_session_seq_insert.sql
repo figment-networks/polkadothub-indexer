@@ -10,4 +10,4 @@ VALUES @values
 
 ON CONFLICT (session, stash_account) DO UPDATE
 SET
-  b.online = m.online
+  online = excluded.online
