@@ -83,7 +83,7 @@ func (uc *getByHeightUseCase) Execute(height *int64) (SeqListView, error) {
 			return SeqListView{}, err
 		}
 
-		sessionSeqs = append(payload.NewValidatorSessionSequences, payload.UpdatedValidatorSessionSequences...)
+		sessionSeqs = payload.ValidatorSessionSequences
 	}
 
 	eraSeqs, err := uc.validatorDb.FindEraSeqsByHeight(*height)

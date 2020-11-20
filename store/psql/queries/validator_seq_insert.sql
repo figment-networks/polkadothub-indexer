@@ -8,4 +8,4 @@ VALUES @values
 
 ON CONFLICT (height, stash_account) DO UPDATE
 SET
-  active_balance   = excluded.active_balance,
+  active_balance   = excluded.active_balance

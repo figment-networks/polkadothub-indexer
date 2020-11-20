@@ -11,8 +11,6 @@ type ValidatorSeq struct {
 
 	StashAccount  string         `json:"stash_account"`
 	ActiveBalance types.Quantity `json:"active_balance"`
-	// commission won't be in effect until beginning of the next era
-	Commission types.Quantity `json:"commission"`
 }
 
 func (ValidatorSeq) TableName() string {
