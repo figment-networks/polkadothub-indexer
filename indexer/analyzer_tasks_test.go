@@ -473,12 +473,12 @@ func TestSystemEventCreatorTask_getDelegationChangedSystemEvents(t *testing.T) {
 			currSeqs: []model.AccountEraSeq{
 				{StashAccount: testDelegatorAddress, ValidatorStashAccount: testValidatorAddress},
 				{StashAccount: testDelegatorAddress, ValidatorStashAccount: "validatorAddr2"},
-				{StashAccount: "addr5", ValidatorStashAccount: testValidatorAddress},
+				{StashAccount: testDelegatorAddress, ValidatorStashAccount: testValidatorAddress},
 				{StashAccount: "addr3", ValidatorStashAccount: testValidatorAddress},
 			},
 			expectedKinds: []model.SystemEventKind{model.SystemEventDelegationJoined, model.SystemEventDelegationLeft},
 			expectedAccounts: map[string][]string{
-				testValidatorAddress: []string{"addr3", "addr5"},
+				testValidatorAddress: []string{"addr3"},
 				"validatorAddr2":     []string{"addr2"},
 			},
 		},
