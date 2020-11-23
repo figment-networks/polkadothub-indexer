@@ -23,17 +23,30 @@ type ValidatorSessionSeqStore struct {
 
 // BulkUpsertSessionSeqs imports new records and updates existing ones
 func (s ValidatorSessionSeqStore) BulkUpsertSessionSeqs(records []model.ValidatorSessionSeq) error {
-	return s.Import(queries.ValidatorSessionSeqInsert, len(records), func(i int) bulk.Row {
-		r := records[i]
-		return bulk.Row{
-			r.Session,
-			r.StartHeight,
-			r.EndHeight,
-			r.Time,
-			r.StashAccount,
-			r.Online,
+	var err error
+
+	for i := 0; i < len(records); i += batchSize {
+		j := i + batchSize
+		if j > len(records) {
+			j = len(records)
 		}
-	})
+
+		err = s.Import(queries.ValidatorSessionSeqInsert, j-i, func(k int) bulk.Row {
+			r := records[i+k]
+			return bulk.Row{
+				r.Session,
+				r.StartHeight,
+				r.EndHeight,
+				r.Time,
+				r.StashAccount,
+				r.Online,
+			}
+		})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // FindByHeightAndStashAccount finds validator by height and stash account

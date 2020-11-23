@@ -11,6 +11,8 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 )
 
+const batchSize = 500
+
 var (
 	_ store.Accounts     = (*accounts)(nil)
 	_ store.Blocks       = (*blocks)(nil)

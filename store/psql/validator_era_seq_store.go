@@ -23,25 +23,38 @@ type ValidatorEraSeqStore struct {
 
 // BulkUpsertEraSeqs imports new records and updates existing ones
 func (s ValidatorEraSeqStore) BulkUpsertEraSeqs(records []model.ValidatorEraSeq) error {
-	return s.Import(queries.ValidatorEraSeqInsert, len(records), func(i int) bulk.Row {
-		r := records[i]
-		return bulk.Row{
-			r.Era,
-			r.StartHeight,
-			r.EndHeight,
-			r.Time,
-			r.StashAccount,
-			r.ControllerAccount,
-			r.SessionAccounts,
-			r.Index,
-			r.TotalStake.String(),
-			r.OwnStake.String(),
-			r.StakersStake.String(),
-			r.RewardPoints,
-			r.Commission,
-			r.StakersCount,
+	var err error
+
+	for i := 0; i < len(records); i += batchSize {
+		j := i + batchSize
+		if j > len(records) {
+			j = len(records)
 		}
-	})
+
+		err = s.Import(queries.ValidatorEraSeqInsert, j-i, func(k int) bulk.Row {
+			r := records[i+k]
+			return bulk.Row{
+				r.Era,
+				r.StartHeight,
+				r.EndHeight,
+				r.Time,
+				r.StashAccount,
+				r.ControllerAccount,
+				r.SessionAccounts,
+				r.Index,
+				r.TotalStake.String(),
+				r.OwnStake.String(),
+				r.StakersStake.String(),
+				r.RewardPoints,
+				r.Commission,
+				r.StakersCount,
+			}
+		})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // FindByHeightAndStashAccount finds validator by height and stash account
