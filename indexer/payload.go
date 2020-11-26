@@ -52,16 +52,14 @@ type payload struct {
 	UpdatedValidatorAggregates []model.ValidatorAgg
 
 	// Sequencer stage
-	NewBlockSequence                 *model.BlockSeq
-	UpdatedBlockSequence             *model.BlockSeq
-	ValidatorSequences               []model.ValidatorSeq
-	NewValidatorSessionSequences     []model.ValidatorSessionSeq
-	UpdatedValidatorSessionSequences []model.ValidatorSessionSeq
-	NewValidatorEraSequences         []model.ValidatorEraSeq
-	UpdatedValidatorEraSequences     []model.ValidatorEraSeq
-	EventSequences                   []model.EventSeq
-	AccountEraSequences              []model.AccountEraSeq
-	TransactionSequences             []model.TransactionSeq
+	NewBlockSequence          *model.BlockSeq
+	UpdatedBlockSequence      *model.BlockSeq
+	ValidatorSequences        []model.ValidatorSeq
+	ValidatorSessionSequences []model.ValidatorSessionSeq
+	ValidatorEraSequences     []model.ValidatorEraSeq
+	EventSequences            []model.EventSeq
+	AccountEraSequences       []model.AccountEraSeq
+	TransactionSequences      []model.TransactionSeq
 
 	// Analyzer
 	SystemEvents []model.SystemEvent

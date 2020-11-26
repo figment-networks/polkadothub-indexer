@@ -3,6 +3,7 @@ package psql
 import (
 	"time"
 
+	"github.com/figment-networks/indexing-engine/store/bulk"
 	"github.com/figment-networks/polkadothub-indexer/store/psql/queries"
 
 	"github.com/figment-networks/polkadothub-indexer/model"
@@ -20,14 +21,32 @@ type ValidatorSessionSeqStore struct {
 	baseStore
 }
 
-// CreateSessionSeq creates the validator aggregate
-func (s ValidatorSessionSeqStore) CreateSessionSeq(val *model.ValidatorSessionSeq) error {
-	return s.Create(val)
-}
+// BulkUpsertSessionSeqs imports new records and updates existing ones
+func (s ValidatorSessionSeqStore) BulkUpsertSessionSeqs(records []model.ValidatorSessionSeq) error {
+	var err error
 
-// SaveSessionSeq creates the validator aggregate
-func (s ValidatorSessionSeqStore) SaveSessionSeq(val *model.ValidatorSessionSeq) error {
-	return s.Save(val)
+	for i := 0; i < len(records); i += batchSize {
+		j := i + batchSize
+		if j > len(records) {
+			j = len(records)
+		}
+
+		err = s.Import(queries.ValidatorSessionSeqInsert, j-i, func(k int) bulk.Row {
+			r := records[i+k]
+			return bulk.Row{
+				r.Session,
+				r.StartHeight,
+				r.EndHeight,
+				r.Time,
+				r.StashAccount,
+				r.Online,
+			}
+		})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // FindByHeightAndStashAccount finds validator by height and stash account

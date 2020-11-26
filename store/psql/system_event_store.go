@@ -20,20 +20,31 @@ type SystemEventStore struct {
 
 // BulkUpsert imports new records and updates existing ones
 func (s SystemEventStore) BulkUpsert(records []model.SystemEvent) error {
+	var err error
 	t := time.Now()
 
-	return s.Import(queries.SystemEventInsert, len(records), func(i int) bulk.Row {
-		r := records[i]
-		return bulk.Row{
-			t,
-			t,
-			r.Height,
-			r.Time,
-			r.Actor,
-			r.Kind,
-			r.Data,
+	for i := 0; i < len(records); i += batchSize {
+		j := i + batchSize
+		if j > len(records) {
+			j = len(records)
 		}
-	})
+		err = s.Import(queries.SystemEventInsert, j-i, func(k int) bulk.Row {
+			r := records[i+k]
+			return bulk.Row{
+				t,
+				t,
+				r.Height,
+				r.Time,
+				r.Actor,
+				r.Kind,
+				r.Data,
+			}
+		})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // FindByActor returns system events by actor

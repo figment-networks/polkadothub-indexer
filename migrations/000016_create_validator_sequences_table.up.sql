@@ -7,7 +7,6 @@ CREATE TABLE IF NOT EXISTS validator_sequences
 
     stash_account           TEXT                     NOT NULL,
     active_balance          DECIMAL(65, 0)           NOT NULL,
-    commission              DECIMAL(65, 0)           NOT NULL,
 
     PRIMARY KEY (id)
 );

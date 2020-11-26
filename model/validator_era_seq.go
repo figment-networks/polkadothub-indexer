@@ -36,14 +36,3 @@ func (s *ValidatorEraSeq) Equal(m ValidatorEraSeq) bool {
 	return s.Index == m.Index &&
 		s.StashAccount == m.StashAccount
 }
-
-func (b *ValidatorEraSeq) Update(m ValidatorEraSeq) {
-	b.ControllerAccount = m.ControllerAccount
-	b.SessionAccounts = m.SessionAccounts
-	b.TotalStake = m.TotalStake
-	b.OwnStake = m.OwnStake
-	b.StakersStake = m.StakersStake
-	b.RewardPoints = m.RewardPoints
-	b.Commission = m.Commission
-	b.StakersCount = m.StakersCount
-}

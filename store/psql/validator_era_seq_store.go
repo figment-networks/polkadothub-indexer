@@ -3,6 +3,7 @@ package psql
 import (
 	"time"
 
+	"github.com/figment-networks/indexing-engine/store/bulk"
 	"github.com/figment-networks/polkadothub-indexer/store/psql/queries"
 
 	"github.com/figment-networks/polkadothub-indexer/model"
@@ -20,14 +21,40 @@ type ValidatorEraSeqStore struct {
 	baseStore
 }
 
-// CreateEraSeq creates the validator aggregate
-func (s ValidatorEraSeqStore) CreateEraSeq(val *model.ValidatorEraSeq) error {
-	return s.Create(val)
-}
+// BulkUpsertEraSeqs imports new records and updates existing ones
+func (s ValidatorEraSeqStore) BulkUpsertEraSeqs(records []model.ValidatorEraSeq) error {
+	var err error
 
-// SaveEraSeq creates the validator aggregate
-func (s ValidatorEraSeqStore) SaveEraSeq(val *model.ValidatorEraSeq) error {
-	return s.Save(val)
+	for i := 0; i < len(records); i += batchSize {
+		j := i + batchSize
+		if j > len(records) {
+			j = len(records)
+		}
+
+		err = s.Import(queries.ValidatorEraSeqInsert, j-i, func(k int) bulk.Row {
+			r := records[i+k]
+			return bulk.Row{
+				r.Era,
+				r.StartHeight,
+				r.EndHeight,
+				r.Time,
+				r.StashAccount,
+				r.ControllerAccount,
+				r.SessionAccounts,
+				r.Index,
+				r.TotalStake.String(),
+				r.OwnStake.String(),
+				r.StakersStake.String(),
+				r.RewardPoints,
+				r.Commission,
+				r.StakersCount,
+			}
+		})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // FindByHeightAndStashAccount finds validator by height and stash account

@@ -51,11 +51,6 @@ func ToValidatorSequence(syncable *model.Syncable, rawValidators []*validatorpb.
 			return nil, err
 		}
 
-		commission, err := types.NewQuantityFromString(rawValidator.GetCommission())
-		if err != nil {
-			return nil, err
-		}
-
 		e := model.ValidatorSeq{
 			Sequence: &model.Sequence{
 				Height: syncable.Height,
@@ -64,7 +59,6 @@ func ToValidatorSequence(syncable *model.Syncable, rawValidators []*validatorpb.
 
 			StashAccount:  rawValidator.GetStashAccount(),
 			ActiveBalance: balance,
-			Commission:    commission,
 		}
 
 		if !e.Valid() {

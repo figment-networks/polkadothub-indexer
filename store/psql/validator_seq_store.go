@@ -20,16 +20,28 @@ type ValidatorSeqStore struct {
 
 // BulkUpsertSeqs imports new records and updates existing ones
 func (s ValidatorSeqStore) BulkUpsertSeqs(records []model.ValidatorSeq) error {
-	return s.Import(queries.ValidatorSeqInsert, len(records), func(i int) bulk.Row {
-		r := records[i]
-		return bulk.Row{
-			r.Height,
-			r.Time,
-			r.StashAccount,
-			r.ActiveBalance.String(),
-			r.Commission.String(),
+	var err error
+
+	for i := 0; i < len(records); i += batchSize {
+		j := i + batchSize
+		if j > len(records) {
+			j = len(records)
 		}
-	})
+
+		err = s.Import(queries.ValidatorSeqInsert, j-i, func(k int) bulk.Row {
+			r := records[i+k]
+			return bulk.Row{
+				r.Height,
+				r.Time,
+				r.StashAccount,
+				r.ActiveBalance.String(),
+			}
+		})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // FindAllByHeight returns all validators for provided height

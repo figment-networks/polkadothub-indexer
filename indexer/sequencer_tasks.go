@@ -8,7 +8,6 @@ import (
 	"github.com/figment-networks/indexing-engine/pipeline"
 	"github.com/figment-networks/polkadothub-indexer/config"
 	"github.com/figment-networks/polkadothub-indexer/metric"
-	"github.com/figment-networks/polkadothub-indexer/model"
 	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/utils/logger"
 )
@@ -150,26 +149,7 @@ func (t *validatorSessionSeqCreatorTask) Run(ctx context.Context, p pipeline.Pay
 		return err
 	}
 
-	var newValidatorSessionSeqs []model.ValidatorSessionSeq
-	var updatedValidatorSessionSeqs []model.ValidatorSessionSeq
-	for _, rawValidatorSessionSeq := range mappedValidatorSessionSeqs {
-		validatorSessionSeq, err := t.validatorSessionSeqDb.FindBySessionAndStashAccount(payload.Syncable.Session, rawValidatorSessionSeq.StashAccount)
-		if err != nil {
-			if err == store.ErrNotFound {
-				newValidatorSessionSeqs = append(newValidatorSessionSeqs, rawValidatorSessionSeq)
-				continue
-			} else {
-				return err
-			}
-		}
-
-		validatorSessionSeq.Update(rawValidatorSessionSeq)
-		updatedValidatorSessionSeqs = append(updatedValidatorSessionSeqs, *validatorSessionSeq)
-	}
-
-	payload.NewValidatorSessionSequences = newValidatorSessionSeqs
-	payload.UpdatedValidatorSessionSequences = updatedValidatorSessionSeqs
-
+	payload.ValidatorSessionSequences = mappedValidatorSessionSeqs
 	return nil
 }
 
@@ -221,26 +201,7 @@ func (t *validatorEraSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload
 		return err
 	}
 
-	var newValidatorEraSeqs []model.ValidatorEraSeq
-	var updatedValidatorEraSeqs []model.ValidatorEraSeq
-	for _, rawValidatorEraSeq := range mappedValidatorEraSeqs {
-		validatorEraSeq, err := t.validatorEraSeqDb.FindByEraAndStashAccount(payload.Syncable.Era, rawValidatorEraSeq.StashAccount)
-		if err != nil {
-			if err == store.ErrNotFound {
-				newValidatorEraSeqs = append(newValidatorEraSeqs, rawValidatorEraSeq)
-				continue
-			} else {
-				return err
-			}
-		}
-
-		validatorEraSeq.Update(rawValidatorEraSeq)
-		updatedValidatorEraSeqs = append(updatedValidatorEraSeqs, *validatorEraSeq)
-	}
-
-	payload.NewValidatorEraSequences = newValidatorEraSeqs
-	payload.UpdatedValidatorEraSequences = updatedValidatorEraSeqs
-
+	payload.ValidatorEraSequences = mappedValidatorEraSeqs
 	return nil
 }
 

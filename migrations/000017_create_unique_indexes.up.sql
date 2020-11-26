@@ -15,3 +15,9 @@ CREATE UNIQUE INDEX idx_system_events_height_actor_kind
 
 CREATE UNIQUE INDEX idx_event_sequences_height_index
     ON event_sequences(height, index);
+
+CREATE UNIQUE INDEX idx_validator_session_sequences_session_account
+    ON validator_session_sequences(session, stash_account);
+
+CREATE UNIQUE INDEX idx_validator_era_sequences_era_account
+    ON validator_era_sequences(era, stash_account);

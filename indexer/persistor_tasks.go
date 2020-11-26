@@ -109,19 +109,7 @@ func (t *validatorSessionSeqPersistorTask) Run(ctx context.Context, p pipeline.P
 
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
 
-	for _, sequence := range payload.NewValidatorSessionSequences {
-		if err := t.validatorSessionSeqDb.CreateSessionSeq(&sequence); err != nil {
-			return err
-		}
-	}
-
-	for _, sequence := range payload.UpdatedValidatorSessionSequences {
-		if err := t.validatorSessionSeqDb.SaveSessionSeq(&sequence); err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return t.validatorSessionSeqDb.BulkUpsertSessionSeqs(payload.ValidatorSessionSequences)
 }
 
 // NewValidatorEraSeqPersistorTask is responsible for storing validator era info to persistence layer
@@ -151,19 +139,7 @@ func (t *validatorEraSeqPersistorTask) Run(ctx context.Context, p pipeline.Paylo
 
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
 
-	for _, sequence := range payload.NewValidatorEraSequences {
-		if err := t.validatorEraSeqDb.CreateEraSeq(&sequence); err != nil {
-			return err
-		}
-	}
-
-	for _, sequence := range payload.UpdatedValidatorEraSequences {
-		if err := t.validatorEraSeqDb.SaveEraSeq(&sequence); err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return t.validatorEraSeqDb.BulkUpsertEraSeqs(payload.ValidatorEraSequences)
 }
 
 func NewValidatorAggPersistorTask(validatorAggDb store.ValidatorAgg) pipeline.Task {

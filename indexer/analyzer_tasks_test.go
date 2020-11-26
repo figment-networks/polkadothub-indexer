@@ -24,7 +24,7 @@ var (
 	}
 )
 
-func TestSystemEventCreatorTask_getValueChangeSystemEvents(t *testing.T) {
+func TestSystemEventCreatorTask_getActiveBalanceChangeSystemEvents(t *testing.T) {
 	currSyncable := &model.Syncable{
 		Height: 20,
 		Time:   *types.NewTimeFromTime(time.Date(2020, 11, 10, 23, 0, 0, 0, time.UTC)),
@@ -38,28 +38,18 @@ func TestSystemEventCreatorTask_getValueChangeSystemEvents(t *testing.T) {
 	tests := []struct {
 		description             string
 		activeBalanceChangeRate float64
-		commissionChangeRate    float64
 		expectedCount           int
 		expectedKind            model.SystemEventKind
 	}{
-		{"returns no system events when active balance haven't changed", 0, 0, 0, ""},
-		{"returns no system events when active balance change smaller than 0.1", 0.09, 0, 0, ""},
-		{"returns one activeBalanceChange1 system event when active balance change is 0.1", 0.1, 0, 1, model.SystemEventActiveBalanceChange1},
-		{"returns one activeBalanceChange1 system events when active balance change is 0.9", 0.9, 0, 1, model.SystemEventActiveBalanceChange1},
-		{"returns one activeBalanceChange2 system events when active balance change is 1", 1, 0, 1, model.SystemEventActiveBalanceChange2},
-		{"returns one activeBalanceChange2 system events when active balance change is 9", 9, 0, 1, model.SystemEventActiveBalanceChange2},
-		{"returns one activeBalanceChange3 system events when active balance change is 10", 10, 0, 1, model.SystemEventActiveBalanceChange3},
-		{"returns one activeBalanceChange3 system events when active balance change is 100", 100, 0, 1, model.SystemEventActiveBalanceChange3},
-		{"returns one activeBalanceChange3 system events when active balance change is 200", 200, 0, 1, model.SystemEventActiveBalanceChange3},
-
-		{"returns no system events when commission haven't changed", 0, 0, 0, ""},
-		{"returns no system events when commission change smaller than 0.1", 0, 0.09, 0, ""},
-		{"returns one commissionChange1 system event when commission change is 0.1", 0, 0.1, 1, model.SystemEventCommissionChange1},
-		{"returns one commissionChange1 system events when commission change is 0.9", 0, 0.9, 1, model.SystemEventCommissionChange1},
-		{"returns one commissionChange2 system events when commission change is 1", 0, 1, 1, model.SystemEventCommissionChange2},
-		{"returns one commissionChange2 system events when commission change is 9", 0, 9, 1, model.SystemEventCommissionChange2},
-		{"returns one commissionChange3 system events when commission change is 10", 0, 10, 1, model.SystemEventCommissionChange3},
-		{"returns one commissionChange3 system events when commission change is 100", 0, 100, 1, model.SystemEventCommissionChange3},
+		{"returns no system events when active balance haven't changed", 0, 0, ""},
+		{"returns no system events when active balance change smaller than 0.1", 0.09, 0, ""},
+		{"returns one activeBalanceChange1 system event when active balance change is 0.1", 0.1, 1, model.SystemEventActiveBalanceChange1},
+		{"returns one activeBalanceChange1 system events when active balance change is 0.9", 0.9, 1, model.SystemEventActiveBalanceChange1},
+		{"returns one activeBalanceChange2 system events when active balance change is 1", 1, 1, model.SystemEventActiveBalanceChange2},
+		{"returns one activeBalanceChange2 system events when active balance change is 9", 9, 1, model.SystemEventActiveBalanceChange2},
+		{"returns one activeBalanceChange3 system events when active balance change is 10", 10, 1, model.SystemEventActiveBalanceChange3},
+		{"returns one activeBalanceChange3 system events when active balance change is 100", 100, 1, model.SystemEventActiveBalanceChange3},
+		{"returns one activeBalanceChange3 system events when active balance change is 200", 200, 1, model.SystemEventActiveBalanceChange3},
 	}
 
 	for _, tt := range tests {
@@ -69,15 +59,11 @@ func TestSystemEventCreatorTask_getValueChangeSystemEvents(t *testing.T) {
 			var activeBalanceBefore int64 = 1000
 			activeBalanceAfter := float64(activeBalanceBefore) + (float64(activeBalanceBefore) * tt.activeBalanceChangeRate / 100)
 
-			var commissionBefore int64 = 1000
-			commissionAfter := float64(commissionBefore) + (float64(commissionBefore) * tt.commissionChangeRate / 100)
-
 			prevHeightValidatorSequences := []model.ValidatorSeq{
 				model.ValidatorSeq{
 					Sequence:      currSeq,
 					StashAccount:  testValidatorAddress,
 					ActiveBalance: types.NewQuantityFromInt64(activeBalanceBefore),
-					Commission:    types.NewQuantityFromInt64(commissionBefore),
 				},
 			}
 			currHeightValidatorSequences := []model.ValidatorSeq{
@@ -85,12 +71,77 @@ func TestSystemEventCreatorTask_getValueChangeSystemEvents(t *testing.T) {
 					Sequence:      currSeq,
 					StashAccount:  testValidatorAddress,
 					ActiveBalance: types.NewQuantityFromInt64(int64(activeBalanceAfter)),
-					Commission:    types.NewQuantityFromInt64(int64(commissionAfter)),
 				},
 			}
 
-			task := NewSystemEventCreatorTask(testCfg, nil, nil, nil, nil, nil)
-			createdSystemEvents, _ := task.getValueChangeSystemEvents(currHeightValidatorSequences, prevHeightValidatorSequences, currSyncable)
+			task := NewSystemEventCreatorTask(testCfg, nil)
+			createdSystemEvents, _ := task.getActiveBalanceChangeSystemEvents(currHeightValidatorSequences, prevHeightValidatorSequences, currSyncable)
+
+			if len(createdSystemEvents) != tt.expectedCount {
+				t.Errorf("unexpected system event count, want %v; got %v", tt.expectedCount, len(createdSystemEvents))
+				return
+			}
+
+			if len(createdSystemEvents) > 0 && createdSystemEvents[0].Kind != tt.expectedKind {
+				t.Errorf("unexpected system event kind, want %v; got %v", tt.expectedKind, createdSystemEvents[0].Kind)
+			}
+		})
+	}
+}
+
+func TestSystemEventCreatorTask_getCommissionChangeSystemEvents(t *testing.T) {
+	currSyncable := &model.Syncable{
+		Height: 20,
+		Time:   *types.NewTimeFromTime(time.Date(2020, 11, 10, 23, 0, 0, 0, time.UTC)),
+	}
+
+	currSeq := &model.EraSequence{
+		StartHeight: currSyncable.Height - 10,
+		EndHeight:   currSyncable.Height,
+		Time:        currSyncable.Time,
+	}
+
+	tests := []struct {
+		description          string
+		commissionChangeRate float64
+		expectedCount        int
+		expectedKind         model.SystemEventKind
+	}{
+		{"returns no system events when commission haven't changed", 0, 0, ""},
+		{"returns no system events when commission change smaller than 0.1", 0.09, 0, ""},
+		{"returns one commissionChange1 system event when commission change is 0.1", 0.1, 1, model.SystemEventCommissionChange1},
+		{"returns one commissionChange1 system events when commission change is 0.9", 0.9, 1, model.SystemEventCommissionChange1},
+		{"returns one commissionChange2 system events when commission change is 1", 1, 1, model.SystemEventCommissionChange2},
+		{"returns one commissionChange2 system events when commission change is 9", 9, 1, model.SystemEventCommissionChange2},
+		{"returns one commissionChange3 system events when commission change is 10", 10, 1, model.SystemEventCommissionChange3},
+		{"returns one commissionChange3 system events when commission change is 100", 100, 1, model.SystemEventCommissionChange3},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.description, func(t *testing.T) {
+			t.Parallel()
+
+			var commissionBefore int64 = 1000
+			commissionAfter := float64(commissionBefore) + (float64(commissionBefore) * tt.commissionChangeRate / 100)
+
+			prevHeightValidatorSequences := []model.ValidatorEraSeq{
+				model.ValidatorEraSeq{
+					EraSequence:  currSeq,
+					StashAccount: testValidatorAddress,
+					Commission:   commissionBefore,
+				},
+			}
+			currHeightValidatorSequences := []model.ValidatorEraSeq{
+				model.ValidatorEraSeq{
+					EraSequence:  currSeq,
+					StashAccount: testValidatorAddress,
+					Commission:   int64(commissionAfter),
+				},
+			}
+
+			task := NewEraSystemEventCreatorTask(testCfg, nil, nil)
+			createdSystemEvents, _ := task.getCommissionChangeSystemEvents(currHeightValidatorSequences, prevHeightValidatorSequences, currSyncable)
 
 			if len(createdSystemEvents) != tt.expectedCount {
 				t.Errorf("unexpected system event count, want %v; got %v", tt.expectedCount, len(createdSystemEvents))
@@ -111,119 +162,62 @@ func TestSystemEventCreatorTask_getActiveSetPresenceChangeSystemEvents(t *testin
 	}
 
 	tests := []struct {
-		description    string
-		prevSeqs       []model.ValidatorSeq // contains waiting and active
-		currSeqs       []model.ValidatorSeq // contains waiting and active
-		prevActiveSeqs []model.ValidatorSessionSeq
-		currActiveSeqs []model.ValidatorSessionSeq
-		expectedCount  int
-		expectedKinds  []model.SystemEventKind
+		description   string
+		prevSeqs      []model.ValidatorSessionSeq
+		currSeqs      []model.ValidatorSessionSeq
+		expectedCount int
+		expectedKinds []model.SystemEventKind
 	}{
 		{
-			description: "returns no system events when validator is both in all prev and current lists",
-			prevSeqs: []model.ValidatorSeq{
+			description: "returns no system events when validator is both in prev and current lists",
+			prevSeqs: []model.ValidatorSessionSeq{
 				{StashAccount: testValidatorAddress},
 			},
-			currSeqs: []model.ValidatorSeq{
-				{StashAccount: testValidatorAddress},
-			},
-			prevActiveSeqs: []model.ValidatorSessionSeq{
-				{StashAccount: testValidatorAddress},
-			},
-			currActiveSeqs: []model.ValidatorSessionSeq{
+			currSeqs: []model.ValidatorSessionSeq{
 				{StashAccount: testValidatorAddress},
 			},
 			expectedCount: 0,
 		},
 		{
-			description: "returns no system events when validator is both in prev and current waiting lists",
-			prevSeqs: []model.ValidatorSeq{
-				{StashAccount: testValidatorAddress},
-			},
-			currSeqs: []model.ValidatorSeq{
-				{StashAccount: testValidatorAddress},
-			},
-			prevActiveSeqs: []model.ValidatorSessionSeq{},
-			currActiveSeqs: []model.ValidatorSessionSeq{},
-			expectedCount:  0,
+			description:   "returns no system events when validator is not in any list",
+			prevSeqs:      []model.ValidatorSessionSeq{},
+			currSeqs:      []model.ValidatorSessionSeq{},
+			expectedCount: 0,
 		},
 		{
-			description:    "returns no system events when validator is not in any list",
-			prevSeqs:       []model.ValidatorSeq{},
-			currSeqs:       []model.ValidatorSeq{},
-			prevActiveSeqs: []model.ValidatorSessionSeq{},
-			currActiveSeqs: []model.ValidatorSessionSeq{},
-			expectedCount:  0,
-		},
-		{
-			description: "returns one joined_waiting_set system events when validator is not in prev lists and is in current list",
-			prevSeqs:    []model.ValidatorSeq{},
-			currSeqs: []model.ValidatorSeq{
-				{StashAccount: testValidatorAddress},
-			},
-			prevActiveSeqs: []model.ValidatorSessionSeq{},
-			currActiveSeqs: []model.ValidatorSessionSeq{},
-			expectedCount:  1,
-			expectedKinds:  []model.SystemEventKind{model.SystemEventJoinedWaitingSet},
-		},
-		{
-			description: "returns one joined_active_set system events when validator is not in prev active set and is in current active set",
-			prevSeqs: []model.ValidatorSeq{
-				{StashAccount: testValidatorAddress},
-			},
-			currSeqs: []model.ValidatorSeq{
-				{StashAccount: testValidatorAddress},
-			},
-			prevActiveSeqs: []model.ValidatorSessionSeq{},
-			currActiveSeqs: []model.ValidatorSessionSeq{
-				{StashAccount: testValidatorAddress},
-			},
+			description:   "returns one joined_set system events when validator is not in prev lists and is in current list",
+			prevSeqs:      []model.ValidatorSessionSeq{},
+			currSeqs:      []model.ValidatorSessionSeq{{StashAccount: testValidatorAddress}},
 			expectedCount: 1,
-			expectedKinds: []model.SystemEventKind{model.SystemEventJoinedActiveSet},
+			expectedKinds: []model.SystemEventKind{model.SystemEventJoinedSet},
 		},
 		{
-			description:    "returns one joined_waiting_set system events when validator is in prev active set and not in current active set but still in current",
-			prevSeqs:       []model.ValidatorSeq{{StashAccount: testValidatorAddress}},
-			currSeqs:       []model.ValidatorSeq{{StashAccount: testValidatorAddress}},
-			prevActiveSeqs: []model.ValidatorSessionSeq{{StashAccount: testValidatorAddress}},
-			currActiveSeqs: []model.ValidatorSessionSeq{},
-			expectedCount:  1,
-			expectedKinds:  []model.SystemEventKind{model.SystemEventJoinedWaitingSet},
+			description:   "returns one left_set system events when validator is in prev set and not in current set",
+			prevSeqs:      []model.ValidatorSessionSeq{{StashAccount: testValidatorAddress}},
+			currSeqs:      []model.ValidatorSessionSeq{},
+			expectedCount: 1,
+			expectedKinds: []model.SystemEventKind{model.SystemEventLeftSet},
 		},
 		{
-			description: "returns one left_set system events when validator is in prev and is not in current lists",
-			prevSeqs: []model.ValidatorSeq{
-				{StashAccount: testValidatorAddress},
-			},
-			currSeqs:       []model.ValidatorSeq{},
-			prevActiveSeqs: []model.ValidatorSessionSeq{},
-			currActiveSeqs: []model.ValidatorSessionSeq{},
-			expectedCount:  1,
-			expectedKinds:  []model.SystemEventKind{model.SystemEventLeftSet},
+			description:   "returns 2 joined_set system events when validators are not in prev but are in current lists",
+			prevSeqs:      []model.ValidatorSessionSeq{},
+			currSeqs:      []model.ValidatorSessionSeq{{StashAccount: testValidatorAddress}, {StashAccount: "testValidatorAddress2"}},
+			expectedCount: 2,
+			expectedKinds: []model.SystemEventKind{model.SystemEventJoinedSet, model.SystemEventJoinedSet},
 		},
 		{
-			description:    "returns one left_set system events when validator is in active prev and is not in current lists",
-			prevSeqs:       []model.ValidatorSeq{{StashAccount: testValidatorAddress}},
-			currSeqs:       []model.ValidatorSeq{},
-			prevActiveSeqs: []model.ValidatorSessionSeq{{StashAccount: testValidatorAddress}},
-			currActiveSeqs: []model.ValidatorSessionSeq{},
-			expectedCount:  1,
-			expectedKinds:  []model.SystemEventKind{model.SystemEventLeftSet},
+			description:   "returns 2 left_set system events when validators are in prev but are not in current lists",
+			prevSeqs:      []model.ValidatorSessionSeq{{StashAccount: testValidatorAddress}, {StashAccount: "testValidatorAddress2"}},
+			currSeqs:      []model.ValidatorSessionSeq{},
+			expectedCount: 2,
+			expectedKinds: []model.SystemEventKind{model.SystemEventLeftSet, model.SystemEventLeftSet},
 		},
 		{
-			description: "returns 2 joined_waiting_set system events when validators are not in prev but are in current lists",
-			prevSeqs: []model.ValidatorSeq{
-				{StashAccount: testValidatorAddress},
-			},
-			currSeqs: []model.ValidatorSeq{
-				{StashAccount: testValidatorAddress},
-				{StashAccount: "addr2"},
-				{StashAccount: "addr3"},
-			},
-			prevActiveSeqs: []model.ValidatorSessionSeq{},
-			currActiveSeqs: []model.ValidatorSessionSeq{},
-			expectedCount:  2,
-			expectedKinds:  []model.SystemEventKind{model.SystemEventJoinedWaitingSet, model.SystemEventJoinedWaitingSet},
+			description:   "returns left and joined set events",
+			prevSeqs:      []model.ValidatorSessionSeq{{StashAccount: testValidatorAddress}, {StashAccount: "testValidatorAddress2"}},
+			currSeqs:      []model.ValidatorSessionSeq{{StashAccount: testValidatorAddress}, {StashAccount: "testValidatorAddress3"}},
+			expectedCount: 2,
+			expectedKinds: []model.SystemEventKind{model.SystemEventLeftSet, model.SystemEventJoinedSet},
 		},
 	}
 
@@ -234,8 +228,8 @@ func TestSystemEventCreatorTask_getActiveSetPresenceChangeSystemEvents(t *testin
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			task := NewSystemEventCreatorTask(testCfg, nil, nil, nil, nil, nil)
-			createdSystemEvents, _ := task.getActiveSetPresenceChangeSystemEvents(tt.currSeqs, tt.prevSeqs, tt.currActiveSeqs, tt.prevActiveSeqs, currSyncable)
+			task := NewSessionSystemEventCreatorTask(testCfg, nil, nil, nil, nil)
+			createdSystemEvents, _ := task.getActiveSetPresenceChangeSystemEvents(tt.currSeqs, tt.prevSeqs, currSyncable)
 
 			if len(createdSystemEvents) != tt.expectedCount {
 				t.Errorf("unexpected system event count, want %v; got %v", tt.expectedCount, len(createdSystemEvents))
@@ -309,7 +303,7 @@ func TestSystemEventCreatorTask_getMissedBlocksSystemEvents(t *testing.T) {
 			missedConsecutiveThreshold = tt.missedConsecutiveThreshold
 			systemEventStoreMock := mock.NewMockSystemEvents(ctrl)
 
-			task := NewSystemEventCreatorTask(testCfg, nil, nil, systemEventStoreMock, nil, nil)
+			task := NewSessionSystemEventCreatorTask(testCfg, nil, systemEventStoreMock, nil, nil)
 
 			kind := model.SystemEventMissedNConsecutive
 			for _, seq := range tt.currSeqs {
@@ -497,7 +491,7 @@ func TestSystemEventCreatorTask_getDelegationChangedSystemEvents(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			task := NewSystemEventCreatorTask(testCfg, nil, nil, nil, nil, nil)
+			task := NewEraSystemEventCreatorTask(testCfg, nil, nil)
 			createdSystemEvents, _ := task.getDelegationChangedSystemEvents(tt.currSeqs, tt.prevSeqs, currSyncable)
 
 			if len(createdSystemEvents) != len(tt.expectedKinds) {

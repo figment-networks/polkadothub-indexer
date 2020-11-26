@@ -19,20 +19,33 @@ type AccountEraSeqStore struct {
 
 // BulkUpsert imports new records and updates existing ones
 func (s AccountEraSeqStore) BulkUpsert(records []model.AccountEraSeq) error {
-	return s.Import(queries.AccountEraSeqInsert, len(records), func(i int) bulk.Row {
-		r := records[i]
-		return bulk.Row{
-			r.Era,
-			r.StartHeight,
-			r.EndHeight,
-			r.Time,
-			r.StashAccount,
-			r.ControllerAccount,
-			r.ValidatorStashAccount,
-			r.ValidatorControllerAccount,
-			r.Stake.String(),
+	var err error
+
+	for i := 0; i < len(records); i += batchSize {
+		j := i + batchSize
+		if j > len(records) {
+			j = len(records)
 		}
-	})
+
+		err = s.Import(queries.AccountEraSeqInsert, j-i, func(k int) bulk.Row {
+			r := records[i+k]
+			return bulk.Row{
+				r.Era,
+				r.StartHeight,
+				r.EndHeight,
+				r.Time,
+				r.StashAccount,
+				r.ControllerAccount,
+				r.ValidatorStashAccount,
+				r.ValidatorControllerAccount,
+				r.Stake.String(),
+			}
+		})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // FindByHeight finds account era sequences by era

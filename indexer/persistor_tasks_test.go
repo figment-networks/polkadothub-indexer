@@ -138,7 +138,7 @@ func TestValidatorSessionSeqPersistor_Run(t *testing.T) {
 
 	for _, tt := range tests {
 		tt := tt
-		t.Run(fmt.Sprintf("[new] %v", tt.description), func(t *testing.T) {
+		t.Run(tt.description, func(t *testing.T) {
 			t.Parallel()
 
 			ctrl := gomock.NewController(t)
@@ -149,50 +149,12 @@ func TestValidatorSessionSeqPersistor_Run(t *testing.T) {
 			task := NewValidatorSessionSeqPersistorTask(dbMock)
 
 			pl := &payload{
-				Syncable:                     &model.Syncable{LastInSession: tt.lastInSession},
-				NewValidatorSessionSequences: seqs,
+				Syncable:                  &model.Syncable{LastInSession: tt.lastInSession},
+				ValidatorSessionSequences: seqs,
 			}
 
 			if tt.lastInSession {
-				for _, s := range seqs {
-					createSeq := s
-					dbMock.EXPECT().CreateSessionSeq(&createSeq).Return(tt.expectErr).Times(1)
-					if tt.expectErr != nil {
-						// don't expect any more calls
-						break
-					}
-				}
-			}
-
-			if err := task.Run(ctx, pl); err != tt.expectErr {
-				t.Errorf("want %v; got %v", tt.expectErr, err)
-			}
-		})
-
-		t.Run(fmt.Sprintf("[updated] %v", tt.description), func(t *testing.T) {
-			t.Parallel()
-
-			ctrl := gomock.NewController(t)
-			ctx := context.Background()
-
-			dbMock := mock.NewMockValidatorSessionSeq(ctrl)
-
-			task := NewValidatorSessionSeqPersistorTask(dbMock)
-
-			pl := &payload{
-				Syncable:                         &model.Syncable{LastInSession: tt.lastInSession},
-				UpdatedValidatorSessionSequences: seqs,
-			}
-
-			if tt.lastInSession {
-				for _, s := range seqs {
-					saveSeq := s
-					dbMock.EXPECT().SaveSessionSeq(&saveSeq).Return(tt.expectErr).Times(1)
-					if tt.expectErr != nil {
-						// don't expect any more calls
-						break
-					}
-				}
+				dbMock.EXPECT().BulkUpsertSessionSeqs(seqs).Return(tt.expectErr).Times(1)
 			}
 
 			if err := task.Run(ctx, pl); err != tt.expectErr {
@@ -221,7 +183,8 @@ func TestValidatorEraSeqPersistor_Run(t *testing.T) {
 
 	for _, tt := range tests {
 		tt := tt
-		t.Run(fmt.Sprintf("[new] %v", tt.description), func(t *testing.T) {
+
+		t.Run(tt.description, func(t *testing.T) {
 			t.Parallel()
 
 			ctrl := gomock.NewController(t)
@@ -232,50 +195,12 @@ func TestValidatorEraSeqPersistor_Run(t *testing.T) {
 			task := NewValidatorEraSeqPersistorTask(dbMock)
 
 			pl := &payload{
-				Syncable:                 &model.Syncable{LastInEra: tt.lastInEra},
-				NewValidatorEraSequences: seqs,
+				Syncable:              &model.Syncable{LastInEra: tt.lastInEra},
+				ValidatorEraSequences: seqs,
 			}
 
 			if tt.lastInEra {
-				for _, s := range seqs {
-					createSeq := s
-					dbMock.EXPECT().CreateEraSeq(&createSeq).Return(tt.expectErr).Times(1)
-					if tt.expectErr != nil {
-						// don't expect any more calls
-						break
-					}
-				}
-			}
-
-			if err := task.Run(ctx, pl); err != tt.expectErr {
-				t.Errorf("want %v; got %v", tt.expectErr, err)
-			}
-		})
-
-		t.Run(fmt.Sprintf("[updated] %v", tt.description), func(t *testing.T) {
-			t.Parallel()
-
-			ctrl := gomock.NewController(t)
-			ctx := context.Background()
-
-			dbMock := mock.NewMockValidatorEraSeq(ctrl)
-
-			task := NewValidatorEraSeqPersistorTask(dbMock)
-
-			pl := &payload{
-				Syncable:                     &model.Syncable{LastInEra: tt.lastInEra},
-				UpdatedValidatorEraSequences: seqs,
-			}
-
-			if tt.lastInEra {
-				for _, s := range seqs {
-					saveSeq := s
-					dbMock.EXPECT().SaveEraSeq(&saveSeq).Return(tt.expectErr).Times(1)
-					if tt.expectErr != nil {
-						// don't expect any more calls
-						break
-					}
-				}
+				dbMock.EXPECT().BulkUpsertEraSeqs(seqs).Return(tt.expectErr).Times(1)
 			}
 
 			if err := task.Run(ctx, pl); err != tt.expectErr {

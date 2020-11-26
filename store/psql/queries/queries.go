@@ -39,14 +39,20 @@ const (
 	// store/psql/queries/transaction_seq_insert.sql
 	TransactionSeqInsert = `INSERT INTO transaction_sequences (   height,   time,   index,   hash,   method,   section ) VALUES @values  ON CONFLICT (height, index) DO UPDATE SET   hash     = excluded.hash,   method   = excluded.method,   section  = excluded.section `
 	
+	// store/psql/queries/validator_era_seq_insert.sql
+	ValidatorEraSeqInsert = `INSERT INTO validator_era_sequences (   era,   start_height,   end_height,   time,   stash_account,   controller_account,   session_accounts,   index,   total_stake,   own_stake,   stakers_stake,   reward_points,   commission,   stakers_count ) VALUES @values  ON CONFLICT (era, stash_account) DO UPDATE SET   controller_account = excluded.controller_account,   session_accounts = excluded.session_accounts,   index = excluded.index,   total_stake = excluded.total_stake,   own_stake = excluded.own_stake,   stakers_stake = excluded.stakers_stake,   reward_points = excluded.reward_points,   commission = excluded.commission,   stakers_count = excluded.stakers_count `
+	
 	// store/psql/queries/validator_era_seq_summarize_select.sql
 	ValidatorEraSeqSummarizeSelect = `	stash_account, 	DATE_TRUNC(?, time) AS time_bucket,    	AVG(total_stake) AS total_stake_avg,    	MAX(total_stake) AS total_stake_max,    	MIN(total_stake) AS total_stake_min, 	AVG(own_stake) AS own_stake_avg,    	MAX(own_stake) AS own_stake_max,    	MIN(own_stake) AS own_stake_min, 	AVG(stakers_stake) AS stakers_stake_avg,    	MAX(stakers_stake) AS stakers_stake_max,    	MIN(stakers_stake) AS stakers_stake_min, 	AVG(reward_points) AS reward_points_avg,    	MAX(reward_points) AS reward_points_max,    	MIN(reward_points) AS reward_points_min, 	AVG(commission) AS commission_avg,    	MAX(commission) AS commission_max,    	MIN(commission) AS commission_min, 	AVG(stakers_count) AS stakers_count_avg,    	MAX(stakers_count) AS stakers_count_max,    	MIN(stakers_count) AS stakers_count_min`
 	
 	// store/psql/queries/validator_seq_insert.sql
-	ValidatorSeqInsert = `INSERT INTO validator_sequences (   height,   time,   stash_account,   active_balance,   commission ) VALUES @values  ON CONFLICT (height, stash_account) DO UPDATE SET   active_balance   = excluded.active_balance,   commission       = excluded.commission `
+	ValidatorSeqInsert = `INSERT INTO validator_sequences (   height,   time,   stash_account,   active_balance ) VALUES @values  ON CONFLICT (height, stash_account) DO UPDATE SET   active_balance   = excluded.active_balance `
 	
 	// store/psql/queries/validator_session_seq_get_counts.sql
 	ValidatorSessionSeqGetCounts = `	stash_account, 	COUNT(*) AS count`
+	
+	// store/psql/queries/validator_session_seq_insert.sql
+	ValidatorSessionSeqInsert = `INSERT INTO validator_session_sequences (   session,   start_height,   end_height,   time,   stash_account,   online ) VALUES @values  ON CONFLICT (session, stash_account) DO UPDATE SET   online = excluded.online `
 	
 	// store/psql/queries/validator_session_seq_summarize_select.sql
 	ValidatorSessionSeqSummarizeSelect = `	stash_account, 	DATE_TRUNC(?, time) AS time_bucket,    	AVG(online::INT) AS uptime_avg,    	MAX(online::INT) AS uptime_max,    	MIN(online::INT) AS uptime_min`
