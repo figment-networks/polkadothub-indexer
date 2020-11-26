@@ -409,18 +409,12 @@ func (t *eraSystemEventCreatorTask) getDelegationChangedSystemEvents(currSeqs, p
 	return systemEvents, nil
 }
 
-func (t *eraSystemEventCreatorTask) getPrevValidatorEraSequences(payload *payload) ([]model.ValidatorEraSeq, error) {
-	var prevEraSequences []model.ValidatorEraSeq
-
+func (t *eraSystemEventCreatorTask) getPrevValidatorEraSequences(payload *payload) (prevEraSequences []model.ValidatorEraSeq, err error) {
 	if payload.CurrentHeight > t.cfg.FirstBlockHeight {
-		var err error
 		prevEraSequences, err = t.validatorEraSeqDb.FindByEra(payload.Syncable.Era - 1)
-		if err != nil {
-			return nil, err
-		}
 	}
 
-	return prevEraSequences, nil
+	return prevEraSequences, err
 }
 
 func (t *systemEventCreatorTask) getActiveBalanceChangeSystemEvents(currValidatorSeqs, prevValidatorSeqs []model.ValidatorSeq, syncable *model.Syncable) ([]model.SystemEvent, error) {
