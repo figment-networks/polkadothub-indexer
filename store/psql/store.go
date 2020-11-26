@@ -19,6 +19,7 @@ var (
 	_ store.Database     = (*database)(nil)
 	_ store.Events       = (*events)(nil)
 	_ store.Reports      = (*reports)(nil)
+	_ store.Rewards      = (*rewards)(nil)
 	_ store.Validators   = (*validators)(nil)
 	_ store.Syncables    = (*syncables)(nil)
 	_ store.SystemEvents = (*systemEvents)(nil)
@@ -32,6 +33,7 @@ type Store struct {
 	database     *database
 	events       *events
 	reports      *reports
+	rewards      *rewards
 	syncables    *syncables
 	systemEvents *systemEvents
 	transactions *transactions
@@ -59,6 +61,9 @@ type reports struct {
 	*ReportsStore
 }
 
+type rewards struct {
+	*RewardsStore
+}
 type syncables struct {
 	*SyncablesStore
 }
@@ -146,6 +151,16 @@ func (s *Store) GetReports() *reports {
 		}
 	}
 	return s.reports
+}
+
+// GetRewards gets rewards
+func (s *Store) GetRewards() *rewards {
+	if s.rewards == nil {
+		s.rewards = &rewards{
+			NewRewardsStore(s.db),
+		}
+	}
+	return s.rewards
 }
 
 // GetSyncables gets syncables

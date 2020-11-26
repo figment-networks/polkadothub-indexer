@@ -22,6 +22,7 @@ const (
 	TransactionSeqPersistorTaskName      = "TransactionSeqPersistor"
 	ValidatorSeqPersistorTaskName        = "ValidatorSeqPersistor"
 	SystemEventPersistorTaskName         = "SystemEventPersistor"
+	RewardPersistorTaskName              = "RewardPersistor"
 )
 
 // NewSyncerPersistorTask is responsible for storing syncable to persistence layer
@@ -311,4 +312,33 @@ func (t *systemEventPersistorTask) Run(ctx context.Context, p pipeline.Payload) 
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
 
 	return t.systemEventDb.BulkUpsert(payload.SystemEvents)
+}
+
+func NewRewardsPersistorTask(rewardsDb store.Rewards) pipeline.Task {
+	return &RewardPersistorTask{
+		rewardsDb: rewardsDb,
+	}
+}
+
+type RewardPersistorTask struct {
+	rewardsDb store.Rewards
+}
+
+func (t *RewardPersistorTask) GetName() string {
+	return RewardPersistorTaskName
+}
+
+func (t *RewardPersistorTask) Run(ctx context.Context, p pipeline.Payload) error {
+	defer metric.LogIndexerTaskDuration(time.Now(), t.GetName())
+
+	payload := p.(*payload)
+
+	if !payload.Syncable.LastInEra {
+		logger.Info(fmt.Sprintf("indexer task skipped because height is not last in era [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
+		return nil
+	}
+
+	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
+
+	return t.rewardsDb.BulkUpsert(payload.Rewards)
 }

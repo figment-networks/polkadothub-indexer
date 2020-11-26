@@ -40,7 +40,7 @@ type indexingPipeline struct {
 }
 
 func NewPipeline(cfg *config.Config, cli *client.Client, accountDb store.Accounts, blockDb store.Blocks, databaseDb store.Database, eventDb store.Events, reportDb store.Reports,
-	syncableDb store.Syncables, systemEventDb store.SystemEvents, transactionDb store.Transactions, validatorDb store.Validators,
+	rewardDb store.Rewards, syncableDb store.Syncables, systemEventDb store.SystemEvents, transactionDb store.Transactions, validatorDb store.Validators,
 ) (*indexingPipeline, error) {
 	p := pipeline.NewCustom(NewPayloadFactory())
 
@@ -98,6 +98,7 @@ func NewPipeline(cfg *config.Config, cli *client.Client, accountDb store.Account
 			pipeline.RetryingTask(NewEraSystemEventCreatorTask(cfg, accountDb, validatorDb), isTransient, maxRetries),
 			pipeline.RetryingTask(NewSessionSystemEventCreatorTask(cfg, syncableDb, systemEventDb, validatorDb, validatorDb), isTransient, maxRetries),
 			pipeline.RetryingTask(NewSystemEventCreatorTask(cfg, validatorDb), isTransient, maxRetries),
+			NewRewardCreatorTask(),
 		),
 	)
 
@@ -115,6 +116,7 @@ func NewPipeline(cfg *config.Config, cli *client.Client, accountDb store.Account
 			pipeline.RetryingTask(NewAccountEraSeqPersistorTask(accountDb), isTransient, maxRetries),
 			pipeline.RetryingTask(NewTransactionSeqPersistorTask(transactionDb), isTransient, maxRetries),
 			pipeline.RetryingTask(NewSystemEventPersistorTask(systemEventDb), isTransient, maxRetries),
+			pipeline.RetryingTask(NewRewardsPersistorTask(rewardDb), isTransient, maxRetries),
 		),
 	)
 

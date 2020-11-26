@@ -24,7 +24,7 @@ func runCmd(cfg *config.Config, flags Flags) error {
 	defer client.Close()
 
 	cmdHandlers := usecase.NewCmdHandlers(cfg, client, db.GetAccounts(), db.GetBlocks(), db.GetDatabase(), db.GetEvents(), db.GetReports(),
-		db.GetSyncables(), db.GetSystemEvents(), db.GetTransactions(), db.GetValidators(),
+		db.GetRewards(), db.GetSyncables(), db.GetSystemEvents(), db.GetTransactions(), db.GetValidators(),
 	)
 
 	logger.Info(fmt.Sprintf("executing cmd %s ...", flags.runCommand), logger.Field("app", "cli"))

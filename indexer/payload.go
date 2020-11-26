@@ -63,6 +63,7 @@ type payload struct {
 
 	// Analyzer
 	SystemEvents []model.SystemEvent
+	Rewards      []model.Reward
 }
 
 func (p *payload) MarkAsProcessed() {}

@@ -33,6 +33,9 @@ const (
 	// store/psql/queries/event_seq_with_tx_hash_for_src_and_target.sql
 	EventSeqWithTxHashForSrcAndTarget = `	SELECT 		e.height, 		e.method, 		e.section, 		e.data, 		t.hash 	FROM event_sequences AS e 	INNER JOIN transaction_sequences as t 		ON t.height = e.height AND t.index = e.extrinsic_index 	WHERE e.section = ? AND e.method = ? AND (e.data->0->>'value' = ? OR e.data->1->>'value' = ?)`
 	
+	// store/psql/queries/reward_insert.sql
+	RewardInsert = `INSERT INTO rewards (   created_at,   updated_at,   era,   stash_account,   validator_stash_account,   amount,   kind ) VALUES @values  ON CONFLICT (era, stash_account, validator_stash_account, kind) DO UPDATE SET   updated_at     = excluded.updated_at,   amount         = excluded.amount `
+	
 	// store/psql/queries/system_event_insert.sql
 	SystemEventInsert = `INSERT INTO system_events (   created_at,   updated_at,   height,   time,   actor,   kind,   data ) VALUES @values  ON CONFLICT (height, actor, kind) DO UPDATE SET   updated_at   = excluded.updated_at,   data         = excluded.data `
 	

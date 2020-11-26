@@ -24,6 +24,11 @@
           "id": 5,
           "targets": [8,9,10,11],
           "parallel": true
+        },
+        {
+          "id": 6,
+          "targets": [12],
+          "parallel": true
         }
     ],
     "shared_tasks": [
@@ -145,6 +150,16 @@
           "AccountEraSeqCreator",
           "EraSystemEventCreator",
           "SystemEventPersistor"
+        ]
+      },
+      {
+        "id": 12,
+        "name": "index_rewards",
+        "desc": "Creates and persists rewards that happen end of era",
+        "tasks": [
+          "Fetcher",
+          "RewardCreator",
+          "RewardPersistor"
         ]
       }
     ]
