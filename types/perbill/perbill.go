@@ -28,21 +28,27 @@ func FromParts(parts int64) Perbill {
 }
 
 func FromRationalApproximation(p, q big.Int) Perbill {
+	qReduce := big.Int{}
 	// q cannot be zero.
 	if q.Cmp(&one) < 0 {
-		q.Set(&one)
+		qReduce.Set(&one)
+	} else {
+		qReduce.Set(&q)
 	}
 
+	pReduce := big.Int{}
 	// p should not be bigger than q.
-	if q.Cmp(&p) < 1 {
-		p.Set(&q)
+	if qReduce.Cmp(&p) < 1 {
+		pReduce.Set(&qReduce)
+	} else {
+		pReduce.Set(&p)
 	}
 
 	factor := big.Int{}
-	factor.Quo(&q, &max)
+	factor.Quo(&qReduce, &max)
 
 	rem := big.Int{}
-	rem.Mod(&q, &max)
+	rem.Mod(&qReduce, &max)
 	if rem.CmpAbs(&zero) != 0 {
 		factor.Add(&factor, &one)
 	}
@@ -51,12 +57,13 @@ func FromRationalApproximation(p, q big.Int) Perbill {
 		factor.Set(&one)
 	}
 
-	q.Quo(&q, &factor)
-	p.Quo(&p, &factor)
+	qReduce.Quo(&qReduce, &factor)
+	pReduce.Quo(&pReduce, &factor)
 
 	part := big.Int{}
-	part.Mul(&p, &max)
-	part.Quo(&part, &q)
+	part.Mul(&pReduce, &max)
+	part.Quo(&part, &qReduce)
+
 	return Perbill{part}
 }
 
