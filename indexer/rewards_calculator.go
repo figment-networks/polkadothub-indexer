@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/figment-networks/polkadothub-indexer/types/perbill"
+	"github.com/figment-networks/polkadothub-indexer/types/sp_arithmetic"
 )
 
 type RewardsCalculator interface {
@@ -28,17 +28,17 @@ func newRewardsCalulator(points int64, payout string) (*calculator, error) {
 }
 
 func (c *calculator) nominatorPayout(validatorLeftoverPayout, nominatorStake, validatorStake big.Int) big.Int {
-	exposurePart := perbill.FromRationalApproximation(nominatorStake, validatorStake)
+	exposurePart := sp_arithmetic.PerbillFromRationalApproximation(nominatorStake, validatorStake)
 	payout := exposurePart.Mul(validatorLeftoverPayout)
 	return payout
 }
 
 func (c *calculator) commissionPayout(validatorRewardPoints, validatorCommission int64) (big.Int, big.Int) {
 	rewardPoints := *big.NewInt((validatorRewardPoints))
-	totalRewardPart := perbill.FromRationalApproximation(rewardPoints, c.totalEraRewardPoints)
+	totalRewardPart := sp_arithmetic.PerbillFromRationalApproximation(rewardPoints, c.totalEraRewardPoints)
 
 	totalPayout := totalRewardPart.Mul(c.totalEraRewardPayout)
-	commission := perbill.FromParts(validatorCommission)
+	commission := sp_arithmetic.PerbillFromParts(validatorCommission)
 	commissionPayout := commission.Mul(totalPayout)
 
 	// leftoverPayouts is divided between stakers

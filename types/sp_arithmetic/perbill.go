@@ -1,4 +1,4 @@
-package perbill
+package sp_arithmetic
 
 import (
 	"math/big"
@@ -16,18 +16,18 @@ var (
 	halfMax big.Int = *big.NewInt(maxval / 2)
 )
 
-// Perbill is a (incomplete) golang implementation of rusts sp_arithmetic::Perbill
-type Perbill struct {
+// perbill is a (incomplete) golang implementation of rusts sp_arithmetic::Perbill
+type perbill struct {
 	big.Int
 }
 
-func FromParts(parts int64) Perbill {
+func PerbillFromParts(parts int64) perbill {
 	parts = minimum(parts, maxval)
 	b := big.NewInt(parts)
-	return Perbill{Int: *b}
+	return perbill{Int: *b}
 }
 
-func FromRationalApproximation(p, q big.Int) Perbill {
+func PerbillFromRationalApproximation(p, q big.Int) perbill {
 	qReduce := big.Int{}
 	// q cannot be zero.
 	if q.Cmp(&one) < 0 {
@@ -53,7 +53,7 @@ func FromRationalApproximation(p, q big.Int) Perbill {
 		factor.Add(&factor, &one)
 	}
 
-	if factor.Cmp(&one) < 1 {
+	if factor.Cmp(&one) < 0 {
 		factor.Set(&one)
 	}
 
@@ -64,11 +64,11 @@ func FromRationalApproximation(p, q big.Int) Perbill {
 	part.Mul(&pReduce, &max)
 	part.Quo(&part, &qReduce)
 
-	return Perbill{part}
+	return perbill{part}
 }
 
 // see https://github.com/w3f/substrate/blob/ed258da33752aa49e76ab077f750c48ad0e43fab/core/sr-primitives/src/sr_arithmetic.rs#L162
-func (p *Perbill) Mul(b big.Int) big.Int {
+func (p *perbill) Mul(b big.Int) big.Int {
 	part := p.Int
 
 	rem := big.Int{}
@@ -89,7 +89,6 @@ func (p *Perbill) Mul(b big.Int) big.Int {
 	result.Quo(&b, &max)
 	result.Mul(&result, &part)
 	result.Add(&result, &remMultipliedDividedSized)
-
 	return result
 }
 
