@@ -1,6 +1,7 @@
 package indexer
 
 import (
+	"context"
 	"encoding/json"
 	"testing"
 	"time"
@@ -9,6 +10,7 @@ import (
 	mock "github.com/figment-networks/polkadothub-indexer/mock/store"
 	"github.com/figment-networks/polkadothub-indexer/model"
 	"github.com/figment-networks/polkadothub-indexer/types"
+	"github.com/figment-networks/polkadothub-proxy/grpc/staking/stakingpb"
 	"github.com/golang/mock/gomock"
 	"github.com/pkg/errors"
 )
@@ -527,6 +529,129 @@ func TestSystemEventCreatorTask_getDelegationChangedSystemEvents(t *testing.T) {
 					if !found {
 						t.Errorf("missing stash account in data, want %v", expected)
 					}
+				}
+			}
+		})
+	}
+}
+
+func TestRewardCreatorTask_Run(t *testing.T) {
+	tests := []struct {
+		description       string
+		lastInEra         bool
+		rawValidators     []*stakingpb.Validator
+		totalRewardPoints int64
+		totalRewardPayout string
+		expectedKinds     []model.RewardKind
+	}{
+		{description: "updates payload with reward events",
+			lastInEra: true,
+			rawValidators: []*stakingpb.Validator{
+				{RewardPoints: 50,
+					Commission:   30000000,
+					StashAccount: testValidatorAddress,
+					TotalStake:   20,
+					Stakers: []*stakingpb.Stake{
+						{StashAccount: "A", Stake: 10},
+						{StashAccount: "B", Stake: 10},
+					}},
+			},
+			totalRewardPoints: 100,
+			totalRewardPayout: "4000",
+			expectedKinds:     []model.RewardKind{model.UnclaimedCommission, model.UnclaimedReward, model.UnclaimedReward},
+		},
+		{description: "Does not update payload if it's not last in era",
+			lastInEra: false,
+			rawValidators: []*stakingpb.Validator{
+				{RewardPoints: 50,
+					Commission:   30000000,
+					StashAccount: testValidatorAddress,
+					TotalStake:   20,
+					Stakers: []*stakingpb.Stake{
+						{StashAccount: "A", Stake: 10},
+						{StashAccount: "B", Stake: 10},
+					}},
+			},
+			totalRewardPoints: 100,
+			totalRewardPayout: "4000",
+			expectedKinds:     []model.RewardKind{},
+		},
+		{description: "Does not create unclaimed_reward events if commission is 100%",
+			lastInEra: true,
+			rawValidators: []*stakingpb.Validator{
+				{RewardPoints: 50,
+					Commission:   1000000000,
+					StashAccount: testValidatorAddress,
+					TotalStake:   20,
+					Stakers: []*stakingpb.Stake{
+						{StashAccount: "A", Stake: 10},
+						{StashAccount: "B", Stake: 10},
+					}},
+			},
+			totalRewardPoints: 100,
+			totalRewardPayout: "4000",
+			expectedKinds:     []model.RewardKind{model.UnclaimedCommission},
+		},
+		{description: "Does not create unclaimed_commission event if commission is 0%",
+			lastInEra: true,
+			rawValidators: []*stakingpb.Validator{
+				{RewardPoints: 50,
+					Commission:   0,
+					StashAccount: testValidatorAddress,
+					TotalStake:   20,
+					Stakers: []*stakingpb.Stake{
+						{StashAccount: "A", Stake: 10},
+						{StashAccount: "B", Stake: 10},
+					}},
+			},
+			totalRewardPoints: 100,
+			totalRewardPayout: "4000",
+			expectedKinds:     []model.RewardKind{model.UnclaimedReward, model.UnclaimedReward},
+		},
+		{description: "Does not create unclaimed_reward event if reward is 0",
+			lastInEra: true,
+			rawValidators: []*stakingpb.Validator{
+				{RewardPoints: 50,
+					Commission:   300000000,
+					StashAccount: testValidatorAddress,
+					TotalStake:   20,
+					Stakers: []*stakingpb.Stake{
+						{StashAccount: "A", Stake: 20},
+						{StashAccount: "B", Stake: 0},
+					}},
+			},
+			totalRewardPoints: 100,
+			totalRewardPayout: "4000",
+			expectedKinds:     []model.RewardKind{model.UnclaimedCommission, model.UnclaimedReward},
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.description, func(t *testing.T) {
+			t.Parallel()
+			ctx := context.Background()
+
+			task := NewRewardCreatorTask()
+
+			pl := &payload{
+				Syncable:   &model.Syncable{LastInEra: tt.lastInEra},
+				RawStaking: &stakingpb.Staking{Validators: tt.rawValidators, TotalRewardPoints: tt.totalRewardPoints, TotalRewardPayout: tt.totalRewardPayout},
+			}
+
+			if err := task.Run(ctx, pl); err != nil {
+				t.Errorf("unexpected error on Run, want %v; got %v", nil, err)
+				return
+			}
+
+			if len(pl.Rewards) != len(tt.expectedKinds) {
+				t.Errorf("unexpected system event count, want %v; got %v", len(tt.expectedKinds), len(pl.Rewards))
+				return
+			}
+
+			for i, kind := range tt.expectedKinds {
+				if len(pl.Rewards) > 0 && pl.Rewards[i].Kind != kind {
+					t.Errorf("unexpected system event kind, want %v; got %v", kind, pl.Rewards[i].Kind)
 				}
 			}
 		})

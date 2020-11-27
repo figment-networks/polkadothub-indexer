@@ -32,6 +32,7 @@ var (
 	ErrCommissionOutsideOfRange    = errors.New("commission is outside of specified buckets")
 
 	missedConsecutiveThreshold int64 = 1
+	zero                       big.Int
 )
 
 // NewSystemEventCreatorTask creates system events
@@ -562,7 +563,6 @@ func (t *rewardCreatorTask) GetName() string {
 }
 
 func (t *rewardCreatorTask) Run(ctx context.Context, p pipeline.Payload) error {
-	fmt.Println("[rewardCreatorTask]")
 	defer metric.LogIndexerTaskDuration(time.Now(), t.GetName())
 
 	payload := p.(*payload)
@@ -580,18 +580,27 @@ func (t *rewardCreatorTask) Run(ctx context.Context, p pipeline.Payload) error {
 
 	for _, v := range payload.RawStaking.GetValidators() {
 		commPayout, leftoverPayout := c.commissionPayout(v.GetRewardPoints(), v.GetCommission())
-		payload.Rewards = append(payload.Rewards, model.Reward{
-			Era:                   payload.Syncable.Era,
-			StashAccount:          v.GetStashAccount(),
-			ValidatorStashAccount: v.GetStashAccount(),
-			Amount:                commPayout.String(),
-			Kind:                  model.UnclaimedCommission,
-		})
-		validatorStake := *big.NewInt(v.GetTotalStake())
 
-		// TODO if commission is 100%, skip reward calculations
+		if commPayout.Cmp(&zero) == 1 {
+			payload.Rewards = append(payload.Rewards, model.Reward{
+				Era:                   payload.Syncable.Era,
+				StashAccount:          v.GetStashAccount(),
+				ValidatorStashAccount: v.GetStashAccount(),
+				Amount:                commPayout.String(),
+				Kind:                  model.UnclaimedCommission,
+			})
+		}
+
+		validatorStake := *big.NewInt(v.GetTotalStake())
+		if leftoverPayout.Cmp(&zero) < 1 {
+			continue
+		}
+
 		for _, n := range v.GetStakers() {
 			amount := c.nominatorPayout(leftoverPayout, *big.NewInt(n.GetStake()), validatorStake)
+			if amount.Cmp(&zero) < 1 {
+				continue
+			}
 			payload.Rewards = append(payload.Rewards, model.Reward{
 				Era:                   payload.Syncable.Era,
 				StashAccount:          n.GetStashAccount(),
