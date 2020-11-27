@@ -16,6 +16,8 @@ ENV CGO_ENABLED=0
 ENV GOARCH=amd64
 ENV GOOS=linux
 
+RUN make setup
+
 RUN \
   GO_VERSION=$(go version | awk {'print $3'}) \
   GIT_COMMIT=$(git rev-parse HEAD) \
