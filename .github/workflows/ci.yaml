@@ -13,10 +13,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Setup
+      - name: Setup Go
         uses: actions/setup-go@v2
         with:
           go-version: 1.14
+
+      - name: Setup app
+        run: make setup
 
       - name: Run tests
         run: make test
