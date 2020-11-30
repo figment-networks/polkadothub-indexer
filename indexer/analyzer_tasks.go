@@ -608,6 +608,10 @@ func (t *rewardCreatorTask) Run(ctx context.Context, p pipeline.Payload) error {
 		}
 
 		for _, n := range v.GetStakers() {
+			if !n.GetIsRewardEligible() {
+				continue
+			}
+
 			amount := c.nominatorPayout(leftoverPayout, *big.NewInt(n.GetStake()), validatorStake)
 			if amount.Cmp(&zero) < 1 {
 				continue
