@@ -596,6 +596,17 @@ func (t *rewardCreatorTask) Run(ctx context.Context, p pipeline.Payload) error {
 			continue
 		}
 
+		amount := c.nominatorPayout(leftoverPayout, *big.NewInt(v.GetOwnStake()), validatorStake)
+		if amount.Cmp(&zero) == 1 {
+			payload.Rewards = append(payload.Rewards, model.Reward{
+				Era:                   payload.Syncable.Era,
+				StashAccount:          v.GetStashAccount(),
+				ValidatorStashAccount: v.GetStashAccount(),
+				Amount:                amount.String(),
+				Kind:                  model.UnclaimedReward,
+			})
+		}
+
 		for _, n := range v.GetStakers() {
 			amount := c.nominatorPayout(leftoverPayout, *big.NewInt(n.GetStake()), validatorStake)
 			if amount.Cmp(&zero) < 1 {

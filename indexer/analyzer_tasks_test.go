@@ -624,6 +624,22 @@ func TestRewardCreatorTask_Run(t *testing.T) {
 			totalRewardPayout: "4000",
 			expectedKinds:     []model.RewardKind{model.UnclaimedCommission, model.UnclaimedReward},
 		},
+		{description: "Creates unclaimed_reward event for validator",
+			lastInEra: true,
+			rawValidators: []*stakingpb.Validator{
+				{RewardPoints: 50,
+					Commission:   300000000,
+					StashAccount: testValidatorAddress,
+					TotalStake:   20,
+					OwnStake:     10,
+					Stakers: []*stakingpb.Stake{
+						{StashAccount: "A", Stake: 10},
+					}},
+			},
+			totalRewardPoints: 100,
+			totalRewardPayout: "4000",
+			expectedKinds:     []model.RewardKind{model.UnclaimedCommission, model.UnclaimedReward, model.UnclaimedReward},
+		},
 	}
 
 	for _, tt := range tests {
