@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS rewards
     validator_stash_account      TEXT                     NOT NULL,
     amount                       DECIMAL(65, 0)           NOT NULL,
     kind                         TEXT                     NOT NULL,
+    claimed                      BOOLEAN                  NOT NULL,
 
     PRIMARY KEY (id)
 );

@@ -1,8 +1,8 @@
 package model
 
 const (
-	UnclaimedCommission RewardKind = "unclaimed_commission"
-	UnclaimedReward     RewardKind = "unclaimed_reward"
+	RewardCommission RewardKind = "commission"
+	RewardReward     RewardKind = "reward"
 )
 
 type RewardKind string
@@ -19,4 +19,5 @@ type Reward struct {
 	ValidatorStashAccount string     `json:"validator_stash_account"`
 	Amount                string     `json:"amount"`
 	Kind                  RewardKind `json:"kind"`
+	Claimed               bool       `json:"claimed"`
 }

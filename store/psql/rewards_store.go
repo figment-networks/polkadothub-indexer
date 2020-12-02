@@ -39,6 +39,7 @@ func (s RewardsStore) BulkUpsert(records []model.Reward) error {
 				r.ValidatorStashAccount,
 				r.Amount,
 				r.Kind,
+				r.Claimed,
 			}
 		})
 		if err != nil {

@@ -587,7 +587,8 @@ func (t *rewardCreatorTask) Run(ctx context.Context, p pipeline.Payload) error {
 				StashAccount:          v.GetStashAccount(),
 				ValidatorStashAccount: v.GetStashAccount(),
 				Amount:                commPayout.String(),
-				Kind:                  model.UnclaimedCommission,
+				Kind:                  model.RewardCommission,
+				Claimed:               false,
 			})
 		}
 
@@ -603,7 +604,8 @@ func (t *rewardCreatorTask) Run(ctx context.Context, p pipeline.Payload) error {
 				StashAccount:          v.GetStashAccount(),
 				ValidatorStashAccount: v.GetStashAccount(),
 				Amount:                amount.String(),
-				Kind:                  model.UnclaimedReward,
+				Kind:                  model.RewardReward,
+				Claimed:               false,
 			})
 		}
 
@@ -621,7 +623,8 @@ func (t *rewardCreatorTask) Run(ctx context.Context, p pipeline.Payload) error {
 				StashAccount:          n.GetStashAccount(),
 				ValidatorStashAccount: v.GetStashAccount(),
 				Amount:                amount.String(),
-				Kind:                  model.UnclaimedReward,
+				Kind:                  model.RewardReward,
+				Claimed:               false,
 			})
 		}
 	}

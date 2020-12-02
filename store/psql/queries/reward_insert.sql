@@ -5,11 +5,13 @@ INSERT INTO rewards (
   stash_account,
   validator_stash_account,
   amount,
-  kind
+  kind,
+  claimed
 )
 VALUES @values
 
 ON CONFLICT (era, stash_account, validator_stash_account, kind) DO UPDATE
 SET
   updated_at     = excluded.updated_at,
-  amount         = excluded.amount
+  amount         = excluded.amount,
+  claimed        = excluded.claimed
