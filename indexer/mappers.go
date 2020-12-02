@@ -225,6 +225,7 @@ func ToTransactionSequence(syncable *model.Syncable, rawTransactions []*transact
 			Hash:    rawTx.GetHash(),
 			Section: rawTx.GetSection(),
 			Method:  rawTx.GetMethod(),
+			Args:    rawTx.GetArgs(),
 		}
 
 		if !tx.Valid() {

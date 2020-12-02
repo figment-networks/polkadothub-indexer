@@ -1,6 +1,24 @@
 package model
 
-import "github.com/figment-networks/polkadothub-indexer/types"
+import (
+	"encoding/json"
+	"errors"
+
+	"github.com/figment-networks/polkadothub-indexer/types"
+)
+
+const (
+	methodReward   = "Reward"
+	sectionStaking = "staking"
+
+	accountKey = "AccountId"
+	balanceKey = "Balance"
+)
+
+var (
+	errIncompatibleType     = errors.New("incompatible event type")
+	errUnexpectedDataFormat = errors.New("unexpected event data format")
+)
 
 type EventSeq struct {
 	ID types.ID `json:"id"`
@@ -34,4 +52,38 @@ func (b *EventSeq) Valid() bool {
 
 func (b *EventSeq) Equal(m EventSeq) bool {
 	return b.Sequence.Equal(*m.Sequence)
+}
+
+func (b *EventSeq) IsReward() bool {
+	return b.Method == methodReward && b.Section == sectionStaking
+}
+
+// EventData is format of Data for some event types (eg. rewards)
+type EventData struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
+
+func (b *EventSeq) GetStashAndAmountFromData() (stash string, amount string, err error) {
+	if !b.IsReward() {
+		return stash, amount, errIncompatibleType
+	}
+
+	var data []EventData
+	err = json.Unmarshal(b.Data.RawMessage, &data)
+	if err != nil {
+		return stash, amount, err
+	}
+
+	for _, d := range data {
+		if d.Name == accountKey {
+			stash = d.Value
+		} else if d.Name == balanceKey {
+			amount = d.Value
+		}
+	}
+	if stash == "" || amount == "" {
+		err = errUnexpectedDataFormat
+	}
+	return
 }

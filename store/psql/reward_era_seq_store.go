@@ -1,10 +1,16 @@
 package psql
 
 import (
+	"errors"
+
 	"github.com/figment-networks/indexing-engine/store/bulk"
 	"github.com/figment-networks/polkadothub-indexer/model"
 	"github.com/figment-networks/polkadothub-indexer/store/psql/queries"
 	"github.com/jinzhu/gorm"
+)
+
+var (
+	errExpectedUpdate = errors.New("no rewards were updated")
 )
 
 func NewRewardEraSeqStore(db *gorm.DB) *RewardEraSeqStore {
@@ -44,5 +50,22 @@ func (s RewardEraSeqStore) BulkUpsert(records []model.RewardEraSeq) error {
 			return err
 		}
 	}
+	return nil
+}
+
+// MarkAllClaimed updates all rewards for validatorStash and era as claimed. Returns error if nothing updates
+func (s RewardsStore) MarkAllClaimed(validatorStash string, era int64) error {
+	// Update with conditions
+	result := s.db.Model(&model.Reward{}).
+		Where("validator_stash_account = ? AND era = ?", validatorStash, era).
+		Update("claimed", true)
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return errExpectedUpdate
+	}
+
 	return nil
 }

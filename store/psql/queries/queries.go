@@ -36,6 +36,9 @@ const (
 	// store/psql/queries/reward_era_seq_insert.sql
 	RewardEraSeqInsert = `INSERT INTO reward_era_sequences (   era,   start_height,   end_height,   time,   stash_account,   validator_stash_account,   amount,   kind,   claimed ) VALUES @values  ON CONFLICT (era, stash_account, validator_stash_account, kind) DO UPDATE SET   amount         = excluded.amount,   claimed        = excluded.claimed `
 	
+	// store/psql/queries/reward_upsert_kind.sql
+	RewardUpsertKind = `INSERT INTO rewards (   created_at,   updated_at,   era,   stash_account,   validator_stash_account,   amount,   kind ) VALUES @values  ON CONFLICT (era, stash_account, validator_stash_account) DO UPDATE SET   updated_at     = excluded.updated_at,   amount         = excluded.amount,   kind           = excluded.knd `
+	
 	// store/psql/queries/system_event_insert.sql
 	SystemEventInsert = `INSERT INTO system_events (   created_at,   updated_at,   height,   time,   actor,   kind,   data ) VALUES @values  ON CONFLICT (height, actor, kind) DO UPDATE SET   updated_at   = excluded.updated_at,   data         = excluded.data `
 	
