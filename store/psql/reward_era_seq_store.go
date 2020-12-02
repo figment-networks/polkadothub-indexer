@@ -69,3 +69,22 @@ func (s RewardsStore) MarkAllClaimed(validatorStash string, era int64) error {
 
 	return nil
 }
+
+// GetAll Gets all rewards for given stash
+func (s RewardsStore) GetAll(stash string, start, end int64) ([]model.Reward, error) {
+	tx := s.db.
+		Model(&model.Reward{}).
+		Select("*").
+		Where("stash_account = ?", stash).
+		Order("era")
+
+	if end != 0 {
+		tx = tx.Where("era <= ?", end)
+	}
+	if start != 0 {
+		tx = tx.Where("era >= ?", start)
+	}
+
+	var res []model.Reward
+	return res, tx.Find(&res).Error
+}
