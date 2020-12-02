@@ -29,6 +29,11 @@
           "id": 6,
           "targets": [12],
           "parallel": true
+        },
+        {
+          "id": 7,
+          "targets": [13],
+          "parallel": true
         }
     ],
     "shared_tasks": [
@@ -155,12 +160,22 @@
       {
         "id": 12,
         "name": "index_rewards",
-        "desc": "Creates and persists rewards that happen end of era",
+        "desc": "Creates and persists (unclaimed) rewards that happen end of era",
         "tasks": [
           "Fetcher",
           "ValidatorsParser",
           "RewardEraSeqCreator",
           "RewardEraSeqPersistor"
+        ]
+      },
+      {
+        "id": 13,
+        "name": "claim_rewards",
+        "desc": "Updates claimed status of existing rewards",
+        "tasks": [
+          "Fetcher",
+          "TransactionSeqCreator",
+          "RewardPersistor"
         ]
       }
     ]
