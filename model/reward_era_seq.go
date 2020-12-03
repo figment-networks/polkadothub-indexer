@@ -11,10 +11,9 @@ func (o RewardKind) String() string {
 	return string(o)
 }
 
-type Reward struct {
-	*Model
+type RewardEraSeq struct {
+	*EraSequence
 
-	Era                   int64      `json:"era"`
 	StashAccount          string     `json:"stash_account"`
 	ValidatorStashAccount string     `json:"validator_stash_account"`
 	Amount                string     `json:"amount"`

@@ -22,7 +22,7 @@ const (
 	TransactionSeqPersistorTaskName      = "TransactionSeqPersistor"
 	ValidatorSeqPersistorTaskName        = "ValidatorSeqPersistor"
 	SystemEventPersistorTaskName         = "SystemEventPersistor"
-	RewardPersistorTaskName              = "RewardPersistor"
+	RewardEraSeqPersistorTaskName        = "RewardEraSeqPersistor"
 )
 
 // NewSyncerPersistorTask is responsible for storing syncable to persistence layer
@@ -314,21 +314,21 @@ func (t *systemEventPersistorTask) Run(ctx context.Context, p pipeline.Payload) 
 	return t.systemEventDb.BulkUpsert(payload.SystemEvents)
 }
 
-func NewRewardsPersistorTask(rewardsDb store.Rewards) pipeline.Task {
-	return &RewardPersistorTask{
+func NewRewardEraSeqPersistorTask(rewardsDb store.Rewards) pipeline.Task {
+	return &RewardEraSeqPersistorTask{
 		rewardsDb: rewardsDb,
 	}
 }
 
-type RewardPersistorTask struct {
+type RewardEraSeqPersistorTask struct {
 	rewardsDb store.Rewards
 }
 
-func (t *RewardPersistorTask) GetName() string {
-	return RewardPersistorTaskName
+func (t *RewardEraSeqPersistorTask) GetName() string {
+	return RewardEraSeqPersistorTaskName
 }
 
-func (t *RewardPersistorTask) Run(ctx context.Context, p pipeline.Payload) error {
+func (t *RewardEraSeqPersistorTask) Run(ctx context.Context, p pipeline.Payload) error {
 	defer metric.LogIndexerTaskDuration(time.Now(), t.GetName())
 
 	payload := p.(*payload)
@@ -340,5 +340,5 @@ func (t *RewardPersistorTask) Run(ctx context.Context, p pipeline.Payload) error
 
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
 
-	return t.rewardsDb.BulkUpsert(payload.Rewards)
+	return t.rewardsDb.BulkUpsert(payload.RewardEraSequences)
 }

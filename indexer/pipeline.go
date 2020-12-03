@@ -80,6 +80,7 @@ func NewPipeline(cfg *config.Config, cli *client.Client, accountDb store.Account
 			pipeline.RetryingTask(NewEventSeqCreatorTask(eventDb), isTransient, maxRetries),
 			pipeline.RetryingTask(NewAccountEraSeqCreatorTask(cfg, accountDb, syncableDb), isTransient, maxRetries),
 			pipeline.RetryingTask(NewTransactionSeqCreatorTask(transactionDb), isTransient, maxRetries),
+			pipeline.RetryingTask(NewRewardEraSeqCreatorTask(cfg, syncableDb), isTransient, maxRetries),
 		),
 	)
 
@@ -98,7 +99,6 @@ func NewPipeline(cfg *config.Config, cli *client.Client, accountDb store.Account
 			pipeline.RetryingTask(NewEraSystemEventCreatorTask(cfg, accountDb, validatorDb), isTransient, maxRetries),
 			pipeline.RetryingTask(NewSessionSystemEventCreatorTask(cfg, syncableDb, systemEventDb, validatorDb, validatorDb), isTransient, maxRetries),
 			pipeline.RetryingTask(NewSystemEventCreatorTask(cfg, validatorDb), isTransient, maxRetries),
-			NewRewardCreatorTask(),
 		),
 	)
 
@@ -116,7 +116,7 @@ func NewPipeline(cfg *config.Config, cli *client.Client, accountDb store.Account
 			pipeline.RetryingTask(NewAccountEraSeqPersistorTask(accountDb), isTransient, maxRetries),
 			pipeline.RetryingTask(NewTransactionSeqPersistorTask(transactionDb), isTransient, maxRetries),
 			pipeline.RetryingTask(NewSystemEventPersistorTask(systemEventDb), isTransient, maxRetries),
-			pipeline.RetryingTask(NewRewardsPersistorTask(rewardDb), isTransient, maxRetries),
+			pipeline.RetryingTask(NewRewardEraSeqPersistorTask(rewardDb), isTransient, maxRetries),
 		),
 	)
 

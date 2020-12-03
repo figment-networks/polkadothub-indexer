@@ -3,11 +3,13 @@ package indexer
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"time"
 
 	"github.com/figment-networks/indexing-engine/pipeline"
 	"github.com/figment-networks/polkadothub-indexer/config"
 	"github.com/figment-networks/polkadothub-indexer/metric"
+	"github.com/figment-networks/polkadothub-indexer/model"
 	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/utils/logger"
 )
@@ -20,6 +22,7 @@ const (
 	EventSeqCreatorTaskName            = "EventSeqCreator"
 	AccountEraSeqCreatorTaskName       = "AccountEraSeqCreator"
 	TransactionSeqCreatorTaskName      = "TransactionSeqCreator"
+	RewardEraSeqCreatorTaskName        = "RewardEraSeqCreator"
 )
 
 var (
@@ -319,6 +322,109 @@ func (t *transactionSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload)
 	}
 
 	payload.TransactionSequences = mappedTxSeqs
+
+	return nil
+}
+
+// NewRewardEraSeqCreatorTask creates rewards
+func NewRewardEraSeqCreatorTask(cfg *config.Config, syncablesDb store.Syncables) *rewardEraSeqCreatorTask {
+	return &rewardEraSeqCreatorTask{cfg, syncablesDb}
+}
+
+type rewardEraSeqCreatorTask struct {
+	cfg         *config.Config
+	syncablesDb store.Syncables
+}
+
+func (t *rewardEraSeqCreatorTask) GetName() string {
+	return RewardEraSeqCreatorTaskName
+}
+
+func (t *rewardEraSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) error {
+	defer metric.LogIndexerTaskDuration(time.Now(), t.GetName())
+
+	payload := p.(*payload)
+
+	if !payload.Syncable.LastInEra {
+		return nil
+	}
+
+	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StageParser, t.GetName(), payload.CurrentHeight))
+
+	var firstHeightInEra int64
+	lastSyncableInPrevEra, err := t.syncablesDb.FindLastInEra(payload.Syncable.Era - 1)
+	if err != nil {
+		if err == store.ErrNotFound {
+			firstHeightInEra = t.cfg.FirstBlockHeight
+		} else {
+			return err
+		}
+	} else {
+		firstHeightInEra = lastSyncableInPrevEra.Height + 1
+	}
+
+	eraSeq := &model.EraSequence{
+		Era:         payload.Syncable.Era,
+		StartHeight: firstHeightInEra,
+		EndHeight:   payload.Syncable.Height,
+		Time:        payload.Syncable.Time,
+	}
+
+	c, err := newRewardsCalulator(payload.RawStaking.GetTotalRewardPoints(), payload.RawStaking.GetTotalRewardPayout())
+	if err != nil {
+		return err
+	}
+
+	for _, v := range payload.RawStaking.GetValidators() {
+		commPayout, leftoverPayout := c.commissionPayout(v.GetRewardPoints(), v.GetCommission())
+
+		if commPayout.Cmp(&zero) == 1 {
+			payload.RewardEraSequences = append(payload.RewardEraSequences, model.RewardEraSeq{
+				EraSequence:           eraSeq,
+				StashAccount:          v.GetStashAccount(),
+				ValidatorStashAccount: v.GetStashAccount(),
+				Amount:                commPayout.String(),
+				Kind:                  model.RewardCommission,
+				Claimed:               false,
+			})
+		}
+
+		validatorStake := *big.NewInt(v.GetTotalStake())
+		if leftoverPayout.Cmp(&zero) < 1 {
+			continue
+		}
+
+		amount := c.nominatorPayout(leftoverPayout, *big.NewInt(v.GetOwnStake()), validatorStake)
+		if amount.Cmp(&zero) == 1 {
+			payload.RewardEraSequences = append(payload.RewardEraSequences, model.RewardEraSeq{
+				EraSequence:           eraSeq,
+				StashAccount:          v.GetStashAccount(),
+				ValidatorStashAccount: v.GetStashAccount(),
+				Amount:                amount.String(),
+				Kind:                  model.RewardReward,
+				Claimed:               false,
+			})
+		}
+
+		for _, n := range v.GetStakers() {
+			if !n.GetIsRewardEligible() {
+				continue
+			}
+
+			amount := c.nominatorPayout(leftoverPayout, *big.NewInt(n.GetStake()), validatorStake)
+			if amount.Cmp(&zero) < 1 {
+				continue
+			}
+			payload.RewardEraSequences = append(payload.RewardEraSequences, model.RewardEraSeq{
+				EraSequence:           eraSeq,
+				StashAccount:          n.GetStashAccount(),
+				ValidatorStashAccount: v.GetStashAccount(),
+				Amount:                amount.String(),
+				Kind:                  model.RewardReward,
+				Claimed:               false,
+			})
+		}
+	}
 
 	return nil
 }

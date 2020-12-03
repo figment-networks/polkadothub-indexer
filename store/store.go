@@ -30,7 +30,7 @@ type Reports interface {
 }
 
 type Rewards interface {
-	BulkUpsert(records []model.Reward) error
+	BulkUpsert(records []model.RewardEraSeq) error
 }
 
 type Syncables interface {

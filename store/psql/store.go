@@ -62,7 +62,7 @@ type reports struct {
 }
 
 type rewards struct {
-	*RewardsStore
+	*RewardEraSeqStore
 }
 type syncables struct {
 	*SyncablesStore
@@ -157,7 +157,7 @@ func (s *Store) GetReports() *reports {
 func (s *Store) GetRewards() *rewards {
 	if s.rewards == nil {
 		s.rewards = &rewards{
-			NewRewardsStore(s.db),
+			NewRewardEraSeqStore(s.db),
 		}
 	}
 	return s.rewards
