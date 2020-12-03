@@ -241,9 +241,11 @@ func (mr *MockRewardsCalculatorMockRecorder) commissionPayout(arg0, arg1 interfa
 }
 
 // nominatorPayout mocks base method
-func (m *MockRewardsCalculator) nominatorPayout(arg0, arg1, arg2 big.Int) {
+func (m *MockRewardsCalculator) nominatorPayout(arg0, arg1, arg2 big.Int) big.Int {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "nominatorPayout", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "nominatorPayout", arg0, arg1, arg2)
+	ret0, _ := ret[0].(big.Int)
+	return ret0
 }
 
 // nominatorPayout indicates an expected call of nominatorPayout

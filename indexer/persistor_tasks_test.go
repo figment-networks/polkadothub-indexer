@@ -414,12 +414,12 @@ func TestValidatorSeqPersistor_Run(t *testing.T) {
 func TestRewardPersistor_Run(t *testing.T) {
 	tests := []struct {
 		description string
-		rewards     []model.Reward
+		rewards     []model.RewardEraSeq
 		expectErr   error
 	}{
 		{
 			description: "calls db with payload rewards",
-			rewards:     []model.Reward{{StashAccount: "acct1", Amount: "100"}, {StashAccount: "acct2", Amount: "200"}},
+			rewards:     []model.RewardEraSeq{{StashAccount: "acct1", Amount: "100"}, {StashAccount: "acct2", Amount: "200"}},
 			expectErr:   nil,
 		},
 		{
@@ -438,10 +438,10 @@ func TestRewardPersistor_Run(t *testing.T) {
 
 			dbMock := mock.NewMockRewards(ctrl)
 
-			task := NewRewardsPersistorTask(dbMock)
+			task := NewRewardEraSeqPersistorTask(dbMock)
 
 			pl := &payload{
-				Rewards: tt.rewards,
+				RewardEraSequences: tt.rewards,
 			}
 
 			dbMock.EXPECT().BulkUpsert(tt.rewards).Return(tt.expectErr).Times(1)
@@ -461,7 +461,7 @@ func TestRewardPersistor_Run(t *testing.T) {
 
 	txtests := []struct {
 		description       string
-		rewards           []model.Reward
+		rewards           []model.RewardEraSeq
 		txs               []model.TransactionSeq
 		shouldUpdateTxIdx []int
 		expectErr         error
@@ -499,7 +499,7 @@ func TestRewardPersistor_Run(t *testing.T) {
 
 			dbMock := mock.NewMockRewards(ctrl)
 
-			task := NewRewardsPersistorTask(dbMock)
+			task := NewRewardEraSeqPersistorTask(dbMock)
 
 			pl := &payload{
 				TransactionSequences: tt.txs,

@@ -683,7 +683,7 @@ func (m *MockRewards) EXPECT() *MockRewardsMockRecorder {
 }
 
 // BulkUpsert mocks base method
-func (m *MockRewards) BulkUpsert(arg0 []model.Reward) error {
+func (m *MockRewards) BulkUpsert(arg0 []model.RewardEraSeq) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "BulkUpsert", arg0)
 	ret0, _ := ret[0].(error)
@@ -694,6 +694,21 @@ func (m *MockRewards) BulkUpsert(arg0 []model.Reward) error {
 func (mr *MockRewardsMockRecorder) BulkUpsert(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BulkUpsert", reflect.TypeOf((*MockRewards)(nil).BulkUpsert), arg0)
+}
+
+// GetAll mocks base method
+func (m *MockRewards) GetAll(arg0 string, arg1, arg2 int64) ([]model.RewardEraSeq, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAll", arg0, arg1, arg2)
+	ret0, _ := ret[0].([]model.RewardEraSeq)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAll indicates an expected call of GetAll
+func (mr *MockRewardsMockRecorder) GetAll(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAll", reflect.TypeOf((*MockRewards)(nil).GetAll), arg0, arg1, arg2)
 }
 
 // MarkAllClaimed mocks base method
