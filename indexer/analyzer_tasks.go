@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
-	"math/big"
 	"sort"
 	"time"
 
@@ -31,7 +30,6 @@ var (
 	ErrCommissionOutsideOfRange    = errors.New("commission is outside of specified buckets")
 
 	missedConsecutiveThreshold int64 = 1
-	zero                       big.Int
 )
 
 // NewSystemEventCreatorTask creates system events

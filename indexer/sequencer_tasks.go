@@ -3,7 +3,6 @@ package indexer
 import (
 	"context"
 	"fmt"
-	"math/big"
 	"time"
 
 	"github.com/figment-networks/indexing-engine/pipeline"
@@ -370,56 +369,35 @@ func (t *rewardEraSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) e
 		Time:        payload.Syncable.Time,
 	}
 
-	c, err := newRewardsCalulator(payload.RawStaking.GetTotalRewardPoints(), payload.RawStaking.GetTotalRewardPayout())
-	if err != nil {
-		return err
-	}
-
-	for _, v := range payload.RawStaking.GetValidators() {
-		commPayout, leftoverPayout := c.commissionPayout(v.GetRewardPoints(), v.GetCommission())
-
-		if commPayout.Cmp(&zero) == 1 {
+	for stash, data := range payload.ParsedValidators {
+		if data.UnclaimedCommission != "" {
 			payload.RewardEraSequences = append(payload.RewardEraSequences, model.RewardEraSeq{
 				EraSequence:           eraSeq,
-				StashAccount:          v.GetStashAccount(),
-				ValidatorStashAccount: v.GetStashAccount(),
-				Amount:                commPayout.String(),
+				StashAccount:          stash,
+				ValidatorStashAccount: stash,
+				Amount:                data.UnclaimedCommission,
 				Kind:                  model.RewardCommission,
 				Claimed:               false,
 			})
 		}
 
-		validatorStake := *big.NewInt(v.GetTotalStake())
-		if leftoverPayout.Cmp(&zero) < 1 {
-			continue
-		}
-
-		amount := c.nominatorPayout(leftoverPayout, *big.NewInt(v.GetOwnStake()), validatorStake)
-		if amount.Cmp(&zero) == 1 {
+		if data.UnclaimedReward != "" {
 			payload.RewardEraSequences = append(payload.RewardEraSequences, model.RewardEraSeq{
 				EraSequence:           eraSeq,
-				StashAccount:          v.GetStashAccount(),
-				ValidatorStashAccount: v.GetStashAccount(),
-				Amount:                amount.String(),
+				StashAccount:          stash,
+				ValidatorStashAccount: stash,
+				Amount:                data.UnclaimedReward,
 				Kind:                  model.RewardReward,
 				Claimed:               false,
 			})
 		}
 
-		for _, n := range v.GetStakers() {
-			if !n.GetIsRewardEligible() {
-				continue
-			}
-
-			amount := c.nominatorPayout(leftoverPayout, *big.NewInt(n.GetStake()), validatorStake)
-			if amount.Cmp(&zero) < 1 {
-				continue
-			}
+		for _, n := range data.UnclaimedStakerRewards {
 			payload.RewardEraSequences = append(payload.RewardEraSequences, model.RewardEraSeq{
 				EraSequence:           eraSeq,
-				StashAccount:          n.GetStashAccount(),
-				ValidatorStashAccount: v.GetStashAccount(),
-				Amount:                amount.String(),
+				StashAccount:          n.Stash,
+				ValidatorStashAccount: stash,
+				Amount:                n.Amount,
 				Kind:                  model.RewardReward,
 				Claimed:               false,
 			})

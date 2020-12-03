@@ -9,7 +9,7 @@ import (
 
 type RewardsCalculator interface {
 	commissionPayout(validatorRewardPoints, validatorCommission int64) (big.Int, big.Int)
-	nominatorPayout(validatorLeftoverPayout, nominatorStake, validatorStake big.Int)
+	nominatorPayout(validatorLeftoverPayout, nominatorStake, validatorStake big.Int) big.Int
 }
 
 type calculator struct {

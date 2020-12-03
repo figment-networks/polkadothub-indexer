@@ -3,6 +3,7 @@ package indexer
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"strings"
 	"time"
 
@@ -22,6 +23,8 @@ const (
 var (
 	_ pipeline.Task = (*blockParserTask)(nil)
 	_ pipeline.Task = (*validatorsParserTask)(nil)
+
+	zero big.Int
 )
 
 func NewBlockParserTask() *blockParserTask {
@@ -76,11 +79,18 @@ type validatorsParserTask struct {
 
 // ParsedValidatorsData normalized validator data
 type ParsedValidatorsData map[string]parsedValidator
-
 type parsedValidator struct {
-	Staking     *stakingpb.Validator
-	Performance *validatorperformancepb.Validator
-	DisplayName string
+	Staking                *stakingpb.Validator
+	Performance            *validatorperformancepb.Validator
+	DisplayName            string
+	UnclaimedCommission    string
+	UnclaimedReward        string
+	UnclaimedStakerRewards []stakerReward
+}
+
+type stakerReward struct {
+	Stash  string
+	Amount string
 }
 
 func (t *validatorsParserTask) GetName() string {
@@ -96,6 +106,15 @@ func (t *validatorsParserTask) Run(ctx context.Context, p pipeline.Payload) erro
 
 	rawStakingState := payload.RawStaking
 	rawValidatorPerformances := payload.RawValidatorPerformance
+
+	var err error
+	var c RewardsCalculator
+	if payload.RawStaking.GetTotalRewardPoints() != 0 && payload.RawStaking.GetTotalRewardPayout() != "" {
+		c, err = newRewardsCalulator(payload.RawStaking.GetTotalRewardPoints(), payload.RawStaking.GetTotalRewardPayout())
+		if err != nil {
+			return err
+		}
+	}
 
 	parsedValidatorsData := make(ParsedValidatorsData)
 
@@ -114,6 +133,10 @@ func (t *validatorsParserTask) Run(ctx context.Context, p pipeline.Payload) erro
 		}
 		parsedData.Staking = rawValidatorStakingInfo
 		parsedData.DisplayName = strings.TrimSpace(identity.GetIdentity().GetDisplayName())
+
+		if c != nil {
+			t.injectRewardData(c, &parsedData, rawValidatorStakingInfo)
+		}
 		parsedValidatorsData[stashAccount] = parsedData
 	}
 
@@ -131,4 +154,38 @@ func (t *validatorsParserTask) Run(ctx context.Context, p pipeline.Payload) erro
 
 	payload.ParsedValidators = parsedValidatorsData
 	return nil
+}
+
+func (t *validatorsParserTask) injectRewardData(calc RewardsCalculator, data *parsedValidator, rawValidator *stakingpb.Validator) {
+	commPayout, leftoverPayout := calc.commissionPayout(rawValidator.GetRewardPoints(), rawValidator.GetCommission())
+
+	if commPayout.Cmp(&zero) > 0 {
+		data.UnclaimedCommission = commPayout.String()
+	}
+	if leftoverPayout.Cmp(&zero) <= 0 { // TODO check 100% commission
+		return
+	}
+
+	validatorStake := *big.NewInt(rawValidator.GetTotalStake())
+	rewardPayout := calc.nominatorPayout(leftoverPayout, *big.NewInt(rawValidator.GetOwnStake()), validatorStake)
+	if rewardPayout.Cmp(&zero) > 0 {
+		data.UnclaimedReward = rewardPayout.String()
+	}
+
+	for _, n := range rawValidator.GetStakers() {
+		if !n.GetIsRewardEligible() {
+			continue
+		}
+
+		amount := calc.nominatorPayout(leftoverPayout, *big.NewInt(n.GetStake()), validatorStake)
+		if amount.Cmp(&zero) <= 0 {
+			continue
+		}
+
+		reward := stakerReward{
+			Amount: amount.String(),
+			Stash:  n.GetStashAccount(),
+		}
+		data.UnclaimedStakerRewards = append(data.UnclaimedStakerRewards, reward)
+	}
 }
