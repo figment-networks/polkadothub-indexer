@@ -158,8 +158,9 @@
         "desc": "Creates and persists rewards that happen end of era",
         "tasks": [
           "Fetcher",
-          "RewardCreator",
-          "RewardPersistor"
+          "ValidatorsParser",
+          "RewardEraSeqCreator",
+          "RewardEraSeqPersistor"
         ]
       }
     ]
