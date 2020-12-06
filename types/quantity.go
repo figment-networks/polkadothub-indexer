@@ -75,3 +75,9 @@ func (b *Quantity) Scan(value interface{}) error {
 	}
 	return nil
 }
+
+// Add adds o to b
+func (b *Quantity) Add(o Quantity) {
+	b.Int.Add(&b.Int, &o.Int)
+	return
+}

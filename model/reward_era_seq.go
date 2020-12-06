@@ -3,6 +3,8 @@ package model
 const (
 	RewardCommission RewardKind = "commission"
 	RewardReward     RewardKind = "reward"
+	// for historical data, it's not possible to dissect reward from commission
+	RewardCommissionAndReward RewardKind = "commission_and_reward"
 )
 
 type RewardKind string
@@ -19,4 +21,8 @@ type RewardEraSeq struct {
 	Amount                string     `json:"amount"`
 	Kind                  RewardKind `json:"kind"`
 	Claimed               bool       `json:"claimed"`
+}
+
+func (RewardEraSeq) TableName() string {
+	return "reward_era_sequences"
 }

@@ -33,6 +33,7 @@ type Rewards interface {
 	BulkUpsert(records []model.RewardEraSeq) error
 	MarkAllClaimed(validatorStash string, era int64) error
 	GetAll(address string, start, end int64) ([]model.RewardEraSeq, error)
+	GetCount(validatorStash string, era int64) (int64, error)
 }
 
 type Syncables interface {

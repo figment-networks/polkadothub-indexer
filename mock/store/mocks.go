@@ -711,6 +711,21 @@ func (mr *MockRewardsMockRecorder) GetAll(arg0, arg1, arg2 interface{}) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAll", reflect.TypeOf((*MockRewards)(nil).GetAll), arg0, arg1, arg2)
 }
 
+// GetCount mocks base method
+func (m *MockRewards) GetCount(arg0 string, arg1 int64) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCount", arg0, arg1)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCount indicates an expected call of GetCount
+func (mr *MockRewardsMockRecorder) GetCount(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCount", reflect.TypeOf((*MockRewards)(nil).GetCount), arg0, arg1)
+}
+
 // MarkAllClaimed mocks base method
 func (m *MockRewards) MarkAllClaimed(arg0 string, arg1 int64) error {
 	m.ctrl.T.Helper()

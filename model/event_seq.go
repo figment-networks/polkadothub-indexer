@@ -64,7 +64,7 @@ type EventData struct {
 	Value string `json:"value"`
 }
 
-func (b *EventSeq) GetStashAndAmountFromData() (stash string, amount string, err error) {
+func (b *EventSeq) GetStashAndAmountFromData() (stash string, amount types.Quantity, err error) {
 	if !b.IsReward() {
 		return stash, amount, errIncompatibleType
 	}
@@ -79,10 +79,10 @@ func (b *EventSeq) GetStashAndAmountFromData() (stash string, amount string, err
 		if d.Name == accountKey {
 			stash = d.Value
 		} else if d.Name == balanceKey {
-			amount = d.Value
+			amount, err = types.NewQuantityFromString(d.Value)
 		}
 	}
-	if stash == "" || amount == "" {
+	if stash == "" {
 		err = errUnexpectedDataFormat
 	}
 	return

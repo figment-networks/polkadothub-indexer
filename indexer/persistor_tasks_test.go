@@ -412,9 +412,12 @@ func TestValidatorSeqPersistor_Run(t *testing.T) {
 }
 
 func TestRewardPersistor_Run(t *testing.T) {
+	dbErr := fmt.Errorf("db err")
 	tests := []struct {
 		description string
 		rewards     []model.RewardEraSeq
+		claims      []RewardsClaim
+		upsertErr   error
 		expectErr   error
 	}{
 		{
@@ -424,7 +427,14 @@ func TestRewardPersistor_Run(t *testing.T) {
 		},
 		{
 			description: "returns error if database errors",
-			expectErr:   fmt.Errorf("db err"),
+			rewards:     []model.RewardEraSeq{{StashAccount: "acct1", Amount: "100"}, {StashAccount: "acct2", Amount: "200"}},
+			expectErr:   dbErr,
+			upsertErr:   dbErr,
+		},
+		{
+			description: "calls db with rewards claims",
+			claims:      []RewardsClaim{{100, "acct1"}, {102, "acct2"}},
+			expectErr:   nil,
 		},
 	}
 
@@ -444,78 +454,11 @@ func TestRewardPersistor_Run(t *testing.T) {
 				RewardEraSequences: tt.rewards,
 			}
 
-			dbMock.EXPECT().BulkUpsert(tt.rewards).Return(tt.expectErr).Times(1)
+			dbMock.EXPECT().BulkUpsert(tt.rewards).Return(tt.upsertErr).Times(1)
 
-			if err := task.Run(ctx, pl); err != tt.expectErr {
-				t.Errorf("want %v; got %v", tt.expectErr, err)
+			for _, claim := range tt.claims {
+				dbMock.EXPECT().MarkAllClaimed(claim.ValidatorStash, claim.Era).Return(nil).Times(1)
 			}
-		})
-	}
-	testValidator := "validator_stash1"
-	var testEra int64 = 182
-	payoutStakersTx := model.TransactionSeq{
-		Method:  model.TxMethodPayoutStakers,
-		Section: model.TxSectionStaking,
-		Args:    fmt.Sprintf("[\"%v\",\"%v\"]", testValidator, testEra),
-	}
-
-	txtests := []struct {
-		description       string
-		rewards           []model.RewardEraSeq
-		txs               []model.TransactionSeq
-		shouldUpdateTxIdx []int
-		expectErr         error
-	}{
-		{
-			description: "calls db if there's a payout stakers transaction",
-			txs:         []model.TransactionSeq{payoutStakersTx},
-			expectErr:   nil,
-		},
-
-		{
-			description: "does not call db if there's no payout stakers transaction",
-			txs: []model.TransactionSeq{
-				{
-					Method:  "foo",
-					Section: model.TxSectionStaking,
-				},
-			},
-			expectErr: nil,
-		},
-		{
-			description: "returns error if database errors",
-			txs:         []model.TransactionSeq{payoutStakersTx},
-			expectErr:   fmt.Errorf("db err"),
-		},
-	}
-
-	for _, tt := range txtests {
-		tt := tt
-		t.Run(tt.description, func(t *testing.T) {
-			t.Parallel()
-
-			ctrl := gomock.NewController(t)
-			ctx := context.Background()
-
-			dbMock := mock.NewMockRewards(ctrl)
-
-			task := NewRewardEraSeqPersistorTask(dbMock)
-
-			pl := &payload{
-				TransactionSequences: tt.txs,
-			}
-
-			for _, tx := range tt.txs {
-				if tx != payoutStakersTx {
-					continue
-				}
-				dbMock.EXPECT().MarkAllClaimed(testValidator, testEra).Return(tt.expectErr).Times(1)
-			}
-
-			if tt.expectErr == nil {
-				dbMock.EXPECT().BulkUpsert(gomock.Any()).Return(nil).Times(1)
-			}
-
 			if err := task.Run(ctx, pl); err != tt.expectErr {
 				t.Errorf("want %v; got %v", tt.expectErr, err)
 			}

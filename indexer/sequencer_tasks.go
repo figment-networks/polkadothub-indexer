@@ -10,6 +10,7 @@ import (
 	"github.com/figment-networks/polkadothub-indexer/metric"
 	"github.com/figment-networks/polkadothub-indexer/model"
 	"github.com/figment-networks/polkadothub-indexer/store"
+	"github.com/figment-networks/polkadothub-indexer/types"
 	"github.com/figment-networks/polkadothub-indexer/utils/logger"
 )
 
@@ -22,11 +23,16 @@ const (
 	AccountEraSeqCreatorTaskName       = "AccountEraSeqCreator"
 	TransactionSeqCreatorTaskName      = "TransactionSeqCreator"
 	RewardEraSeqCreatorTaskName        = "RewardEraSeqCreator"
+	ClaimedRewardEraSeqCreatorTaskName = "ClaimedRewardEraSeqCreator"
 )
 
 var (
 	_ pipeline.Task = (*blockSeqCreatorTask)(nil)
 	_ pipeline.Task = (*validatorSessionSeqCreatorTask)(nil)
+)
+
+const (
+	hundredpermill = 1000000000
 )
 
 // NewBlockSeqCreatorTask creates block sequences
@@ -405,4 +411,166 @@ func (t *rewardEraSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) e
 	}
 
 	return nil
+}
+
+// NewClaimedRewardEraSeqCreatorTask creates rewards
+func NewClaimedRewardEraSeqCreatorTask(cfg *config.Config, rewardsDb store.Rewards, syncablesDb store.Syncables, validatorDb store.ValidatorEraSeq) *claimedRewardEraSeqCreatorTask {
+	return &claimedRewardEraSeqCreatorTask{cfg, rewardsDb, syncablesDb, validatorDb}
+}
+
+type claimedRewardEraSeqCreatorTask struct {
+	cfg         *config.Config
+	rewardsDb   store.Rewards
+	syncablesDb store.Syncables
+	validatorDb store.ValidatorEraSeq
+}
+
+func (t *claimedRewardEraSeqCreatorTask) GetName() string {
+	return ClaimedRewardEraSeqCreatorTaskName
+}
+
+func (t *claimedRewardEraSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) error {
+	defer metric.LogIndexerTaskDuration(time.Now(), t.GetName())
+
+	payload := p.(*payload)
+	for _, tx := range payload.TransactionSequences {
+		if !tx.IsPayoutStakers() {
+			continue
+		}
+
+		validatorStash, era, err := tx.GetStashAndEraFromPayoutArgs()
+		if err != nil {
+			return err
+		}
+
+		//check if already exists in db, if yes mark all claimed
+		count, err := t.rewardsDb.GetCount(validatorStash, era)
+		if err != nil {
+			return err
+		}
+
+		if count == 0 {
+			// these are historical rewards whose unclaimed reward data is not in the database
+			rewards, err := t.getRewardsFromEvents(validatorStash, era, payload.EventSequences)
+			if err != nil {
+				return err
+			}
+			payload.RewardEraSequences = append(payload.RewardEraSequences, rewards...)
+			continue
+		}
+
+		payload.RewardsClaimed = append(payload.RewardsClaimed, RewardsClaim{
+			Era:            era,
+			ValidatorStash: validatorStash,
+		})
+	}
+
+	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StageParser, t.GetName(), payload.CurrentHeight))
+
+	return nil
+}
+
+func (t *claimedRewardEraSeqCreatorTask) getEraSeq(era int64) (*model.EraSequence, error) {
+	var firstHeightInEra int64
+	lastSyncableInPrevEra, err := t.syncablesDb.FindLastInEra(era - 1)
+	if err != nil {
+		if err == store.ErrNotFound {
+			firstHeightInEra = t.cfg.FirstBlockHeight
+		} else {
+			return nil, err
+		}
+	} else {
+		firstHeightInEra = lastSyncableInPrevEra.Height + 1
+	}
+
+	lastSyncableInEra, err := t.syncablesDb.FindLastInEra(era)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.EraSequence{
+		Era:         era,
+		StartHeight: firstHeightInEra,
+		EndHeight:   lastSyncableInEra.Height + 1,
+		Time:        lastSyncableInEra.Time,
+	}, nil
+}
+
+func (t *claimedRewardEraSeqCreatorTask) getRewardsFromEvents(validatorStash string, era int64, events []model.EventSeq) ([]model.RewardEraSeq, error) {
+	var rewardSeqs []model.RewardEraSeq
+
+	eraSeq, err := t.getEraSeq(era)
+	if err != nil {
+		return nil, err
+	}
+
+	var totalStakerRewards types.Quantity
+	var validatorRewardAndCommission types.Quantity
+
+	for _, event := range events {
+		if !event.IsReward() {
+			continue
+		}
+
+		stash, amount, err := event.GetStashAndAmountFromData()
+		if err != nil {
+			return nil, err
+		}
+
+		if stash == validatorStash {
+			validatorRewardAndCommission = amount
+			continue
+		}
+
+		rewardSeqs = append(rewardSeqs, model.RewardEraSeq{
+			EraSequence:           eraSeq,
+			StashAccount:          stash,
+			ValidatorStashAccount: validatorStash,
+			Amount:                amount.String(),
+			Kind:                  model.RewardReward,
+			Claimed:               true,
+		})
+
+		totalStakerRewards.Add(amount)
+	}
+
+	if validatorRewardAndCommission.Cmp(&zero) <= 0 {
+		return rewardSeqs, nil
+	}
+
+	validator, err := t.validatorDb.FindByEraAndStashAccount(era, validatorStash)
+	if err != nil {
+		return nil, err
+	}
+
+	if validator.Commission == hundredpermill || validator.OwnStake.Cmp(&zero) <= 0 {
+		return append(rewardSeqs, model.RewardEraSeq{
+			EraSequence:           eraSeq,
+			StashAccount:          validatorStash,
+			ValidatorStashAccount: validatorStash,
+			Amount:                validatorRewardAndCommission.String(),
+			Kind:                  model.RewardCommission,
+			Claimed:               true,
+		}), nil
+	}
+
+	if validator.Commission == 0 {
+		return append(rewardSeqs, model.RewardEraSeq{
+			EraSequence:           eraSeq,
+			StashAccount:          validatorStash,
+			ValidatorStashAccount: validatorStash,
+			Amount:                validatorRewardAndCommission.String(),
+			Kind:                  model.RewardReward,
+			Claimed:               true,
+		}), nil
+	}
+
+	return append(rewardSeqs, model.RewardEraSeq{
+		EraSequence:           eraSeq,
+		StashAccount:          validatorStash,
+		ValidatorStashAccount: validatorStash,
+		Amount:                validatorRewardAndCommission.String(),
+		Kind:                  model.RewardCommissionAndReward,
+		Claimed:               true,
+	}), nil
 }

@@ -73,7 +73,7 @@ func (s RewardEraSeqStore) MarkAllClaimed(validatorStash string, era int64) erro
 // GetAll Gets all rewards for given stash
 func (s RewardEraSeqStore) GetAll(stash string, start, end int64) ([]model.RewardEraSeq, error) {
 	tx := s.db.
-		Model(&model.RewardEraSeq{}).
+		Table(model.RewardEraSeq{}.TableName()).
 		Select("*").
 		Where("stash_account = ?", stash).
 		Order("era")
@@ -87,4 +87,20 @@ func (s RewardEraSeqStore) GetAll(stash string, start, end int64) ([]model.Rewar
 
 	var res []model.RewardEraSeq
 	return res, tx.Find(&res).Error
+}
+
+// GetCount returns record count for given validatorStash at era
+func (s RewardEraSeqStore) GetCount(validatorStash string, era int64) (int64, error) {
+	var count int64
+	err := s.db.
+		Table(model.RewardEraSeq{}.TableName()).
+		Where("validator_stash_account = ? AND era = ?", validatorStash, era).
+		Count(&count).
+		Error
+
+	if gorm.IsRecordNotFoundError(err) {
+		return 0, nil
+	}
+
+	return count, err
 }
