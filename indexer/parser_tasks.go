@@ -162,10 +162,9 @@ func (t *validatorsParserTask) Run(ctx context.Context, p pipeline.Payload) erro
 			return err
 		}
 
-		parsedData, ok := parsedValidatorsData[stashAccount]
-		if !ok {
-			parsedData = parsedValidator{}
-		}
+		var parsedData parsedValidator
+		parsedData, _ = parsedValidatorsData[stashAccount]
+
 		parsedData.Staking = rawValidatorStakingInfo
 		parsedData.DisplayName = strings.TrimSpace(identity.GetIdentity().GetDisplayName())
 
@@ -181,10 +180,9 @@ func (t *validatorsParserTask) Run(ctx context.Context, p pipeline.Payload) erro
 	for _, rawValidatorPerf := range rawValidatorPerformances {
 		stashAccount := rawValidatorPerf.GetStashAccount()
 
-		parsedData, ok := parsedValidatorsData[stashAccount]
-		if !ok {
-			parsedData = parsedValidator{}
-		}
+		var parsedData parsedValidator
+		parsedData, _ = parsedValidatorsData[stashAccount]
+
 		parsedData.Performance = rawValidatorPerf
 		parsedValidatorsData[stashAccount] = parsedData
 	}
@@ -207,10 +205,8 @@ func (t *validatorsParserTask) Run(ctx context.Context, p pipeline.Payload) erro
 		}
 
 		if count == 0 {
-			parsedData, ok := parsedValidatorsData[validatorStash]
-			if !ok {
-				parsedData = parsedValidator{}
-			}
+			var parsedData parsedValidator
+			parsedData, _ = parsedValidatorsData[validatorStash]
 
 			// these are historical rewards whose unclaimed reward data is not in the database
 			parsedRewards, err := t.getClaimedRewardDataFromEvents(validatorStash, era, payload.RawEvents)
