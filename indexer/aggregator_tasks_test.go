@@ -2,6 +2,7 @@ package indexer
 
 import (
 	"context"
+	"errors"
 	"reflect"
 	"testing"
 	"time"
@@ -12,7 +13,6 @@ import (
 	"github.com/figment-networks/polkadothub-indexer/types"
 	"github.com/figment-networks/polkadothub-proxy/grpc/validatorperformance/validatorperformancepb"
 	"github.com/golang/mock/gomock"
-	"github.com/pkg/errors"
 )
 
 func TestValidatorAggCreatorTask_Run(t *testing.T) {

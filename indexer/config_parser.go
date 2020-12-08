@@ -2,11 +2,11 @@ package indexer
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 
 	"github.com/figment-networks/indexing-engine/pipeline"
-	"github.com/pkg/errors"
 )
 
 const (

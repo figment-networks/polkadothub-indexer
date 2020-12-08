@@ -21,7 +21,6 @@ import (
 	"github.com/figment-networks/polkadothub-proxy/grpc/staking/stakingpb"
 	"github.com/figment-networks/polkadothub-proxy/grpc/transaction/transactionpb"
 	"github.com/figment-networks/polkadothub-proxy/grpc/validatorperformance/validatorperformancepb"
-	"github.com/pkg/errors"
 )
 
 const (

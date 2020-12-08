@@ -2,12 +2,12 @@ package account
 
 import (
 	"encoding/json"
+	"errors"
 	"strings"
 
 	"github.com/figment-networks/polkadothub-indexer/model"
 	"github.com/figment-networks/polkadothub-indexer/usecase/common"
 	"github.com/figment-networks/polkadothub-proxy/grpc/account/accountpb"
-	"github.com/pkg/errors"
 )
 
 var (

@@ -6,7 +6,7 @@ import (
 	"github.com/figment-networks/polkadothub-indexer/usecase/http"
 	"github.com/figment-networks/polkadothub-indexer/utils/logger"
 	"github.com/gin-gonic/gin"
-	"github.com/pkg/errors"
+	"errors"
 )
 
 var (

@@ -2,6 +2,7 @@ package indexer
 
 import (
 	"context"
+	"errors"
 	"reflect"
 	"testing"
 
@@ -15,7 +16,6 @@ import (
 	"github.com/figment-networks/polkadothub-proxy/grpc/validatorperformance/validatorperformancepb"
 	"github.com/golang/mock/gomock"
 	"github.com/golang/protobuf/ptypes"
-	"github.com/pkg/errors"
 )
 
 func TestFetcher_Run(t *testing.T) {

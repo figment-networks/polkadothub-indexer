@@ -2,6 +2,7 @@ package indexer
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"reflect"
 	"testing"
@@ -18,7 +19,6 @@ import (
 	"github.com/figment-networks/polkadothub-proxy/grpc/validatorperformance/validatorperformancepb"
 
 	"github.com/golang/mock/gomock"
-	"github.com/pkg/errors"
 )
 
 func TestBlockParserTask_Run(t *testing.T) {

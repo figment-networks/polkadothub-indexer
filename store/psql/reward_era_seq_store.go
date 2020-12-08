@@ -6,6 +6,7 @@ import (
 	"github.com/figment-networks/indexing-engine/store/bulk"
 	"github.com/figment-networks/polkadothub-indexer/model"
 	"github.com/figment-networks/polkadothub-indexer/store/psql/queries"
+
 	"github.com/jinzhu/gorm"
 )
 

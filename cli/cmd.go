@@ -2,12 +2,12 @@ package cli
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/figment-networks/polkadothub-indexer/config"
 	"github.com/figment-networks/polkadothub-indexer/usecase"
 	"github.com/figment-networks/polkadothub-indexer/utils/logger"
-	"github.com/pkg/errors"
 )
 
 func runCmd(cfg *config.Config, flags Flags) error {

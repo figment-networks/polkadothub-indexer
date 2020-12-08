@@ -2,6 +2,7 @@ package indexer
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/figment-networks/indexing-engine/pipeline"
@@ -9,7 +10,6 @@ import (
 	"github.com/figment-networks/polkadothub-indexer/model"
 	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/utils/logger"
-	"github.com/pkg/errors"
 )
 
 var (

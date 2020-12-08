@@ -1,14 +1,16 @@
 package validator
 
 import (
+	"errors"
+
 	"github.com/figment-networks/polkadothub-indexer/client"
 	"github.com/figment-networks/polkadothub-indexer/config"
 	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/types"
 	"github.com/figment-networks/polkadothub-indexer/usecase/http"
 	"github.com/figment-networks/polkadothub-indexer/utils/logger"
+
 	"github.com/gin-gonic/gin"
-	"github.com/pkg/errors"
 )
 
 var (

@@ -1,6 +1,8 @@
 package system_event
 
 import (
+	"errors"
+
 	"github.com/figment-networks/polkadothub-indexer/client"
 	"github.com/figment-networks/polkadothub-indexer/model"
 	"github.com/figment-networks/polkadothub-indexer/store"
@@ -9,7 +11,6 @@ import (
 	"github.com/figment-networks/polkadothub-indexer/utils/logger"
 
 	"github.com/gin-gonic/gin"
-	"github.com/pkg/errors"
 )
 
 var (
