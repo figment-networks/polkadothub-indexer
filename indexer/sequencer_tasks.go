@@ -420,11 +420,10 @@ func (t *rewardEraSeqCreatorTask) getEraSeq(era int64, currentSyncable *model.Sy
 	var firstHeightInEra int64
 	lastSyncableInPrevEra, err := t.syncablesDb.FindLastInEra(era - 1)
 	if err != nil {
-		if err == store.ErrNotFound {
-			firstHeightInEra = t.cfg.FirstBlockHeight
-		} else {
+		if err != store.ErrNotFound {
 			return nil, err
 		}
+		firstHeightInEra = t.cfg.FirstBlockHeight
 	} else {
 		firstHeightInEra = lastSyncableInPrevEra.Height + 1
 	}
