@@ -1,9 +1,10 @@
 package account
 
 import (
+	"errors"
+
 	"github.com/figment-networks/polkadothub-indexer/client"
 	"github.com/figment-networks/polkadothub-indexer/store"
-	"github.com/pkg/errors"
 )
 
 type getByHeightUseCase struct {

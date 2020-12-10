@@ -1,8 +1,9 @@
 package validator
 
 import (
+	"errors"
+
 	"github.com/figment-networks/polkadothub-indexer/store"
-	"github.com/pkg/errors"
 )
 
 type getForMinHeightUseCase struct {

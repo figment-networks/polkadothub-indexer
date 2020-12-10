@@ -2,6 +2,7 @@ package indexer
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/figment-networks/indexing-engine/pipeline"
@@ -11,7 +12,6 @@ import (
 	"github.com/figment-networks/polkadothub-indexer/model"
 	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/utils/logger"
-	"github.com/pkg/errors"
 )
 
 const (
@@ -66,7 +66,7 @@ func NewPipeline(cfg *config.Config, cli *client.Client, accountDb store.Account
 		pipeline.NewAsyncStageWithTasks(
 			pipeline.StageParser,
 			NewBlockParserTask(),
-			NewValidatorsParserTask(cli.Account),
+			pipeline.RetryingTask(NewValidatorsParserTask(cfg, cli.Account, rewardDb, syncableDb, validatorDb), isTransient, 1),
 		),
 	)
 

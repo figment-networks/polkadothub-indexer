@@ -28,6 +28,11 @@ func (pf *payloadFactory) GetPayload(currentHeight int64) pipeline.Payload {
 	}
 }
 
+type RewardsClaim struct {
+	Era            int64
+	ValidatorStash string
+}
+
 type payload struct {
 	CurrentHeight int64
 
@@ -61,6 +66,7 @@ type payload struct {
 	AccountEraSequences       []model.AccountEraSeq
 	TransactionSequences      []model.TransactionSeq
 	RewardEraSequences        []model.RewardEraSeq
+	RewardsClaimed            []RewardsClaim
 
 	// Analyzer
 	SystemEvents []model.SystemEvent

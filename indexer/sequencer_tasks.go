@@ -22,11 +22,16 @@ const (
 	AccountEraSeqCreatorTaskName       = "AccountEraSeqCreator"
 	TransactionSeqCreatorTaskName      = "TransactionSeqCreator"
 	RewardEraSeqCreatorTaskName        = "RewardEraSeqCreator"
+	ClaimedRewardEraSeqCreatorTaskName = "ClaimedRewardEraSeqCreator"
 )
 
 var (
 	_ pipeline.Task = (*blockSeqCreatorTask)(nil)
 	_ pipeline.Task = (*validatorSessionSeqCreatorTask)(nil)
+)
+
+const (
+	hundredpermill = 1000000000
 )
 
 // NewBlockSeqCreatorTask creates block sequences
@@ -344,65 +349,97 @@ func (t *rewardEraSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) e
 
 	payload := p.(*payload)
 
-	if !payload.Syncable.LastInEra {
-		return nil
-	}
-
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StageParser, t.GetName(), payload.CurrentHeight))
 
-	var firstHeightInEra int64
-	lastSyncableInPrevEra, err := t.syncablesDb.FindLastInEra(payload.Syncable.Era - 1)
+	currentEraSeq, err := t.getEraSeq(payload.Syncable.Era, payload.Syncable)
 	if err != nil {
-		if err == store.ErrNotFound {
-			firstHeightInEra = t.cfg.FirstBlockHeight
-		} else {
-			return err
+		return err
+	}
+
+	var eraSeq *model.EraSequence
+	for stash, validator := range payload.ParsedValidators {
+		data := validator.parsedRewards
+
+		eraSeq = currentEraSeq
+		if data.Era != payload.Syncable.Era {
+			eraSeq, err = t.getEraSeq(data.Era, payload.Syncable)
+			if err != nil {
+				return err
+			}
 		}
-	} else {
-		firstHeightInEra = lastSyncableInPrevEra.Height + 1
-	}
 
-	eraSeq := &model.EraSequence{
-		Era:         payload.Syncable.Era,
-		StartHeight: firstHeightInEra,
-		EndHeight:   payload.Syncable.Height,
-		Time:        payload.Syncable.Time,
-	}
-
-	for stash, data := range payload.ParsedValidators {
-		if data.UnclaimedCommission != "" {
+		if data.Commission != "" {
 			payload.RewardEraSequences = append(payload.RewardEraSequences, model.RewardEraSeq{
 				EraSequence:           eraSeq,
 				StashAccount:          stash,
 				ValidatorStashAccount: stash,
-				Amount:                data.UnclaimedCommission,
+				Amount:                data.Commission,
 				Kind:                  model.RewardCommission,
-				Claimed:               false,
+				Claimed:               data.IsClaimed,
 			})
 		}
 
-		if data.UnclaimedReward != "" {
+		if data.Reward != "" {
 			payload.RewardEraSequences = append(payload.RewardEraSequences, model.RewardEraSeq{
 				EraSequence:           eraSeq,
 				StashAccount:          stash,
 				ValidatorStashAccount: stash,
-				Amount:                data.UnclaimedReward,
+				Amount:                data.Reward,
 				Kind:                  model.RewardReward,
-				Claimed:               false,
+				Claimed:               data.IsClaimed,
 			})
 		}
 
-		for _, n := range data.UnclaimedStakerRewards {
+		if data.RewardAndCommission != "" {
+			payload.RewardEraSequences = append(payload.RewardEraSequences, model.RewardEraSeq{
+				EraSequence:           eraSeq,
+				StashAccount:          stash,
+				ValidatorStashAccount: stash,
+				Amount:                data.RewardAndCommission,
+				Kind:                  model.RewardCommissionAndReward,
+				Claimed:               data.IsClaimed,
+			})
+		}
+
+		for _, n := range data.StakerRewards {
 			payload.RewardEraSequences = append(payload.RewardEraSequences, model.RewardEraSeq{
 				EraSequence:           eraSeq,
 				StashAccount:          n.Stash,
 				ValidatorStashAccount: stash,
 				Amount:                n.Amount,
 				Kind:                  model.RewardReward,
-				Claimed:               false,
+				Claimed:               data.IsClaimed,
 			})
 		}
 	}
 
 	return nil
+}
+
+func (t *rewardEraSeqCreatorTask) getEraSeq(era int64, currentSyncable *model.Syncable) (*model.EraSequence, error) {
+	var firstHeightInEra int64
+	lastSyncableInPrevEra, err := t.syncablesDb.FindLastInEra(era - 1)
+	if err != nil {
+		if err != store.ErrNotFound {
+			return nil, err
+		}
+		firstHeightInEra = t.cfg.FirstBlockHeight
+	} else {
+		firstHeightInEra = lastSyncableInPrevEra.Height + 1
+	}
+
+	lastSyncableInEra := currentSyncable
+	if currentSyncable.Era != era {
+		lastSyncableInEra, err = t.syncablesDb.FindLastInEra(era)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &model.EraSequence{
+		Era:         era,
+		StartHeight: firstHeightInEra,
+		EndHeight:   lastSyncableInEra.Height + 1,
+		Time:        lastSyncableInEra.Time,
+	}, nil
 }

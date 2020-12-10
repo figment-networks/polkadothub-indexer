@@ -29,6 +29,11 @@
           "id": 6,
           "targets": [12],
           "parallel": true
+        },
+        {
+          "id": 7,
+          "targets": [13],
+          "parallel": true
         }
     ],
     "shared_tasks": [
@@ -155,7 +160,7 @@
       {
         "id": 12,
         "name": "index_rewards",
-        "desc": "Creates and persists rewards that happen end of era",
+        "desc": "Creates and persists rewards",
         "tasks": [
           "Fetcher",
           "ValidatorsParser",

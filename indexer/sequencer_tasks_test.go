@@ -108,38 +108,53 @@ func TestValidatorSeqCreator_Run(t *testing.T) {
 
 func TestRewardEraSeqCreatorTask_Run(t *testing.T) {
 	const currEra int64 = 20
+	const testValidator = "testValidator"
+
 	tests := []struct {
 		description   string
 		lastInEra     bool
-		validators    ParsedValidatorsData
+		validator     parsedValidator
 		expectedKinds []model.RewardKind
 	}{
 		{description: "updates payload with commission and reward events",
 			lastInEra: true,
-			validators: ParsedValidatorsData{
-				"addr": {
-					UnclaimedCommission: "300",
-					UnclaimedReward:     "300",
-				},
-			},
+			validator: parsedValidator{parsedRewards: parsedRewards{
+				Commission: "300",
+				Reward:     "300",
+				Era:        currEra,
+			}},
 			expectedKinds: []model.RewardKind{model.RewardCommission, model.RewardReward},
+		},
+		{description: "updates payload with commission_and_reward event",
+			lastInEra: true,
+			validator: parsedValidator{parsedRewards: parsedRewards{
+				RewardAndCommission: "300",
+				Era:                 currEra,
+			}},
+			expectedKinds: []model.RewardKind{model.RewardCommissionAndReward},
 		},
 		{description: "updates payload with reward events from staker",
 			lastInEra: true,
-			validators: ParsedValidatorsData{
-				"addr": {
-					UnclaimedStakerRewards: []stakerReward{{Stash: "AAA", Amount: "123"}, {Stash: "BBB", Amount: "123"}},
-				},
-			},
+			validator: parsedValidator{parsedRewards: parsedRewards{
+				StakerRewards: []stakerReward{{Stash: "AAA", Amount: "123"}, {Stash: "BBB", Amount: "123"}},
+				Era:           currEra,
+			}},
 			expectedKinds: []model.RewardKind{model.RewardReward, model.RewardReward},
 		},
-		{description: "does not create rewards if not last in era",
-			validators: ParsedValidatorsData{
-				"addr": {
-					UnclaimedStakerRewards: []stakerReward{{Stash: "AAA", Amount: "123"}, {Stash: "BBB", Amount: "123"}},
-				},
+		{description: "creates rewards if not last in era",
+			validator: parsedValidator{parsedRewards: parsedRewards{
+				StakerRewards: []stakerReward{{Stash: "AAA", Amount: "123"}, {Stash: "BBB", Amount: "123"}},
+				Era:           currEra,
+			}},
+			expectedKinds: []model.RewardKind{model.RewardReward, model.RewardReward},
+		},
+		{description: "creates rewards if validator era is different from current era",
+			validator: parsedValidator{parsedRewards: parsedRewards{
+				StakerRewards: []stakerReward{{Stash: "AAA", Amount: "123"}, {Stash: "BBB", Amount: "123"}},
+				Era:           currEra - 1,
 			},
-			expectedKinds: []model.RewardKind{},
+			},
+			expectedKinds: []model.RewardKind{model.RewardReward, model.RewardReward},
 		},
 	}
 
@@ -155,12 +170,14 @@ func TestRewardEraSeqCreatorTask_Run(t *testing.T) {
 			task := NewRewardEraSeqCreatorTask(nil, dbMock)
 
 			pl := &payload{
-				ParsedValidators: tt.validators,
+				ParsedValidators: ParsedValidatorsData{testValidator: tt.validator},
 				Syncable:         &model.Syncable{Era: currEra, LastInEra: tt.lastInEra},
 			}
 
-			if tt.lastInEra {
-				dbMock.EXPECT().FindLastInEra(currEra-1).Return(&model.Syncable{Height: 500}, nil).Times(1)
+			dbMock.EXPECT().FindLastInEra(currEra-1).Return(&model.Syncable{Height: 500}, nil).Times(1)
+			if tt.validator.parsedRewards.Era != currEra {
+				dbMock.EXPECT().FindLastInEra(tt.validator.parsedRewards.Era).Return(&model.Syncable{Height: 500}, nil).Times(1)
+				dbMock.EXPECT().FindLastInEra(tt.validator.parsedRewards.Era-1).Return(&model.Syncable{Height: 500}, nil).Times(1)
 			}
 
 			if err := task.Run(ctx, pl); err != nil {

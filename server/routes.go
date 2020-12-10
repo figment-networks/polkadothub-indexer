@@ -15,4 +15,5 @@ func (s *Server) setupRoutes() {
 	s.engine.GET("/validators/for_min_height/:height", s.handlers.GetValidatorsForMinHeight.Handle)
 	s.engine.GET("/validators", s.handlers.GetValidatorsByHeight.Handle)
 	s.engine.GET("/validators_summary", s.handlers.GetValidatorSummary.Handle)
+	s.engine.GET("/rewards/:stash_account", s.handlers.GetRewardsForStashAccount.Handle)
 }

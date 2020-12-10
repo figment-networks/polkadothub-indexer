@@ -2,6 +2,7 @@ package indexer
 
 import (
 	"encoding/json"
+	"errors"
 	"testing"
 	"time"
 
@@ -10,7 +11,6 @@ import (
 	"github.com/figment-networks/polkadothub-indexer/model"
 	"github.com/figment-networks/polkadothub-indexer/types"
 	"github.com/golang/mock/gomock"
-	"github.com/pkg/errors"
 )
 
 const (

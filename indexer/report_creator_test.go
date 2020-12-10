@@ -1,6 +1,7 @@
 package indexer
 
 import (
+	"errors"
 	"testing"
 	"time"
 
@@ -9,7 +10,6 @@ import (
 	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/types"
 	"github.com/golang/mock/gomock"
-	"github.com/pkg/errors"
 )
 
 func TestReportCreator_createIfNotExists(t *testing.T) {
@@ -22,7 +22,7 @@ func TestReportCreator_createIfNotExists(t *testing.T) {
 		reportStoreMock.EXPECT().FindNotCompletedByIndexVersion(gomock.Any(), gomock.Any()).Return(getTestReport(model.ReportKindSequentialReindex), nil).Times(1)
 
 		creator := reportCreator{
-			kind:      model.ReportKindSequentialReindex,
+			kind:     model.ReportKindSequentialReindex,
 			reportDb: reportStoreMock,
 		}
 
@@ -45,7 +45,7 @@ func TestReportCreator_createIfNotExists(t *testing.T) {
 		reportStoreMock.EXPECT().FindNotCompletedByIndexVersion(gomock.Any(), gomock.Any()).Return(getTestReport(model.ReportKindIndex), nil).Times(1)
 
 		creator := reportCreator{
-			kind:      model.ReportKindSequentialReindex,
+			kind:     model.ReportKindSequentialReindex,
 			reportDb: reportStoreMock,
 		}
 
@@ -67,7 +67,7 @@ func TestReportCreator_createIfNotExists(t *testing.T) {
 		reportStoreMock.EXPECT().FindNotCompletedByIndexVersion(gomock.Any(), gomock.Any()).Return(nil, errors.New("test error")).Times(1)
 
 		creator := reportCreator{
-			kind:      model.ReportKindSequentialReindex,
+			kind:     model.ReportKindSequentialReindex,
 			reportDb: reportStoreMock,
 		}
 
@@ -91,7 +91,7 @@ func TestReportCreator_createIfNotExists(t *testing.T) {
 		reportStoreMock.EXPECT().Create(gomock.Any()).Return(testErr).Times(1)
 
 		creator := reportCreator{
-			kind:      model.ReportKindSequentialReindex,
+			kind:     model.ReportKindSequentialReindex,
 			reportDb: reportStoreMock,
 		}
 
@@ -114,7 +114,7 @@ func TestReportCreator_createIfNotExists(t *testing.T) {
 		reportStoreMock.EXPECT().Create(gomock.Any()).Return(nil).Times(1)
 
 		creator := reportCreator{
-			kind:      model.ReportKindSequentialReindex,
+			kind:     model.ReportKindSequentialReindex,
 			reportDb: reportStoreMock,
 		}
 
@@ -139,7 +139,7 @@ func TestReportCreator_complete(t *testing.T) {
 		reportStoreMock.EXPECT().Save(gomock.Any()).Return(nil).Times(1)
 
 		creator := reportCreator{
-			report:    getTestReport(model.ReportKindSequentialReindex),
+			report:   getTestReport(model.ReportKindSequentialReindex),
 			reportDb: reportStoreMock,
 		}
 
@@ -159,7 +159,7 @@ func TestReportCreator_complete(t *testing.T) {
 		reportStoreMock.EXPECT().Save(gomock.Any()).Return(testErr).Times(1)
 
 		creator := reportCreator{
-			report:    getTestReport(model.ReportKindSequentialReindex),
+			report:   getTestReport(model.ReportKindSequentialReindex),
 			reportDb: reportStoreMock,
 		}
 

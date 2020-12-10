@@ -2,13 +2,12 @@ package validator
 
 import (
 	"context"
+	"errors"
 
 	"github.com/figment-networks/polkadothub-indexer/client"
 	"github.com/figment-networks/polkadothub-indexer/config"
 	"github.com/figment-networks/polkadothub-indexer/indexer"
 	"github.com/figment-networks/polkadothub-indexer/store"
-
-	"github.com/pkg/errors"
 )
 
 type getByHeightUseCase struct {

@@ -1,6 +1,8 @@
 package model
 
-import "github.com/figment-networks/polkadothub-indexer/types"
+import (
+	"github.com/figment-networks/polkadothub-indexer/types"
+)
 
 type TransactionSeq struct {
 	ID types.ID `json:"id"`
@@ -12,6 +14,7 @@ type TransactionSeq struct {
 	Hash    string `json:"hash"`
 	Method  string `json:"method"`
 	Section string `json:"section"`
+	Args    string `json:"args"`
 }
 
 func (TransactionSeq) TableName() string {

@@ -3,6 +3,7 @@ package indexer
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math"
 	"sort"
@@ -15,8 +16,6 @@ import (
 	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/types"
 	"github.com/figment-networks/polkadothub-indexer/utils/logger"
-
-	"github.com/pkg/errors"
 )
 
 const (

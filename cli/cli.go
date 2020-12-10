@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"strconv"
@@ -11,7 +12,6 @@ import (
 	"github.com/figment-networks/polkadothub-indexer/store/psql"
 	"github.com/figment-networks/polkadothub-indexer/utils/logger"
 	"github.com/figment-networks/polkadothub-indexer/utils/reporting"
-	"github.com/pkg/errors"
 )
 
 type Flags struct {

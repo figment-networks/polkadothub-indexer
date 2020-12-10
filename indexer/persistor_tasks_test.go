@@ -410,3 +410,58 @@ func TestValidatorSeqPersistor_Run(t *testing.T) {
 		})
 	}
 }
+
+func TestRewardPersistor_Run(t *testing.T) {
+	dbErr := fmt.Errorf("db err")
+	tests := []struct {
+		description string
+		rewards     []model.RewardEraSeq
+		claims      []RewardsClaim
+		upsertErr   error
+		expectErr   error
+	}{
+		{
+			description: "calls db with payload rewards",
+			rewards:     []model.RewardEraSeq{{StashAccount: "acct1", Amount: "100"}, {StashAccount: "acct2", Amount: "200"}},
+			expectErr:   nil,
+		},
+		{
+			description: "returns error if database errors",
+			rewards:     []model.RewardEraSeq{{StashAccount: "acct1", Amount: "100"}, {StashAccount: "acct2", Amount: "200"}},
+			expectErr:   dbErr,
+			upsertErr:   dbErr,
+		},
+		{
+			description: "calls db with rewards claims",
+			claims:      []RewardsClaim{{100, "acct1"}, {102, "acct2"}},
+			expectErr:   nil,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.description, func(t *testing.T) {
+			t.Parallel()
+
+			ctrl := gomock.NewController(t)
+			ctx := context.Background()
+
+			dbMock := mock.NewMockRewards(ctrl)
+
+			task := NewRewardEraSeqPersistorTask(dbMock)
+
+			pl := &payload{
+				RewardEraSequences: tt.rewards,
+			}
+
+			dbMock.EXPECT().BulkUpsert(tt.rewards).Return(tt.upsertErr).Times(1)
+
+			for _, claim := range tt.claims {
+				dbMock.EXPECT().MarkAllClaimed(claim.ValidatorStash, claim.Era).Return(nil).Times(1)
+			}
+			if err := task.Run(ctx, pl); err != tt.expectErr {
+				t.Errorf("want %v; got %v", tt.expectErr, err)
+			}
+		})
+	}
+}

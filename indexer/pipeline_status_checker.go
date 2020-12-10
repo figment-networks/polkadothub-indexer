@@ -1,10 +1,10 @@
 package indexer
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/figment-networks/polkadothub-indexer/store"
-	"github.com/pkg/errors"
 )
 
 // pipelineStatusChecker checks if index version is up to date and what index versions are missing (are not up to date)

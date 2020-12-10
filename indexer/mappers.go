@@ -2,6 +2,7 @@ package indexer
 
 import (
 	"encoding/json"
+	"errors"
 
 	"github.com/figment-networks/polkadothub-indexer/model"
 	"github.com/figment-networks/polkadothub-indexer/types"
@@ -11,7 +12,6 @@ import (
 	"github.com/figment-networks/polkadothub-proxy/grpc/transaction/transactionpb"
 	"github.com/figment-networks/polkadothub-proxy/grpc/validator/validatorpb"
 	"github.com/figment-networks/polkadothub-proxy/grpc/validatorperformance/validatorperformancepb"
-	"github.com/pkg/errors"
 )
 
 var (
@@ -225,6 +225,7 @@ func ToTransactionSequence(syncable *model.Syncable, rawTransactions []*transact
 			Hash:    rawTx.GetHash(),
 			Section: rawTx.GetSection(),
 			Method:  rawTx.GetMethod(),
+			Args:    rawTx.GetArgs(),
 		}
 
 		if !tx.Valid() {

@@ -332,13 +332,18 @@ func (t *RewardEraSeqPersistorTask) Run(ctx context.Context, p pipeline.Payload)
 	defer metric.LogIndexerTaskDuration(time.Now(), t.GetName())
 
 	payload := p.(*payload)
-
-	if !payload.Syncable.LastInEra {
-		logger.Info(fmt.Sprintf("indexer task skipped because height is not last in era [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
-		return nil
-	}
-
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
 
-	return t.rewardsDb.BulkUpsert(payload.RewardEraSequences)
+	err := t.rewardsDb.BulkUpsert(payload.RewardEraSequences)
+	if err != nil {
+		return err
+	}
+
+	for _, claim := range payload.RewardsClaimed {
+		err = t.rewardsDb.MarkAllClaimed(claim.ValidatorStash, claim.Era)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

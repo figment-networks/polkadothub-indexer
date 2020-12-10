@@ -2,10 +2,12 @@ package server
 
 import (
 	"errors"
+
 	"github.com/figment-networks/polkadothub-indexer/config"
 	"github.com/figment-networks/polkadothub-indexer/metric"
 	"github.com/figment-networks/polkadothub-indexer/usecase"
 	"github.com/figment-networks/polkadothub-indexer/utils/logger"
+
 	"github.com/gin-gonic/gin"
 )
 

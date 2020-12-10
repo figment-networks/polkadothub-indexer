@@ -9,6 +9,7 @@ import (
 	"github.com/figment-networks/polkadothub-indexer/usecase/block"
 	"github.com/figment-networks/polkadothub-indexer/usecase/chain"
 	"github.com/figment-networks/polkadothub-indexer/usecase/health"
+	"github.com/figment-networks/polkadothub-indexer/usecase/reward"
 	"github.com/figment-networks/polkadothub-indexer/usecase/system_event"
 	"github.com/figment-networks/polkadothub-indexer/usecase/transaction"
 	"github.com/figment-networks/polkadothub-indexer/usecase/validator"
@@ -31,6 +32,7 @@ func NewHttpHandlers(cfg *config.Config, cli *client.Client, accountDb store.Acc
 		GetValidatorByStashAccount: validator.NewGetByStashAccountHttpHandler(accountDb, validatorDb),
 		GetValidatorSummary:        validator.NewGetSummaryHttpHandler(syncableDb, validatorDb),
 		GetValidatorsForMinHeight:  validator.NewGetForMinHeightHttpHandler(syncableDb, validatorDb),
+		GetRewardsForStashAccount:  reward.NewGetForStashAccountHttpHandler(rewardDb),
 	}
 }
 
@@ -48,4 +50,5 @@ type HttpHandlers struct {
 	GetValidatorByStashAccount types.HttpHandler
 	GetValidatorSummary        types.HttpHandler
 	GetValidatorsForMinHeight  types.HttpHandler
+	GetRewardsForStashAccount  types.HttpHandler
 }

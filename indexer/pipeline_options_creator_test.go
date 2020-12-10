@@ -1,13 +1,13 @@
 package indexer
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/figment-networks/indexing-engine/pipeline"
 	mock "github.com/figment-networks/polkadothub-indexer/mock/indexer"
 	"github.com/golang/mock/gomock"
-	"github.com/pkg/errors"
 )
 
 func TestPipelineOptionsCreator_parse(t *testing.T) {

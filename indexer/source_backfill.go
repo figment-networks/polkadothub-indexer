@@ -2,13 +2,14 @@ package indexer
 
 import (
 	"context"
+	"errors"
 	"fmt"
+
 	"github.com/figment-networks/indexing-engine/pipeline"
 	"github.com/figment-networks/polkadothub-indexer/client"
 	"github.com/figment-networks/polkadothub-indexer/config"
 	"github.com/figment-networks/polkadothub-indexer/model"
 	"github.com/figment-networks/polkadothub-indexer/store"
-	"github.com/pkg/errors"
 )
 
 var (
@@ -32,12 +33,12 @@ func NewBackfillSource(cfg *config.Config, syncablesDb store.Syncables, client *
 }
 
 type backfillSource struct {
-	cfg              *config.Config
-	syncablesDb      store.Syncables
-	client           *client.Client
-	useWhiteList     bool
-	heightsWhitelist map[int64]int64
-	whiteListStages  []pipeline.StageName
+	cfg                 *config.Config
+	syncablesDb         store.Syncables
+	client              *client.Client
+	useWhiteList        bool
+	heightsWhitelist    map[int64]int64
+	whiteListStages     []pipeline.StageName
 	currentIndexVersion int64
 	currentHeight       int64
 	startHeight         int64

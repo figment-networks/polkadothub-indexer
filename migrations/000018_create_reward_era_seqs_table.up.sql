@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS reward_era_sequences
 );
 
 -- Indexes
-CREATE index idx_rewards_era on reward_era_sequences (era);
-CREATE index idx_rewards_stash_account on reward_era_sequences (stash_account);
+CREATE index idx_rewards_validator_era on reward_era_sequences (validator_stash_account, era);
+CREATE index idx_rewards_stash_account_era on reward_era_sequences (stash_account, era);
 CREATE UNIQUE INDEX idx_rewards_accounts_kind
     ON reward_era_sequences(era, stash_account, validator_stash_account, kind);

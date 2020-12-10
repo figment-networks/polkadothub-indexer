@@ -1,11 +1,11 @@
 package indexer
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/figment-networks/polkadothub-indexer/model"
 	"github.com/figment-networks/polkadothub-indexer/store"
-	"github.com/pkg/errors"
 )
 
 // reportCreator creates and completes report

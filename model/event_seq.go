@@ -1,6 +1,8 @@
 package model
 
-import "github.com/figment-networks/polkadothub-indexer/types"
+import (
+	"github.com/figment-networks/polkadothub-indexer/types"
+)
 
 type EventSeq struct {
 	ID types.ID `json:"id"`
