@@ -26,6 +26,7 @@ type getByHeightHttpHandler struct {
 	databaseDb    store.Database
 	eventDb       store.Events
 	reportDb      store.Reports
+	rewardDb      store.Rewards
 	syncableDb    store.Syncables
 	systemEventDb store.SystemEvents
 	transactionDb store.Transactions
@@ -33,7 +34,7 @@ type getByHeightHttpHandler struct {
 }
 
 func NewGetByHeightHttpHandler(cfg *config.Config, cli *client.Client, accountDb store.Accounts, blockDb store.Blocks, databaseDb store.Database, eventDb store.Events, reportDb store.Reports,
-	syncableDb store.Syncables, systemEventDb store.SystemEvents, transactionDb store.Transactions, validatorDb store.Validators,
+	rewardDb store.Rewards, syncableDb store.Syncables, systemEventDb store.SystemEvents, transactionDb store.Transactions, validatorDb store.Validators,
 ) *getByHeightHttpHandler {
 	return &getByHeightHttpHandler{
 		cfg:    cfg,
@@ -44,6 +45,7 @@ func NewGetByHeightHttpHandler(cfg *config.Config, cli *client.Client, accountDb
 		databaseDb:    databaseDb,
 		eventDb:       eventDb,
 		reportDb:      reportDb,
+		rewardDb:      rewardDb,
 		syncableDb:    syncableDb,
 		systemEventDb: systemEventDb,
 		transactionDb: transactionDb,
@@ -75,7 +77,7 @@ func (h *getByHeightHttpHandler) Handle(c *gin.Context) {
 
 func (h *getByHeightHttpHandler) getUseCase() *getByHeightUseCase {
 	if h.useCase == nil {
-		return NewGetByHeightUseCase(h.cfg, h.client, h.accountDb, h.blockDb, h.databaseDb, h.eventDb, h.reportDb, h.syncableDb, h.systemEventDb, h.transactionDb, h.validatorDb)
+		return NewGetByHeightUseCase(h.cfg, h.client, h.accountDb, h.blockDb, h.databaseDb, h.eventDb, h.reportDb, h.rewardDb, h.syncableDb, h.systemEventDb, h.transactionDb, h.validatorDb)
 	}
 	return h.useCase
 }

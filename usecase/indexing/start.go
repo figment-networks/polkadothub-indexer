@@ -24,6 +24,7 @@ type startUseCase struct {
 	databaseDb    store.Database
 	eventDb       store.Events
 	reportDb      store.Reports
+	rewardDb      store.Rewards
 	syncableDb    store.Syncables
 	systemEventDb store.SystemEvents
 	transactionDb store.Transactions
@@ -31,7 +32,7 @@ type startUseCase struct {
 }
 
 func NewStartUseCase(cfg *config.Config, cli *client.Client, accountDb store.Accounts, blockDb store.Blocks, databaseDb store.Database, eventDb store.Events, reportDb store.Reports,
-	syncableDb store.Syncables, systemEventDb store.SystemEvents, transactionDb store.Transactions, validatorDb store.Validators,
+	rewardDb store.Rewards, syncableDb store.Syncables, systemEventDb store.SystemEvents, transactionDb store.Transactions, validatorDb store.Validators,
 ) *startUseCase {
 	return &startUseCase{
 		cfg:    cfg,
@@ -42,6 +43,7 @@ func NewStartUseCase(cfg *config.Config, cli *client.Client, accountDb store.Acc
 		databaseDb:    databaseDb,
 		eventDb:       eventDb,
 		reportDb:      reportDb,
+		rewardDb:      rewardDb,
 		syncableDb:    syncableDb,
 		systemEventDb: systemEventDb,
 		transactionDb: transactionDb,
@@ -54,7 +56,7 @@ func (uc *startUseCase) Execute(ctx context.Context, batchSize int64) error {
 		return err
 	}
 
-	indexingPipeline, err := indexer.NewPipeline(uc.cfg, uc.client, uc.accountDb, uc.blockDb, uc.databaseDb, uc.eventDb, uc.reportDb, uc.syncableDb, uc.systemEventDb, uc.transactionDb, uc.validatorDb)
+	indexingPipeline, err := indexer.NewPipeline(uc.cfg, uc.client, uc.accountDb, uc.blockDb, uc.databaseDb, uc.eventDb, uc.reportDb, uc.rewardDb, uc.syncableDb, uc.systemEventDb, uc.transactionDb, uc.validatorDb)
 	if err != nil {
 		return err
 	}

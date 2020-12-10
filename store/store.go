@@ -29,6 +29,10 @@ type Reports interface {
 	Last() (*model.Report, error)
 }
 
+type Rewards interface {
+	BulkUpsert(records []model.RewardEraSeq) error
+}
+
 type Syncables interface {
 	syncables
 	FindMostRecenter

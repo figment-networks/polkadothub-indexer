@@ -8,6 +8,7 @@ import (
 	"github.com/figment-networks/indexing-engine/pipeline"
 	"github.com/figment-networks/polkadothub-indexer/config"
 	"github.com/figment-networks/polkadothub-indexer/metric"
+	"github.com/figment-networks/polkadothub-indexer/model"
 	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/utils/logger"
 )
@@ -20,6 +21,7 @@ const (
 	EventSeqCreatorTaskName            = "EventSeqCreator"
 	AccountEraSeqCreatorTaskName       = "AccountEraSeqCreator"
 	TransactionSeqCreatorTaskName      = "TransactionSeqCreator"
+	RewardEraSeqCreatorTaskName        = "RewardEraSeqCreator"
 )
 
 var (
@@ -319,6 +321,88 @@ func (t *transactionSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload)
 	}
 
 	payload.TransactionSequences = mappedTxSeqs
+
+	return nil
+}
+
+// NewRewardEraSeqCreatorTask creates rewards
+func NewRewardEraSeqCreatorTask(cfg *config.Config, syncablesDb store.Syncables) *rewardEraSeqCreatorTask {
+	return &rewardEraSeqCreatorTask{cfg, syncablesDb}
+}
+
+type rewardEraSeqCreatorTask struct {
+	cfg         *config.Config
+	syncablesDb store.Syncables
+}
+
+func (t *rewardEraSeqCreatorTask) GetName() string {
+	return RewardEraSeqCreatorTaskName
+}
+
+func (t *rewardEraSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) error {
+	defer metric.LogIndexerTaskDuration(time.Now(), t.GetName())
+
+	payload := p.(*payload)
+
+	if !payload.Syncable.LastInEra {
+		return nil
+	}
+
+	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StageParser, t.GetName(), payload.CurrentHeight))
+
+	var firstHeightInEra int64
+	lastSyncableInPrevEra, err := t.syncablesDb.FindLastInEra(payload.Syncable.Era - 1)
+	if err != nil {
+		if err == store.ErrNotFound {
+			firstHeightInEra = t.cfg.FirstBlockHeight
+		} else {
+			return err
+		}
+	} else {
+		firstHeightInEra = lastSyncableInPrevEra.Height + 1
+	}
+
+	eraSeq := &model.EraSequence{
+		Era:         payload.Syncable.Era,
+		StartHeight: firstHeightInEra,
+		EndHeight:   payload.Syncable.Height,
+		Time:        payload.Syncable.Time,
+	}
+
+	for stash, data := range payload.ParsedValidators {
+		if data.UnclaimedCommission != "" {
+			payload.RewardEraSequences = append(payload.RewardEraSequences, model.RewardEraSeq{
+				EraSequence:           eraSeq,
+				StashAccount:          stash,
+				ValidatorStashAccount: stash,
+				Amount:                data.UnclaimedCommission,
+				Kind:                  model.RewardCommission,
+				Claimed:               false,
+			})
+		}
+
+		if data.UnclaimedReward != "" {
+			payload.RewardEraSequences = append(payload.RewardEraSequences, model.RewardEraSeq{
+				EraSequence:           eraSeq,
+				StashAccount:          stash,
+				ValidatorStashAccount: stash,
+				Amount:                data.UnclaimedReward,
+				Kind:                  model.RewardReward,
+				Claimed:               false,
+			})
+		}
+
+		for _, n := range data.UnclaimedStakerRewards {
+			payload.RewardEraSequences = append(payload.RewardEraSequences, model.RewardEraSeq{
+				EraSequence:           eraSeq,
+				StashAccount:          n.Stash,
+				ValidatorStashAccount: stash,
+				Amount:                n.Amount,
+				Kind:                  model.RewardReward,
+				Claimed:               false,
+			})
+		}
+	}
 
 	return nil
 }

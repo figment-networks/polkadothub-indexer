@@ -9,12 +9,12 @@ import (
 )
 
 func NewCmdHandlers(cfg *config.Config, cli *client.Client, accountDb store.Accounts, blockDb store.Blocks, databaseDb store.Database, eventDb store.Events, reportDb store.Reports,
-	syncableDb store.Syncables, systemEventDb store.SystemEvents, transactionDb store.Transactions, validatorDb store.Validators,
+	rewardDb store.Rewards, syncableDb store.Syncables, systemEventDb store.SystemEvents, transactionDb store.Transactions, validatorDb store.Validators,
 ) *CmdHandlers {
 	return &CmdHandlers{
 		GetStatus:        chain.NewGetStatusCmdHandler(cli, syncableDb),
-		StartIndexer:     indexing.NewStartCmdHandler(cfg, cli, accountDb, blockDb, databaseDb, eventDb, reportDb, syncableDb, systemEventDb, transactionDb, validatorDb),
-		BackfillIndexer:  indexing.NewBackfillCmdHandler(cfg, cli, accountDb, blockDb, databaseDb, eventDb, reportDb, syncableDb, systemEventDb, transactionDb, validatorDb),
+		StartIndexer:     indexing.NewStartCmdHandler(cfg, cli, accountDb, blockDb, databaseDb, eventDb, reportDb, rewardDb, syncableDb, systemEventDb, transactionDb, validatorDb),
+		BackfillIndexer:  indexing.NewBackfillCmdHandler(cfg, cli, accountDb, blockDb, databaseDb, eventDb, reportDb, rewardDb, syncableDb, systemEventDb, transactionDb, validatorDb),
 		PurgeIndexer:     indexing.NewPurgeCmdHandler(cfg, blockDb, validatorDb),
 		SummarizeIndexer: indexing.NewSummarizeCmdHandler(cfg, blockDb, validatorDb),
 	}

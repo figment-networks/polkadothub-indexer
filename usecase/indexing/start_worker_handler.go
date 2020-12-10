@@ -26,6 +26,7 @@ type runWorkerHandler struct {
 	databaseDb    store.Database
 	eventDb       store.Events
 	reportDb      store.Reports
+	rewardDb      store.Rewards
 	syncableDb    store.Syncables
 	systemEventDb store.SystemEvents
 	transactionDb store.Transactions
@@ -33,7 +34,7 @@ type runWorkerHandler struct {
 }
 
 func NewRunWorkerHandler(cfg *config.Config, cli *client.Client, accountDb store.Accounts, blockDb store.Blocks, databaseDb store.Database, eventDb store.Events, reportDb store.Reports,
-	syncableDb store.Syncables, systemEventDb store.SystemEvents, transactionDb store.Transactions, validatorDb store.Validators,
+	rewardDb store.Rewards, syncableDb store.Syncables, systemEventDb store.SystemEvents, transactionDb store.Transactions, validatorDb store.Validators,
 ) *runWorkerHandler {
 	return &runWorkerHandler{
 		cfg:    cfg,
@@ -44,6 +45,7 @@ func NewRunWorkerHandler(cfg *config.Config, cli *client.Client, accountDb store
 		databaseDb:    databaseDb,
 		eventDb:       eventDb,
 		reportDb:      reportDb,
+		rewardDb:      rewardDb,
 		syncableDb:    syncableDb,
 		systemEventDb: systemEventDb,
 		transactionDb: transactionDb,
@@ -66,7 +68,7 @@ func (h *runWorkerHandler) Handle() {
 
 func (h *runWorkerHandler) getUseCase() *startUseCase {
 	if h.useCase == nil {
-		return NewStartUseCase(h.cfg, h.client, h.accountDb, h.blockDb, h.databaseDb, h.eventDb, h.reportDb, h.syncableDb, h.systemEventDb, h.transactionDb, h.validatorDb)
+		return NewStartUseCase(h.cfg, h.client, h.accountDb, h.blockDb, h.databaseDb, h.eventDb, h.reportDb, h.rewardDb, h.syncableDb, h.systemEventDb, h.transactionDb, h.validatorDb)
 	}
 	return h.useCase
 }

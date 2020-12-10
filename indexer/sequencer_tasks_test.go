@@ -105,3 +105,79 @@ func TestValidatorSeqCreator_Run(t *testing.T) {
 		})
 	}
 }
+
+func TestRewardEraSeqCreatorTask_Run(t *testing.T) {
+	const currEra int64 = 20
+	tests := []struct {
+		description   string
+		lastInEra     bool
+		validators    ParsedValidatorsData
+		expectedKinds []model.RewardKind
+	}{
+		{description: "updates payload with commission and reward events",
+			lastInEra: true,
+			validators: ParsedValidatorsData{
+				"addr": {
+					UnclaimedCommission: "300",
+					UnclaimedReward:     "300",
+				},
+			},
+			expectedKinds: []model.RewardKind{model.RewardCommission, model.RewardReward},
+		},
+		{description: "updates payload with reward events from staker",
+			lastInEra: true,
+			validators: ParsedValidatorsData{
+				"addr": {
+					UnclaimedStakerRewards: []stakerReward{{Stash: "AAA", Amount: "123"}, {Stash: "BBB", Amount: "123"}},
+				},
+			},
+			expectedKinds: []model.RewardKind{model.RewardReward, model.RewardReward},
+		},
+		{description: "does not create rewards if not last in era",
+			validators: ParsedValidatorsData{
+				"addr": {
+					UnclaimedStakerRewards: []stakerReward{{Stash: "AAA", Amount: "123"}, {Stash: "BBB", Amount: "123"}},
+				},
+			},
+			expectedKinds: []model.RewardKind{},
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.description, func(t *testing.T) {
+			t.Parallel()
+			ctx := context.Background()
+			ctrl := gomock.NewController(t)
+
+			dbMock := mock.NewMockSyncables(ctrl)
+
+			task := NewRewardEraSeqCreatorTask(nil, dbMock)
+
+			pl := &payload{
+				ParsedValidators: tt.validators,
+				Syncable:         &model.Syncable{Era: currEra, LastInEra: tt.lastInEra},
+			}
+
+			if tt.lastInEra {
+				dbMock.EXPECT().FindLastInEra(currEra-1).Return(&model.Syncable{Height: 500}, nil).Times(1)
+			}
+
+			if err := task.Run(ctx, pl); err != nil {
+				t.Errorf("unexpected error on Run, want %v; got %v", nil, err)
+				return
+			}
+
+			if len(pl.RewardEraSequences) != len(tt.expectedKinds) {
+				t.Errorf("unexpected system event count, want %v; got %v", len(tt.expectedKinds), len(pl.RewardEraSequences))
+				return
+			}
+
+			for i, kind := range tt.expectedKinds {
+				if len(pl.RewardEraSequences) > 0 && pl.RewardEraSequences[i].Kind != kind {
+					t.Errorf("unexpected system event kind, want %v; got %v", kind, pl.RewardEraSequences[i].Kind)
+				}
+			}
+		})
+	}
+}
