@@ -11,7 +11,4 @@ INSERT INTO reward_era_sequences (
 )
 VALUES @values
 
-ON CONFLICT (era, stash_account, validator_stash_account, kind) DO UPDATE
-SET
-  amount         = excluded.amount,
-  claimed        = excluded.claimed
+ON CONFLICT (era, stash_account, validator_stash_account, kind) DO NOTHING;
