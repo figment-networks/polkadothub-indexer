@@ -29,11 +29,6 @@
           "id": 6,
           "targets": [12],
           "parallel": true
-        },
-        {
-          "id": 7,
-          "targets": [13],
-          "parallel": true
         }
     ],
     "shared_tasks": [
