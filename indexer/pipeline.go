@@ -8,7 +8,6 @@ import (
 	"github.com/figment-networks/indexing-engine/pipeline"
 	"github.com/figment-networks/polkadothub-indexer/client"
 	"github.com/figment-networks/polkadothub-indexer/config"
-	"github.com/figment-networks/polkadothub-indexer/metric"
 	"github.com/figment-networks/polkadothub-indexer/model"
 	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/utils/logger"
@@ -195,9 +194,6 @@ func (p *indexingPipeline) Start(ctx context.Context, indexCfg IndexConfig) erro
 
 	ctxWithReport := context.WithValue(ctx, CtxReport, reportCreator.report)
 	err = p.pipeline.Start(ctxWithReport, source, sink, pipelineOptions)
-	if err != nil {
-		metric.IndexerTotalErrors.Inc()
-	}
 
 	logger.Info(fmt.Sprintf("pipeline completed [Err: %+v]", err))
 
@@ -328,7 +324,6 @@ func (p *indexingPipeline) Run(ctx context.Context, runCfg RunConfig) (*payload,
 
 	runPayload, err := p.pipeline.Run(ctx, runCfg.Height, pipelineOptions)
 	if err != nil {
-		metric.IndexerTotalErrors.Inc()
 		logger.Info(fmt.Sprintf("pipeline completed with error [Err: %+v]", err))
 		return nil, err
 	}

@@ -7,11 +7,9 @@ import (
 	"fmt"
 	"math"
 	"sort"
-	"time"
 
 	"github.com/figment-networks/indexing-engine/pipeline"
 	"github.com/figment-networks/polkadothub-indexer/config"
-	"github.com/figment-networks/polkadothub-indexer/metric"
 	"github.com/figment-networks/polkadothub-indexer/model"
 	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/types"
@@ -51,8 +49,6 @@ func (t *systemEventCreatorTask) GetName() string {
 }
 
 func (t *systemEventCreatorTask) Run(ctx context.Context, p pipeline.Payload) error {
-	defer metric.LogIndexerTaskDuration(time.Now(), t.GetName())
-
 	payload := p.(*payload)
 
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", "Analyzer", t.GetName(), payload.CurrentHeight))
@@ -97,8 +93,6 @@ func (t *sessionSystemEventCreatorTask) GetName() string {
 }
 
 func (t *sessionSystemEventCreatorTask) Run(ctx context.Context, p pipeline.Payload) error {
-	defer metric.LogIndexerTaskDuration(time.Now(), t.GetName())
-
 	payload := p.(*payload)
 
 	if !payload.Syncable.LastInSession {
@@ -152,8 +146,6 @@ func (t *eraSystemEventCreatorTask) GetName() string {
 }
 
 func (t *eraSystemEventCreatorTask) Run(ctx context.Context, p pipeline.Payload) error {
-	defer metric.LogIndexerTaskDuration(time.Now(), t.GetName())
-
 	payload := p.(*payload)
 
 	if !payload.Syncable.LastInEra {

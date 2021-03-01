@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/figment-networks/polkadothub-indexer/metric"
 	"github.com/figment-networks/polkadothub-indexer/types"
 
 	"github.com/figment-networks/indexing-engine/pipeline"
@@ -33,8 +32,6 @@ func (t *mainSyncerTask) GetName() string {
 }
 
 func (t *mainSyncerTask) Run(ctx context.Context, p pipeline.Payload) error {
-	defer metric.LogIndexerTaskDuration(time.Now(), t.GetName())
-
 	payload := p.(*payload)
 
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StageSyncer, t.GetName(), payload.CurrentHeight))

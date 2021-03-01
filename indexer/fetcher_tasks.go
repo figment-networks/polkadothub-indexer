@@ -3,13 +3,11 @@ package indexer
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/figment-networks/polkadothub-proxy/grpc/height/heightpb"
 
 	"github.com/figment-networks/indexing-engine/pipeline"
 	"github.com/figment-networks/polkadothub-indexer/client"
-	"github.com/figment-networks/polkadothub-indexer/metric"
 	"github.com/figment-networks/polkadothub-indexer/types"
 	"github.com/figment-networks/polkadothub-indexer/utils/logger"
 )
@@ -49,8 +47,6 @@ func (t *FetcherTask) GetName() string {
 }
 
 func (t *FetcherTask) Run(ctx context.Context, p pipeline.Payload) error {
-	defer metric.LogIndexerTaskDuration(time.Now(), t.GetName())
-
 	payload := p.(*payload)
 
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StageFetcher, t.GetName(), payload.CurrentHeight))
@@ -103,8 +99,6 @@ func (t *ValidatorFetcherTask) GetName() string {
 }
 
 func (t *ValidatorFetcherTask) Run(ctx context.Context, p pipeline.Payload) error {
-	defer metric.LogIndexerTaskDuration(time.Now(), t.GetName())
-
 	payload := p.(*payload)
 	validators, err := t.client.GetByHeight(payload.CurrentHeight)
 	if err != nil {
