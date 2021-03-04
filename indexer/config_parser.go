@@ -25,6 +25,7 @@ type ConfigParser interface {
 	GetCurrentVersionId() int64
 	IsLastInSession() bool
 	IsLastInEra() bool
+	GetTrxFilter() []TrxFilter
 	GetAllVersionedVersionIds() []int64
 	IsAnyVersionSequential(versionIds []int64) bool
 	GetAllAvailableTasks() []pipeline.TaskName
@@ -40,11 +41,17 @@ type indexerConfig struct {
 }
 
 type version struct {
-	ID            int64   `json:"id"`
-	Targets       []int64 `json:"targets"`
-	Parallel      bool    `json:"parallel"`
-	LastInSession bool    `json:"last_in_session"`
-	LastInEra     bool    `json:"last_in_era"`
+	ID            int64       `json:"id"`
+	Targets       []int64     `json:"targets"`
+	Parallel      bool        `json:"parallel"`
+	LastInSession bool        `json:"last_in_session"`
+	LastInEra     bool        `json:"last_in_era"`
+	TrxFilter     []TrxFilter `json:"trx_filter"`
+}
+
+type TrxFilter struct {
+	Section string `json:"section"`
+	Method  string `json:"method"`
 }
 
 type target struct {
@@ -106,6 +113,11 @@ func (o *configParser) IsLastInSession() bool {
 //IsLastInEra check if this version is for last of eras
 func (o *configParser) IsLastInEra() bool {
 	return o.getCurrentVersion().LastInEra
+}
+
+//GetTrxFilter gets transaction filter info
+func (o *configParser) GetTrxFilter() []TrxFilter {
+	return o.getCurrentVersion().TrxFilter
 }
 
 // GetAllAvailableTasks get lists of tasks for all available targets

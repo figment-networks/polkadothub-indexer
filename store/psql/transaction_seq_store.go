@@ -1,6 +1,7 @@
 package psql
 
 import (
+	"github.com/figment-networks/polkadothub-indexer/indexer"
 	"github.com/jinzhu/gorm"
 
 	"github.com/figment-networks/indexing-engine/store/bulk"
@@ -30,4 +31,16 @@ func (s TransactionSeqStore) BulkUpsert(records []model.TransactionSeq) error {
 			r.Section,
 		}
 	})
+}
+
+// GetTransactionByTrxFilter gets transactions by TrxFilter
+func (s TransactionSeqStore) GetTransactionByTrxFilter(filter indexer.TrxFilter) ([]model.TransactionSeq, error) {
+	var results []model.TransactionSeq
+
+	err := s.db.
+		Where("method = ? AND section = ?", filter.Method, filter.Section).
+		Find(&results).
+		Error
+
+	return results, checkErr(err)
 }

@@ -34,9 +34,10 @@ type indexingPipeline struct {
 	configParser ConfigParser
 	pipeline     pipeline.CustomPipeline
 
-	databaseDb store.Database
-	reportDb   store.Reports
-	syncableDb store.Syncables
+	databaseDb    store.Database
+	reportDb      store.Reports
+	syncableDb    store.Syncables
+	transactionDb store.Transactions
 }
 
 func NewPipeline(cfg *config.Config, cli *client.Client, accountDb store.Accounts, blockDb store.Blocks, databaseDb store.Database, eventDb store.Events, reportDb store.Reports,
@@ -140,9 +141,10 @@ func NewPipeline(cfg *config.Config, cli *client.Client, accountDb store.Account
 		status:       pipelineStatus,
 		configParser: configParser,
 
-		databaseDb: databaseDb,
-		reportDb:   reportDb,
-		syncableDb: syncableDb,
+		databaseDb:    databaseDb,
+		reportDb:      reportDb,
+		syncableDb:    syncableDb,
+		transactionDb: transactionDb,
 	}, nil
 }
 
@@ -228,7 +230,8 @@ func (p *indexingPipeline) Backfill(ctx context.Context, backfillCfg BackfillCon
 	indexVersion := p.configParser.GetCurrentVersionId()
 	isLastInSession := p.configParser.IsLastInSession()
 	isLastInEra := p.configParser.IsLastInEra()
-	source, err := NewBackfillSource(p.cfg, p.syncableDb, p.client, indexVersion, isLastInSession, isLastInEra)
+	trxFilter := p.configParser.GetTrxFilter()
+	source, err := NewBackfillSource(p.cfg, p.syncableDb, p.client, indexVersion, isLastInSession, isLastInEra, p.transactionDb, trxFilter)
 	if err != nil {
 		return err
 	}
