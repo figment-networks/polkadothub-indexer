@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/figment-networks/polkadothub-indexer/model"
 
 	"github.com/figment-networks/indexing-engine/pipeline"
 	"github.com/figment-networks/polkadothub-indexer/client"
@@ -15,7 +16,7 @@ var (
 	_ pipeline.Source = (*backfillSource)(nil)
 )
 
-func NewBackfillSource(cfg *config.Config, syncablesDb store.Syncables, client *client.Client, indexVersion int64, isLastInSession, isLastInEra bool, transactionDb store.Transactions, trxFilter []TrxFilter) (*backfillSource, error) {
+func NewBackfillSource(cfg *config.Config, syncablesDb store.Syncables, client *client.Client, indexVersion int64, isLastInSession, isLastInEra bool, transactionDb store.Transactions, trxFilter []model.TrxFilter) (*backfillSource, error) {
 	src := &backfillSource{
 		cfg:           cfg,
 		syncablesDb:   syncablesDb,
@@ -88,7 +89,7 @@ func (s *backfillSource) Len() int64 {
 	return s.endHeight - s.startHeight + 1
 }
 
-func (s *backfillSource) init(isLastInSession, isLastInEra bool, trxFilter []TrxFilter) error {
+func (s *backfillSource) init(isLastInSession, isLastInEra bool, trxFilter []model.TrxFilter) error {
 	useWhiteListForEra := isLastInSession || isLastInEra
 	s.heightsWhitelist = make(map[int64]int64)
 	if useWhiteListForEra {
@@ -159,7 +160,7 @@ func (s *backfillSource) setHeightsWhitelistForEra(isLastInSession, isLastInEra 
 	return nil
 }
 
-func (s *backfillSource) setHeightsWhitelistForTrxFilter(trxFilters []TrxFilter) error {
+func (s *backfillSource) setHeightsWhitelistForTrxFilter(trxFilters []model.TrxFilter) error {
 	for i := 0; i < len(trxFilters); i++ {
 		transactions, err := s.transactionDb.GetTransactionByTrxFilter(trxFilters[i])
 		if err != nil {

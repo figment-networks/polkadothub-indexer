@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/figment-networks/polkadothub-indexer/model"
 	"io/ioutil"
 
 	"github.com/figment-networks/indexing-engine/pipeline"
@@ -25,7 +26,7 @@ type ConfigParser interface {
 	GetCurrentVersionId() int64
 	IsLastInSession() bool
 	IsLastInEra() bool
-	GetTrxFilter() []TrxFilter
+	GetTrxFilter() []model.TrxFilter
 	GetAllVersionedVersionIds() []int64
 	IsAnyVersionSequential(versionIds []int64) bool
 	GetAllAvailableTasks() []pipeline.TaskName
@@ -41,17 +42,12 @@ type indexerConfig struct {
 }
 
 type version struct {
-	ID            int64       `json:"id"`
-	Targets       []int64     `json:"targets"`
-	Parallel      bool        `json:"parallel"`
-	LastInSession bool        `json:"last_in_session"`
-	LastInEra     bool        `json:"last_in_era"`
-	TrxFilter     []TrxFilter `json:"trx_filter"`
-}
-
-type TrxFilter struct {
-	Section string `json:"section"`
-	Method  string `json:"method"`
+	ID            int64             `json:"id"`
+	Targets       []int64           `json:"targets"`
+	Parallel      bool              `json:"parallel"`
+	LastInSession bool              `json:"last_in_session"`
+	LastInEra     bool              `json:"last_in_era"`
+	TrxFilter     []model.TrxFilter `json:"trx_filter"`
 }
 
 type target struct {
@@ -116,7 +112,7 @@ func (o *configParser) IsLastInEra() bool {
 }
 
 //GetTrxFilter gets transaction filter info
-func (o *configParser) GetTrxFilter() []TrxFilter {
+func (o *configParser) GetTrxFilter() []model.TrxFilter {
 	return o.getCurrentVersion().TrxFilter
 }
 
