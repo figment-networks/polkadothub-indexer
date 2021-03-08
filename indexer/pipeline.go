@@ -230,8 +230,8 @@ func (p *indexingPipeline) Backfill(ctx context.Context, backfillCfg BackfillCon
 	indexVersion := p.configParser.GetCurrentVersionId()
 	isLastInSession := p.configParser.IsLastInSession()
 	isLastInEra := p.configParser.IsLastInEra()
-	trxFilter := p.configParser.GetTrxFilter()
-	source, err := NewBackfillSource(p.cfg, p.syncableDb, p.client, indexVersion, isLastInSession, isLastInEra, p.transactionDb, trxFilter)
+	trxKinds := p.configParser.GetTransactionKinds()
+	source, err := NewBackfillSource(p.cfg, p.syncableDb, p.client, indexVersion, isLastInSession, isLastInEra, p.transactionDb, trxKinds)
 	if err != nil {
 		return err
 	}

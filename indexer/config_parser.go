@@ -26,7 +26,7 @@ type ConfigParser interface {
 	GetCurrentVersionId() int64
 	IsLastInSession() bool
 	IsLastInEra() bool
-	GetTransactionKind() []model.TransactionKind
+	GetTransactionKinds() []model.TransactionKind
 	GetAllVersionedVersionIds() []int64
 	IsAnyVersionSequential(versionIds []int64) bool
 	GetAllAvailableTasks() []pipeline.TaskName
@@ -47,7 +47,7 @@ type version struct {
 	Parallel      bool                    `json:"parallel"`
 	LastInSession bool                    `json:"last_in_session"`
 	LastInEra     bool                    `json:"last_in_era"`
-	TrxKind       []model.TransactionKind `json:"transaction_kind"`
+	TrxKinds      []model.TransactionKind `json:"transaction_kind"`
 }
 
 type target struct {
@@ -111,9 +111,9 @@ func (o *configParser) IsLastInEra() bool {
 	return o.getCurrentVersion().LastInEra
 }
 
-//GetTransactionKind gets transaction kind info
-func (o *configParser) GetTransactionKind() []model.TransactionKind {
-	return o.getCurrentVersion().TrxKind
+//GetTransactionKinds gets transaction kinds info
+func (o *configParser) GetTransactionKinds() []model.TransactionKind {
+	return o.getCurrentVersion().TrxKinds
 }
 
 // GetAllAvailableTasks get lists of tasks for all available targets
