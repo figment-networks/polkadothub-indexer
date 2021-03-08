@@ -70,8 +70,6 @@ func (s *sink) addMetrics(syncable *model.Syncable) error {
 		return err
 	}
 
-	metric.IndexerHeightSuccess.Inc()
-	metric.IndexerHeightDuration.Set(syncable.Duration.Seconds())
 	metric.IndexerDbSizeAfterHeight.Set(res.Size)
 	return nil
 }

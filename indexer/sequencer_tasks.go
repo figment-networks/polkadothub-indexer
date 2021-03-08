@@ -3,11 +3,9 @@ package indexer
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/figment-networks/indexing-engine/pipeline"
 	"github.com/figment-networks/polkadothub-indexer/config"
-	"github.com/figment-networks/polkadothub-indexer/metric"
 	"github.com/figment-networks/polkadothub-indexer/model"
 	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/utils/logger"
@@ -50,8 +48,6 @@ func (t *blockSeqCreatorTask) GetName() string {
 }
 
 func (t *blockSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) error {
-	defer metric.LogIndexerTaskDuration(time.Now(), t.GetName())
-
 	payload := p.(*payload)
 
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StageSequencer, t.GetName(), payload.CurrentHeight))
@@ -93,8 +89,6 @@ func (t *validatorSeqCreatorTask) GetName() string {
 }
 
 func (t *validatorSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) error {
-	defer metric.LogIndexerTaskDuration(time.Now(), t.GetName())
-
 	payload := p.(*payload)
 
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StageSequencer, t.GetName(), payload.CurrentHeight))
@@ -128,8 +122,6 @@ func (t *validatorSessionSeqCreatorTask) GetName() string {
 }
 
 func (t *validatorSessionSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) error {
-	defer metric.LogIndexerTaskDuration(time.Now(), t.GetName())
-
 	payload := p.(*payload)
 
 	if !payload.Syncable.LastInSession {
@@ -180,8 +172,6 @@ func (t *validatorEraSeqCreatorTask) GetName() string {
 }
 
 func (t *validatorEraSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) error {
-	defer metric.LogIndexerTaskDuration(time.Now(), t.GetName())
-
 	payload := p.(*payload)
 
 	if !payload.Syncable.LastInEra {
@@ -228,8 +218,6 @@ func (t *eventSeqCreatorTask) GetName() string {
 }
 
 func (t *eventSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) error {
-	defer metric.LogIndexerTaskDuration(time.Now(), t.GetName())
-
 	payload := p.(*payload)
 
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StageSequencer, t.GetName(), payload.CurrentHeight))
@@ -263,8 +251,6 @@ func (t *accountEraSeqCreatorTask) GetName() string {
 }
 
 func (t *accountEraSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) error {
-	defer metric.LogIndexerTaskDuration(time.Now(), t.GetName())
-
 	payload := p.(*payload)
 
 	if !payload.Syncable.LastInEra {
@@ -314,8 +300,6 @@ func (t *transactionSeqCreatorTask) GetName() string {
 }
 
 func (t *transactionSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) error {
-	defer metric.LogIndexerTaskDuration(time.Now(), t.GetName())
-
 	payload := p.(*payload)
 
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StageSequencer, t.GetName(), payload.CurrentHeight))
@@ -345,8 +329,6 @@ func (t *rewardEraSeqCreatorTask) GetName() string {
 }
 
 func (t *rewardEraSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) error {
-	defer metric.LogIndexerTaskDuration(time.Now(), t.GetName())
-
 	payload := p.(*payload)
 
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StageParser, t.GetName(), payload.CurrentHeight))

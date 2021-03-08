@@ -3,10 +3,8 @@ package indexer
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/figment-networks/indexing-engine/pipeline"
-	"github.com/figment-networks/polkadothub-indexer/metric"
 	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/utils/logger"
 )
@@ -41,8 +39,6 @@ func (t *syncerPersistorTask) GetName() string {
 }
 
 func (t *syncerPersistorTask) Run(ctx context.Context, p pipeline.Payload) error {
-	defer metric.LogIndexerTaskDuration(time.Now(), t.GetName())
-
 	payload := p.(*payload)
 
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
@@ -66,8 +62,6 @@ func (t *blockSeqPersistorTask) GetName() string {
 }
 
 func (t *blockSeqPersistorTask) Run(ctx context.Context, p pipeline.Payload) error {
-	defer metric.LogIndexerTaskDuration(time.Now(), t.GetName())
-
 	payload := p.(*payload)
 
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
@@ -99,8 +93,6 @@ func (t *validatorSessionSeqPersistorTask) GetName() string {
 }
 
 func (t *validatorSessionSeqPersistorTask) Run(ctx context.Context, p pipeline.Payload) error {
-	defer metric.LogIndexerTaskDuration(time.Now(), t.GetName())
-
 	payload := p.(*payload)
 
 	if !payload.Syncable.LastInSession {
@@ -129,8 +121,6 @@ func (t *validatorEraSeqPersistorTask) GetName() string {
 }
 
 func (t *validatorEraSeqPersistorTask) Run(ctx context.Context, p pipeline.Payload) error {
-	defer metric.LogIndexerTaskDuration(time.Now(), t.GetName())
-
 	payload := p.(*payload)
 
 	if !payload.Syncable.LastInEra {
@@ -158,8 +148,6 @@ func (t *validatorAggPersistorTask) GetName() string {
 }
 
 func (t *validatorAggPersistorTask) Run(ctx context.Context, p pipeline.Payload) error {
-	defer metric.LogIndexerTaskDuration(time.Now(), t.GetName())
-
 	payload := p.(*payload)
 
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
@@ -195,8 +183,6 @@ func (t *eventSeqPersistorTask) GetName() string {
 }
 
 func (t *eventSeqPersistorTask) Run(ctx context.Context, p pipeline.Payload) error {
-	defer metric.LogIndexerTaskDuration(time.Now(), t.GetName())
-
 	payload := p.(*payload)
 
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
@@ -220,8 +206,6 @@ func (t *accountEraSeqPersistorTask) GetName() string {
 }
 
 func (t *accountEraSeqPersistorTask) Run(ctx context.Context, p pipeline.Payload) error {
-	defer metric.LogIndexerTaskDuration(time.Now(), t.GetName())
-
 	payload := p.(*payload)
 
 	if !payload.Syncable.LastInEra {
@@ -250,8 +234,6 @@ func (t *transactionSeqPersistorTask) GetName() string {
 }
 
 func (t *transactionSeqPersistorTask) Run(ctx context.Context, p pipeline.Payload) error {
-	defer metric.LogIndexerTaskDuration(time.Now(), t.GetName())
-
 	payload, ok := p.(*payload)
 	if !ok {
 		return fmt.Errorf("Interface is not a  *payload type (%T)", p)
@@ -278,8 +260,6 @@ func (t *validatorSeqPersistorTask) GetName() string {
 }
 
 func (t *validatorSeqPersistorTask) Run(ctx context.Context, p pipeline.Payload) error {
-	defer metric.LogIndexerTaskDuration(time.Now(), t.GetName())
-
 	payload, ok := p.(*payload)
 	if !ok {
 		return fmt.Errorf("Interface is not a  *payload type (%T)", p)
@@ -305,8 +285,6 @@ func (t *systemEventPersistorTask) GetName() string {
 }
 
 func (t *systemEventPersistorTask) Run(ctx context.Context, p pipeline.Payload) error {
-	defer metric.LogIndexerTaskDuration(time.Now(), t.GetName())
-
 	payload := p.(*payload)
 
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
@@ -329,8 +307,6 @@ func (t *RewardEraSeqPersistorTask) GetName() string {
 }
 
 func (t *RewardEraSeqPersistorTask) Run(ctx context.Context, p pipeline.Payload) error {
-	defer metric.LogIndexerTaskDuration(time.Now(), t.GetName())
-
 	payload := p.(*payload)
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StagePersistor, t.GetName(), payload.CurrentHeight))
 
