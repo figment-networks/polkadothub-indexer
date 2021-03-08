@@ -14,6 +14,7 @@ import (
 	"github.com/figment-networks/polkadothub-indexer/client"
 	"github.com/figment-networks/polkadothub-indexer/config"
 	"github.com/figment-networks/polkadothub-indexer/metric"
+	"github.com/figment-networks/polkadothub-indexer/model"
 	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/types"
 	"github.com/figment-networks/polkadothub-indexer/utils/logger"
@@ -23,12 +24,20 @@ import (
 	"github.com/figment-networks/polkadothub-proxy/grpc/validatorperformance/validatorperformancepb"
 )
 
-const (
-	BlockParserTaskName      = "BlockParser"
-	ValidatorsParserTaskName = "ValidatorsParser"
+// (3001567,batch,utility)
+// (3001801,batchAll,utility)
+//  (3046637,proxy,proxy)
 
-	txMethodPayoutStakers = "payoutStakers"
+const (
+	BlockParserTaskName       = "BlockParser"
+	ValidatorsParserTaskName  = "ValidatorsParser"
+	TransactionParserTaskName = "TransactionParser"
+
 	eventMethodReward     = "Reward"
+	txMethodPayoutStakers = "payoutStakers"
+	txMethodBatch         = "batch"
+	txMethodBatchAll      = "batchAll"
+	sectionUtility        = "utility"
 	sectionStaking        = "staking"
 
 	accountKey = "AccountId"
@@ -114,20 +123,6 @@ type parsedValidator struct {
 	parsedRewards parsedRewards
 }
 
-type parsedRewards struct {
-	Commission          string
-	Reward              string
-	RewardAndCommission string
-	StakerRewards       []stakerReward
-	IsClaimed           bool
-	Era                 int64
-}
-
-type stakerReward struct {
-	Stash  string
-	Amount string
-}
-
 func (t *validatorsParserTask) GetName() string {
 	return ValidatorsParserTaskName
 }
@@ -187,43 +182,6 @@ func (t *validatorsParserTask) Run(ctx context.Context, p pipeline.Payload) erro
 		parsedValidatorsData[stashAccount] = parsedData
 	}
 
-	// Get claimed validator rewards
-	for _, tx := range payload.RawTransactions {
-		if tx.GetMethod() != txMethodPayoutStakers || tx.GetSection() != sectionStaking {
-			continue
-		}
-
-		validatorStash, era, err := getStashAndEraFromPayoutArgs(tx)
-		if err != nil {
-			return err
-		}
-
-		//check if already exists in db, if yes mark all claimed
-		count, err := t.rewardsDb.GetCount(validatorStash, era)
-		if err != nil {
-			return err
-		}
-
-		if count == 0 {
-			var parsedData parsedValidator
-			parsedData, _ = parsedValidatorsData[validatorStash]
-
-			// these are historical rewards whose unclaimed reward data is not in the database
-			parsedRewards, err := t.getClaimedRewardDataFromEvents(validatorStash, era, payload.RawEvents)
-			if err != nil {
-				return err
-			}
-			parsedData.parsedRewards = parsedRewards
-			parsedValidatorsData[validatorStash] = parsedData
-			continue
-		}
-
-		payload.RewardsClaimed = append(payload.RewardsClaimed, RewardsClaim{
-			Era:            era,
-			ValidatorStash: validatorStash,
-		})
-	}
-
 	payload.ParsedValidators = parsedValidatorsData
 	return nil
 }
@@ -265,60 +223,201 @@ func (t *validatorsParserTask) getUnclaimedRewardData(calc RewardsCalculator, ra
 	return data
 }
 
-func (t *validatorsParserTask) getClaimedRewardDataFromEvents(validatorStash string, era int64, events []*eventpb.Event) (parsedRewards, error) {
-	if len(events) == 0 {
-		return parsedRewards{}, nil
+func NewTransactionParserTask(cfg *config.Config, accountClient client.AccountClient, rewardsDb store.Rewards, syncablesDb store.Syncables, validatorDb store.ValidatorEraSeq) *transactionParserTask {
+	return &transactionParserTask{
+		cfg:           cfg,
+		accountClient: accountClient,
+		rewardsDb:     rewardsDb,
+		syncablesDb:   syncablesDb,
+		validatorDb:   validatorDb,
+	}
+}
+
+type transactionParserTask struct {
+	cfg *config.Config
+
+	accountClient client.AccountClient
+
+	rewardsDb   store.Rewards
+	syncablesDb store.Syncables
+	validatorDb store.ValidatorEraSeq
+}
+type parsedRewards struct {
+	Commission          string
+	Reward              string
+	RewardAndCommission string
+	StakerRewards       []stakerReward
+	IsClaimed           bool
+	Era                 int64
+}
+
+type stakerReward struct {
+	Stash  string
+	Amount string
+}
+
+func (t *transactionParserTask) GetName() string {
+	return TransactionParserTaskName
+}
+
+func (t *transactionParserTask) Run(ctx context.Context, p pipeline.Payload) error {
+	defer metric.LogIndexerTaskDuration(time.Now(), t.GetName())
+
+	payload := p.(*payload)
+
+	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StageParser, t.GetName(), payload.CurrentHeight))
+
+	for _, tx := range payload.RawTransactions {
+		var claims []RewardsClaim
+		var err error
+
+		if tx.GetSection() == sectionStaking && tx.GetMethod() == txMethodPayoutStakers {
+			claim, err := getRewardsClaimFromPayoutStakersTx(tx.GetArgs())
+			if err != nil {
+				return err
+			}
+			claims = append(claims, claim)
+		} else if tx.GetSection() == sectionUtility && (tx.GetMethod() == txMethodBatch || tx.GetMethod() == txMethodBatchAll) {
+			claims, err = getRewardsClaimFromBatchTx(tx.GetArgs())
+			if err != nil {
+				return err
+			}
+		}
+
+		shouldParseEvents, err := t.addRewardsClaimed(tx, claims, &payload.RewardsClaimed)
+
+		if !shouldParseEvents || len(payload.RawEvents) == 0 {
+			return nil
+		}
+
+		rewards, err := t.getRewardsFromEvents(tx.GetExtrinsicIndex(), claims, payload.RawEvents)
+		if err != nil {
+			return err
+		}
+
+		payload.RewardEraSequences = append(payload.RewardEraSequences, rewards...)
 	}
 
-	data := parsedRewards{IsClaimed: true, Era: era}
-	var validatorRewardAndCommission types.Quantity
+	return nil
+}
 
-	for _, event := range events {
-		if event.GetMethod() != eventMethodReward || event.GetSection() != sectionStaking {
+func (t *transactionParserTask) getRewardsFromEvents(txIdx int64, claims []RewardsClaim, events []*eventpb.Event) ([]model.RewardEraSeq, error) {
+	var rewards []model.RewardEraSeq
+
+	if len(events) == 0 {
+		return rewards, nil
+	}
+
+	var idx int
+	var nextVald string
+	for i, claim := range claims {
+		if i < len(claims)-1 {
+			nextVald = claims[i+1].ValidatorStash
+		}
+
+		stakerRewards, validatorReward, ranged, err := t.getRewardsForClaim(claim, txIdx, nextVald, events[idx:])
+		idx += ranged
+
+		// what if valid earned no rewards/commission ? then show error .. add check?
+		count, err := t.rewardsDb.GetCount(claim.ValidatorStash, claim.Era)
+		if err != nil {
+			return rewards, err
+		}
+
+		// if already exists in db, then claim was added to RewardsClaimed, so don't add parsedRewards
+		if count != 0 {
+			continue
+		}
+		rewards = append(rewards, stakerRewards...)
+
+		err = t.updateValidatorRewardKind(&validatorReward, claim)
+		if err != nil {
+			return rewards, err
+		}
+		rewards = append(rewards, validatorReward)
+	}
+	return rewards, nil
+}
+
+func (t *transactionParserTask) addRewardsClaimed(tx *transactionpb.Annotated, claims []RewardsClaim, rewardClaims *[]RewardsClaim) (shouldParseEvents bool, err error) {
+	var count int64
+	for _, claim := range claims {
+		count, err = t.rewardsDb.GetCount(claim.ValidatorStash, claim.Era)
+		if err != nil {
+			return
+		}
+		if count == 0 {
+			// doesn't exist in db, so need to create reward seqs from raw events
+			shouldParseEvents = true
+			continue
+		}
+		// exists in db, so can mark all claimed
+		*rewardClaims = append(*rewardClaims, claim)
+	}
+	return
+}
+
+func (t *transactionParserTask) getRewardsForClaim(claim RewardsClaim, txIdx int64, nextVald string, events []*eventpb.Event) ([]model.RewardEraSeq, model.RewardEraSeq, int, error) {
+	var rewards []model.RewardEraSeq
+	var validatorReward model.RewardEraSeq
+
+	for i, event := range events {
+		if event.GetExtrinsicIndex() != txIdx || event.GetMethod() != eventMethodReward || event.GetSection() != sectionStaking {
 			continue
 		}
 
 		stash, amount, err := t.getStashAndAmountFromData(event)
 		if err != nil {
-			return parsedRewards{}, err
+			return rewards, validatorReward, i, err
 		}
 
-		if stash == validatorStash {
-			validatorRewardAndCommission = amount
+		if stash == nextVald && i != 0 {
+			return rewards, validatorReward, i, nil
+		}
+
+		reward := model.RewardEraSeq{
+			StashAccount:          stash,
+			Amount:                amount.String(),
+			ValidatorStashAccount: claim.ValidatorStash,
+			Claimed:               true,
+		}
+
+		if stash == claim.ValidatorStash {
+			reward.Kind = model.RewardCommissionAndReward
+			validatorReward = reward
 			continue
 		}
 
-		reward := stakerReward{
-			Amount: amount.String(),
-			Stash:  stash,
-		}
-		data.StakerRewards = append(data.StakerRewards, reward)
+		reward.Kind = model.RewardReward
+		rewards = append(rewards, reward)
+	}
+	return rewards, validatorReward, 0, nil
+}
+
+func (t *transactionParserTask) updateValidatorRewardKind(reward *model.RewardEraSeq, claim RewardsClaim) error {
+	if reward.Amount == "0" {
+		return nil
 	}
 
-	if validatorRewardAndCommission.Cmp(&zero) <= 0 {
-		return data, nil
-	}
-
-	validator, err := t.validatorDb.FindByEraAndStashAccount(era, validatorStash)
+	validator, err := t.validatorDb.FindByEraAndStashAccount(claim.Era, claim.ValidatorStash)
 	if err != nil {
-		return parsedRewards{}, err
+		return err
 	}
 
 	if validator.Commission == hundredpermill || validator.OwnStake.Cmp(&zero) <= 0 {
-		data.Commission = validatorRewardAndCommission.String()
-		return data, nil
+		reward.Kind = model.RewardCommission
+		return nil
 	}
 
 	if validator.Commission == 0 {
-		data.Reward = validatorRewardAndCommission.String()
-		return data, nil
+		reward.Kind = model.RewardReward
+		return nil
 	}
 
-	data.RewardAndCommission = validatorRewardAndCommission.String()
-	return data, nil
+	return nil
 }
 
-func (t *validatorsParserTask) getStashAndAmountFromData(event *eventpb.Event) (stash string, amount types.Quantity, err error) {
+func (t *transactionParserTask) getStashAndAmountFromData(event *eventpb.Event) (stash string, amount types.Quantity, err error) {
 	for _, d := range event.GetData() {
 		if d.GetName() == accountKey {
 			stash = d.Value
@@ -332,18 +431,62 @@ func (t *validatorsParserTask) getStashAndAmountFromData(event *eventpb.Event) (
 	return
 }
 
-func getStashAndEraFromPayoutArgs(tx *transactionpb.Annotated) (validatorStash string, era int64, err error) {
+func getRewardsClaimFromPayoutStakersTx(args string) (RewardsClaim, error) {
 	var data []string
 
-	err = json.Unmarshal([]byte(tx.GetArgs()), &data)
+	err := json.Unmarshal([]byte(args), &data)
 	if err != nil {
-		return validatorStash, era, err
+		return RewardsClaim{}, err
 	}
 
+	return getStashAndEraFromPayoutArgs(data)
+}
+
+func getStashAndEraFromPayoutArgs(data []string) (RewardsClaim, error) {
 	if len(data) < 2 {
-		return validatorStash, era, errUnexpectedTxDataFormat
+		return RewardsClaim{}, errUnexpectedTxDataFormat
 	}
-	validatorStash = data[0]
-	era, err = strconv.ParseInt(data[1], 10, 64)
-	return
+
+	era, err := strconv.ParseInt(data[1], 10, 64)
+	if err != nil {
+		return RewardsClaim{}, err
+	}
+
+	return RewardsClaim{
+		Era:            era,
+		ValidatorStash: data[0],
+	}, nil
+}
+
+type batchArgs struct {
+	Method  string   `json:"method"`
+	Section string   `json:"section"`
+	Args    []string `json:"args"`
+}
+
+func getRewardsClaimFromBatchTx(args string) ([]RewardsClaim, error) {
+	var resp []RewardsClaim
+	var data [][]batchArgs
+
+	err := json.Unmarshal([]byte(args), &data)
+	if err != nil {
+		return resp, err
+	}
+
+	if len(data) != 1 {
+		return resp, errUnexpectedTxDataFormat
+	}
+
+	for _, batch := range data[0] {
+		if batch.Method != "payoutStakers" {
+			continue
+		}
+		r, err := getStashAndEraFromPayoutArgs(batch.Args)
+		if err != nil {
+			return resp, err
+		}
+		resp = append(resp, r)
+	}
+
+	return resp, nil
 }

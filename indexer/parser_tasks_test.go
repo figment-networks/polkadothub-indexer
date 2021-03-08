@@ -2,11 +2,10 @@ package indexer
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"reflect"
 	"testing"
 
+	"github.com/davecgh/go-spew/spew"
 	mock_client "github.com/figment-networks/polkadothub-indexer/mock/client"
 	mock "github.com/figment-networks/polkadothub-indexer/mock/store"
 	"github.com/figment-networks/polkadothub-indexer/model"
@@ -417,167 +416,283 @@ func TestValidatorParserTask_Run(t *testing.T) {
 	}
 }
 
-func Test_getClaimedRewardDataFromEvents(t *testing.T) {
-	testValidator := "validator_stash1"
-	var testEra int64 = 182
-	var dbErr = errors.New("test err")
+func Test_addRewardsFromEvents(t *testing.T) {
+	testValidatorEraSeq := &model.ValidatorEraSeq{
+		Commission:   0,
+		StakersStake: types.NewQuantityFromInt64(300),
+		TotalStake:   types.NewQuantityFromInt64(400),
+	}
+	// testValidator := "validator_stash1"
+	// var testEra int64 = 182
+	// var dbErr = errors.New("test err")
 
-	txtests := []struct {
-		description     string
-		events          []*eventpb.Event
-		validatorEraSeq *model.ValidatorEraSeq
-		validatorDbErr  error
-		expectErr       error
-		expectParsed    parsedRewards
+	tests := []struct {
+		description    string
+		txIdx          int64
+		rawClaimsForTx []RewardsClaim
+		events         []*eventpb.Event
+		expectErr      error
+		expectRewards  []model.RewardEraSeq
 	}{
 		{
-			description: "expect no rewards if there's no events",
-			events:      []*eventpb.Event{},
-			validatorEraSeq: &model.ValidatorEraSeq{
-				Commission:   0,
-				StakersStake: types.NewQuantityFromInt64(300),
-				TotalStake:   types.NewQuantityFromInt64(400),
+			description:    "expect no rewards if there's no events",
+			rawClaimsForTx: []RewardsClaim{{100, "v1"}},
+			events:         []*eventpb.Event{},
+		},
+		{
+			description:    "expect validator and nominator rewards if there are reward events",
+			rawClaimsForTx: []RewardsClaim{{100, "v1"}},
+			events:         []*eventpb.Event{testpbRewardEvent(0, "v1", "1500"), testpbRewardEvent(0, "nom1", "1000"), testpbRewardEvent(0, "nom2", "2000")},
+			expectRewards: []model.RewardEraSeq{
+				{
+					ValidatorStashAccount: "v1",
+					StashAccount:          "v1",
+					Amount:                "1500",
+					Claimed:               true,
+				},
+				{
+					ValidatorStashAccount: "v1",
+					StashAccount:          "nom1",
+					Amount:                "1000",
+					Claimed:               true,
+				},
+				{
+					ValidatorStashAccount: "v1",
+					StashAccount:          "nom2",
+					Amount:                "2000",
+					Claimed:               true,
+				},
 			},
 		},
 		{
-			description: "expect StakerRewards  from nominator reward events",
-			events:      []*eventpb.Event{testpbRewardEvent(t, "nom1", "2000"), testpbRewardEvent(t, "nom2", "1200")},
-			validatorEraSeq: &model.ValidatorEraSeq{
-				Commission:   0,
-				StakersStake: types.NewQuantityFromInt64(400),
-				TotalStake:   types.NewQuantityFromInt64(400),
-			},
-			expectParsed: parsedRewards{
-				IsClaimed:     true,
-				Era:           testEra,
-				StakerRewards: []stakerReward{{"nom1", "2000"}, {"nom2", "1200"}},
-			},
-		},
-		{
-			description: "expect no StakerRewards  from non-reward events",
+			description:    "expect no rewards  from non-reward events",
+			rawClaimsForTx: []RewardsClaim{{100, "v1"}},
 			events: []*eventpb.Event{
-				testpbRewardEvent(t, "nom1", "2000"),
-				&eventpb.Event{Section: sectionStaking, Method: "Foo"},
-				&eventpb.Event{Section: "Foo", Method: "Foo"},
+				{Section: sectionStaking, Method: "Foo"},
+				testpbRewardEvent(0, "v1", "1500"),
+				testpbRewardEvent(0, "nom1", "1000"),
+				{Section: "Foo", Method: "Foo"},
 			},
-			validatorEraSeq: &model.ValidatorEraSeq{
-				Commission:   0,
-				StakersStake: types.NewQuantityFromInt64(400),
-				TotalStake:   types.NewQuantityFromInt64(400),
-			},
-			expectParsed: parsedRewards{
-				IsClaimed:     true,
-				Era:           testEra,
-				StakerRewards: []stakerReward{{"nom1", "2000"}},
-			},
-		},
-		{
-			description: "expect reward from validator when commission is zero",
-			events:      []*eventpb.Event{testpbRewardEvent(t, testValidator, "400"), testpbRewardEvent(t, "nom1", "1200")},
-			validatorEraSeq: &model.ValidatorEraSeq{
-				Commission:   0,
-				OwnStake:     types.NewQuantityFromInt64(100),
-				StakersStake: types.NewQuantityFromInt64(300),
-				TotalStake:   types.NewQuantityFromInt64(400),
-			},
-			expectParsed: parsedRewards{
-				IsClaimed:     true,
-				Era:           testEra,
-				Reward:        "400",
-				StakerRewards: []stakerReward{{"nom1", "1200"}},
+			expectRewards: []model.RewardEraSeq{
+				{
+					ValidatorStashAccount: "v1",
+					StashAccount:          "v1",
+					Amount:                "1500",
+					Claimed:               true,
+				},
+				{
+					ValidatorStashAccount: "v1",
+					StashAccount:          "nom1",
+					Amount:                "1000",
+					Claimed:               true,
+				},
 			},
 		},
 		{
-			description: "expect  validator commission when commission = 100%",
-			events:      []*eventpb.Event{testpbRewardEvent(t, testValidator, "2000")},
-			validatorEraSeq: &model.ValidatorEraSeq{
-				Commission:   1000000000,
-				OwnStake:     types.NewQuantityFromInt64(100),
-				StakersStake: types.NewQuantityFromInt64(300),
-				TotalStake:   types.NewQuantityFromInt64(400),
+			description:    "expect rewards only from events from same transaction",
+			rawClaimsForTx: []RewardsClaim{{100, "v1"}},
+			txIdx:          1,
+			events: []*eventpb.Event{
+				testpbRewardEvent(0, "v0", "2000"),
+				testpbRewardEvent(0, "nom1", "2000"),
+				testpbRewardEvent(1, "v1", "1500"),
+				testpbRewardEvent(1, "nom1", "1000"),
+				testpbRewardEvent(2, "v1", "5000"),
+				testpbRewardEvent(2, "nom1", "5000"),
+				{ExtrinsicIndex: 2, Section: "Foo", Method: "Foo"},
 			},
-			expectParsed: parsedRewards{
-				IsClaimed:  true,
-				Era:        testEra,
-				Commission: "2000",
-			},
-		},
-		{
-			description: "expect only validator commission when validator is not staked",
-			events:      []*eventpb.Event{testpbRewardEvent(t, testValidator, "2000")},
-			validatorEraSeq: &model.ValidatorEraSeq{
-				Commission:   500000000,
-				StakersStake: types.NewQuantityFromInt64(400),
-				TotalStake:   types.NewQuantityFromInt64(400),
-			},
-			expectParsed: parsedRewards{
-				IsClaimed:  true,
-				Era:        testEra,
-				Commission: "2000",
-			},
-		},
-		{
-			description: "expect validator commission_and_reward when validator has commission and is staked",
-			events:      []*eventpb.Event{testpbRewardEvent(t, testValidator, "2000"), testpbRewardEvent(t, "nom1", "1200")},
-			validatorEraSeq: &model.ValidatorEraSeq{
-				Commission:   500000000,
-				OwnStake:     types.NewQuantityFromInt64(100),
-				StakersStake: types.NewQuantityFromInt64(300),
-				TotalStake:   types.NewQuantityFromInt64(400),
-			},
-			expectParsed: parsedRewards{
-				IsClaimed:           true,
-				Era:                 testEra,
-				RewardAndCommission: "2000",
-				StakerRewards:       []stakerReward{{"nom1", "1200"}},
+			expectRewards: []model.RewardEraSeq{
+				{
+					ValidatorStashAccount: "v1",
+					StashAccount:          "v1",
+					Amount:                "1500",
+					Claimed:               true,
+				},
+				{
+					ValidatorStashAccount: "v1",
+					StashAccount:          "nom1",
+					Amount:                "1000",
+					Claimed:               true,
+				},
 			},
 		},
 		{
-			description: "expect err if db errors",
-			events:      []*eventpb.Event{testpbRewardEvent(t, testValidator, "2000"), testpbRewardEvent(t, "nom1", "1200")},
-			validatorEraSeq: &model.ValidatorEraSeq{
-				Commission:   500000000,
-				OwnStake:     types.NewQuantityFromInt64(100),
-				StakersStake: types.NewQuantityFromInt64(300),
-				TotalStake:   types.NewQuantityFromInt64(400),
+			description:    "expect rewards to be created for multiple claims",
+			rawClaimsForTx: []RewardsClaim{{100, "v1"}, {101, "v1"}, {102, "v1"}},
+			events: []*eventpb.Event{
+				testpbRewardEvent(0, "v1", "1000"),
+				testpbRewardEvent(0, "nom1", "1500"),
+				testpbRewardEvent(0, "v1", "2000"),
+				testpbRewardEvent(0, "nom1", "2500"),
+				testpbRewardEvent(0, "v1", "3000"),
+				testpbRewardEvent(0, "nom1", "3500"),
 			},
-			validatorDbErr: dbErr,
-			expectErr:      dbErr,
+			expectRewards: []model.RewardEraSeq{
+				{
+					ValidatorStashAccount: "v1",
+					StashAccount:          "v1",
+					Amount:                "1000",
+					Claimed:               true,
+				},
+				{
+					ValidatorStashAccount: "v1",
+					StashAccount:          "nom1",
+					Amount:                "1500",
+					Claimed:               true,
+				},
+				{
+					ValidatorStashAccount: "v1",
+					StashAccount:          "v1",
+					Amount:                "2000",
+					Claimed:               true,
+				},
+				{
+					ValidatorStashAccount: "v1",
+					StashAccount:          "nom1",
+					Amount:                "2500",
+					Claimed:               true,
+				},
+				{
+					ValidatorStashAccount: "v1",
+					StashAccount:          "v1",
+					Amount:                "3000",
+					Claimed:               true,
+				},
+				{
+					ValidatorStashAccount: "v1",
+					StashAccount:          "nom1",
+					Amount:                "3500",
+					Claimed:               true,
+				},
+			},
 		},
-	}
 
-	for _, tt := range txtests {
+		// {
+		// 	description: "expect reward from validator when commission is zero",
+		// 	events:      []*eventpb.Event{testpbRewardEvent(t, testValidator, "400"), testpbRewardEvent(t, "nom1", "1200")},
+		// 	validatorEraSeq: &model.ValidatorEraSeq{
+		// 		Commission:   0,
+		// 		OwnStake:     types.NewQuantityFromInt64(100),
+		// 		StakersStake: types.NewQuantityFromInt64(300),
+		// 		TotalStake:   types.NewQuantityFromInt64(400),
+		// 	},
+		// 	expectParsed: parsedRewards{
+		// 		IsClaimed:     true,
+		// 		Era:           testEra,
+		// 		Reward:        "400",
+		// 		StakerRewards: []stakerReward{{"nom1", "1200"}},
+		// 	},
+		// },
+		// {
+		// 	description: "expect  validator commission when commission = 100%",
+		// 	events:      []*eventpb.Event{testpbRewardEvent(t, testValidator, "2000")},
+		// 	validatorEraSeq: &model.ValidatorEraSeq{
+		// 		Commission:   1000000000,
+		// 		OwnStake:     types.NewQuantityFromInt64(100),
+		// 		StakersStake: types.NewQuantityFromInt64(300),
+		// 		TotalStake:   types.NewQuantityFromInt64(400),
+		// 	},
+		// 	expectParsed: parsedRewards{
+		// 		IsClaimed:  true,
+		// 		Era:        testEra,
+		// 		Commission: "2000",
+		// 	},
+		// },
+		// {
+		// 	description: "expect only validator commission when validator is not staked",
+		// 	events:      []*eventpb.Event{testpbRewardEvent(t, testValidator, "2000")},
+		// 	validatorEraSeq: &model.ValidatorEraSeq{
+		// 		Commission:   500000000,
+		// 		StakersStake: types.NewQuantityFromInt64(400),
+		// 		TotalStake:   types.NewQuantityFromInt64(400),
+		// 	},
+		// 	expectParsed: parsedRewards{
+		// 		IsClaimed:  true,
+		// 		Era:        testEra,
+		// 		Commission: "2000",
+		// 	},
+		// },
+		// {
+		// 	description: "expect validator commission_and_reward when validator has commission and is staked",
+		// 	events:      []*eventpb.Event{testpbRewardEvent(t, testValidator, "2000"), testpbRewardEvent(t, "nom1", "1200")},
+		// 	validatorEraSeq: &model.ValidatorEraSeq{
+		// 		Commission:   500000000,
+		// 		OwnStake:     types.NewQuantityFromInt64(100),
+		// 		StakersStake: types.NewQuantityFromInt64(300),
+		// 		TotalStake:   types.NewQuantityFromInt64(400),
+		// 	},
+		// 	expectParsed: parsedRewards{
+		// 		IsClaimed:           true,
+		// 		Era:                 testEra,
+		// 		RewardAndCommission: "2000",
+		// 		StakerRewards:       []stakerReward{{"nom1", "1200"}},
+		// 	},
+		// },
+		// {
+		// 	description: "expect err if db errors",
+		// 	events:      []*eventpb.Event{testpbRewardEvent(t, testValidator, "2000"), testpbRewardEvent(t, "nom1", "1200")},
+		// 	validatorEraSeq: &model.ValidatorEraSeq{
+		// 		Commission:   500000000,
+		// 		OwnStake:     types.NewQuantityFromInt64(100),
+		// 		StakersStake: types.NewQuantityFromInt64(300),
+		// 		TotalStake:   types.NewQuantityFromInt64(400),
+		// 	},
+		// 	validatorDbErr: dbErr,
+		// 	expectErr:      dbErr,
+		// },
+	}
+	var zero int64
+	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.description, func(t *testing.T) {
 			t.Parallel()
 
 			ctrl := gomock.NewController(t)
-
-			syncablesMock := mock.NewMockSyncables(ctrl)
+			rewardsMock := mock.NewMockRewards(ctrl)
 			validatorMock := mock.NewMockValidatorEraSeq(ctrl)
 
-			syncablesMock.EXPECT().FindLastInEra(testEra-1).Return(&model.Syncable{}, nil).Times(1)
-			syncablesMock.EXPECT().FindLastInEra(testEra).Return(&model.Syncable{}, nil).Times(1)
+			for _, c := range tt.rawClaimsForTx {
+				rewardsMock.EXPECT().GetCount(c.ValidatorStash, c.Era).Return(zero, nil).Times(1)
+				validatorMock.EXPECT().FindByEraAndStashAccount(c.Era, c.ValidatorStash).Return(testValidatorEraSeq, nil).Times(1)
+			}
 
-			validatorMock.EXPECT().FindByEraAndStashAccount(testEra, testValidator).Return(tt.validatorEraSeq, tt.validatorDbErr).Times(1)
+			task := NewTransactionParserTask(nil, nil, rewardsMock, nil, validatorMock)
 
-			task := NewValidatorsParserTask(nil, nil, nil, syncablesMock, validatorMock)
-
-			got, err := task.getClaimedRewardDataFromEvents(testValidator, testEra, tt.events)
+			rewards, err := task.getRewardsFromEvents(tt.txIdx, tt.rawClaimsForTx, tt.events)
 			if err != tt.expectErr {
 				t.Errorf("want %v; got %v", tt.expectErr, err)
 			}
 
-			if !reflect.DeepEqual(got, tt.expectParsed) {
-				t.Errorf("Unexpected parsedReward, want: %v, got: %+v", tt.expectParsed, got)
+			spew.Dump(rewards)
 
+			if len(rewards) != len(tt.expectRewards) {
+				t.Errorf("Unexpected parsedReward.StakerRewards length, want: %v, got: %+v", len(tt.expectRewards), len(rewards))
+			}
+
+			for _, want := range tt.expectRewards {
+				var found bool
+				for _, got := range rewards {
+					// if got.StashAccount == want.StashAccount && got.ValidatorStashAccount == want.ValidatorStashAccount && got.Era == want.Era {
+					if got.StashAccount == want.StashAccount && got.ValidatorStashAccount == want.ValidatorStashAccount {
+						found = true
+						if got.Amount != want.Amount {
+							t.Errorf("Unexpected Amount for %v; want: %v, got: %+v", got.StashAccount, want.Amount, got.Amount)
+						}
+						if !got.Claimed {
+							t.Errorf("Unexpected parsedReward.IsClaimed, want: %v, got: %+v", true, got.Claimed)
+						}
+					}
+				}
+				if !found {
+					t.Errorf("Expected to find entry for %v in rewards; got entries: %v", want, rewards)
+				}
 			}
 		})
 	}
 }
 
-func testpbRewardEvent(t *testing.T, stash, amount string) *eventpb.Event {
-	return &eventpb.Event{Method: "Reward", Section: "staking", Data: []*eventpb.EventData{{Name: "AccountId", Value: stash}, {Name: "Balance", Value: amount}}}
+func testpbRewardEvent(txIdx int64, stash, amount string) *eventpb.Event {
+	return &eventpb.Event{ExtrinsicIndex: txIdx, Method: "Reward", Section: "staking", Data: []*eventpb.EventData{{Name: "AccountId", Value: stash}, {Name: "Balance", Value: amount}}}
 }
 
 func testPayoutStakersTx(stash string, era int64) *transactionpb.Annotated {
