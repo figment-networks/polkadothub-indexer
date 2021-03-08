@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/figment-networks/polkadothub-indexer/model"
 
 	"github.com/figment-networks/indexing-engine/pipeline"
 	"github.com/figment-networks/polkadothub-indexer/client"
 	"github.com/figment-networks/polkadothub-indexer/config"
-	"github.com/figment-networks/polkadothub-indexer/model"
 	"github.com/figment-networks/polkadothub-indexer/store"
 )
 
@@ -16,16 +16,17 @@ var (
 	_ pipeline.Source = (*backfillSource)(nil)
 )
 
-func NewBackfillSource(cfg *config.Config, syncablesDb store.Syncables, client *client.Client, indexVersion int64, isLastInSession, isLastInEra bool) (*backfillSource, error) {
+func NewBackfillSource(cfg *config.Config, syncablesDb store.Syncables, client *client.Client, indexVersion int64, isLastInSession, isLastInEra bool, transactionDb store.Transactions, trxFilter []model.TransactionKind) (*backfillSource, error) {
 	src := &backfillSource{
-		cfg:         cfg,
-		syncablesDb: syncablesDb,
-		client:      client,
+		cfg:           cfg,
+		syncablesDb:   syncablesDb,
+		transactionDb: transactionDb,
+		client:        client,
 
 		currentIndexVersion: indexVersion,
 	}
 
-	if err := src.init(isLastInSession, isLastInEra); err != nil {
+	if err := src.init(isLastInSession, isLastInEra, trxFilter); err != nil {
 		return nil, err
 	}
 
@@ -35,9 +36,10 @@ func NewBackfillSource(cfg *config.Config, syncablesDb store.Syncables, client *
 type backfillSource struct {
 	cfg                 *config.Config
 	syncablesDb         store.Syncables
+	transactionDb       store.Transactions
 	client              *client.Client
 	useWhiteList        bool
-	heightsWhitelist    map[int64]int64
+	heightsWhitelist    map[int64]struct{}
 	whiteListStages     []pipeline.StageName
 	currentIndexVersion int64
 	currentHeight       int64
@@ -87,13 +89,24 @@ func (s *backfillSource) Len() int64 {
 	return s.endHeight - s.startHeight + 1
 }
 
-func (s *backfillSource) init(isLastInSession, isLastInEra bool) error {
-	s.useWhiteList = isLastInSession || isLastInEra
-	if s.UseWhiteList() {
-		if err := s.setHeightsWhitelist(isLastInSession, isLastInEra); err != nil {
+func (s *backfillSource) init(isLastInSession, isLastInEra bool, kinds []model.TransactionKind) error {
+	useWhiteListForEra := isLastInSession || isLastInEra
+	s.heightsWhitelist = make(map[int64]struct{})
+	if useWhiteListForEra {
+		if err := s.setHeightsWhitelistForEra(isLastInSession, isLastInEra); err != nil {
 			return err
 		}
 	}
+
+	useWhiteListForTrxFilter := len(kinds) != 0
+	if useWhiteListForTrxFilter {
+		if err := s.setHeightsWhitelistForTrxFilter(kinds); err != nil {
+			return err
+		}
+	}
+
+	s.useWhiteList = useWhiteListForEra || useWhiteListForTrxFilter
+
 	if err := s.setStartHeight(); err != nil {
 		return err
 	}
@@ -130,25 +143,35 @@ func (s *backfillSource) setEndHeight() error {
 	return nil
 }
 
-func (s *backfillSource) setHeightsWhitelist(isLastInSession, isLastInEra bool) error {
+func (s *backfillSource) setHeightsWhitelistForEra(isLastInSession, isLastInEra bool) error {
 	syncables, err := s.syncablesDb.FindAllByLastInSessionOrEra(s.currentIndexVersion, isLastInSession, isLastInEra)
 	if err != nil {
 		return err
 	}
+
 	if len(syncables) == 0 {
 		return errors.New(fmt.Sprintf("no heights for whitelist to backfill [currentIndexVersion=%d]", s.currentIndexVersion))
 	}
 
-	s.generateMapForWhiteList(syncables)
+	for i := 0; i < len(syncables); i++ {
+		s.heightsWhitelist[syncables[i].Height] = struct{}{}
+	}
+
 	return nil
 }
 
-func (s *backfillSource) generateMapForWhiteList(syncables []model.Syncable) {
-	heightsWhitelist := make(map[int64]int64)
-	for i := 0; i < len(syncables); i++ {
-		heightsWhitelist[syncables[i].Height] = syncables[i].Height
+func (s *backfillSource) setHeightsWhitelistForTrxFilter(kinds []model.TransactionKind) error {
+	for _, kind := range kinds {
+		transactions, err := s.transactionDb.GetTransactionByTransactionKind(kind)
+		if err != nil {
+			return err
+		}
+
+		for _, trx := range transactions {
+			s.heightsWhitelist[trx.Height] = struct{}{}
+		}
 	}
-	s.heightsWhitelist = heightsWhitelist
+	return nil
 }
 
 func (s *backfillSource) isStageInWhiteList(stageName pipeline.StageName) bool {

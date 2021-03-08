@@ -1,0 +1,1 @@
+DROP INDEX IF EXISTS idx_transaction_seq_method_and_section;

@@ -27,3 +27,8 @@ func (t *TransactionSeq) Valid() bool {
 	}
 	return true
 }
+
+type TransactionKind struct {
+	Section string `json:"section"`
+	Method  string `json:"method"`
+}
