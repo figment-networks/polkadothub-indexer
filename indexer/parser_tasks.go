@@ -315,7 +315,12 @@ func (t *transactionParserTask) getRewardsFromEvents(txIdx int64, claims []Rewar
 			nextVald = claims[i+1].ValidatorStash
 		}
 
-		stakerRewards, validatorReward, ranged, err := t.getRewardsForClaim(claim, txIdx, nextVald, events[idx:])
+		eraSeq, err := t.getEraSeq(claim.Era)
+		if err != nil {
+			return rewards, err
+		}
+
+		stakerRewards, validatorReward, ranged, err := t.getRewardsForClaim(claim, eraSeq, txIdx, nextVald, events[idx:])
 		idx += ranged
 
 		// what if valid earned no rewards/commission ? then show error .. add check?
@@ -339,6 +344,31 @@ func (t *transactionParserTask) getRewardsFromEvents(txIdx int64, claims []Rewar
 	return rewards, nil
 }
 
+func (t *transactionParserTask) getEraSeq(era int64) (model.EraSequence, error) {
+	var firstHeightInEra int64
+	lastSyncableInPrevEra, err := t.syncablesDb.FindLastInEra(era - 1)
+	if err != nil {
+		if err != store.ErrNotFound {
+			return model.EraSequence{}, err
+		}
+		firstHeightInEra = t.cfg.FirstBlockHeight
+	} else {
+		firstHeightInEra = lastSyncableInPrevEra.Height + 1
+	}
+
+	lastSyncableInEra, err := t.syncablesDb.FindLastInEra(era)
+	if err != nil {
+		return model.EraSequence{}, err
+	}
+
+	return model.EraSequence{
+		Era:         era,
+		StartHeight: firstHeightInEra,
+		EndHeight:   lastSyncableInEra.Height,
+		Time:        lastSyncableInEra.Time,
+	}, nil
+}
+
 func (t *transactionParserTask) addRewardsClaimed(tx *transactionpb.Annotated, claims []RewardsClaim, rewardClaims *[]RewardsClaim) (shouldParseEvents bool, err error) {
 	var count int64
 	for _, claim := range claims {
@@ -357,7 +387,7 @@ func (t *transactionParserTask) addRewardsClaimed(tx *transactionpb.Annotated, c
 	return
 }
 
-func (t *transactionParserTask) getRewardsForClaim(claim RewardsClaim, txIdx int64, nextVald string, events []*eventpb.Event) ([]model.RewardEraSeq, model.RewardEraSeq, int, error) {
+func (t *transactionParserTask) getRewardsForClaim(claim RewardsClaim, eraSeq model.EraSequence, txIdx int64, nextVald string, events []*eventpb.Event) ([]model.RewardEraSeq, model.RewardEraSeq, int, error) {
 	var rewards []model.RewardEraSeq
 	var validatorReward model.RewardEraSeq
 
@@ -376,6 +406,7 @@ func (t *transactionParserTask) getRewardsForClaim(claim RewardsClaim, txIdx int
 		}
 
 		reward := model.RewardEraSeq{
+			EraSequence:           &eraSeq,
 			StashAccount:          stash,
 			Amount:                amount.String(),
 			ValidatorStashAccount: claim.ValidatorStash,

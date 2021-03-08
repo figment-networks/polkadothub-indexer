@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/davecgh/go-spew/spew"
 	mock_client "github.com/figment-networks/polkadothub-indexer/mock/client"
 	mock "github.com/figment-networks/polkadothub-indexer/mock/store"
 	"github.com/figment-networks/polkadothub-indexer/model"
@@ -422,9 +421,6 @@ func Test_addRewardsFromEvents(t *testing.T) {
 		StakersStake: types.NewQuantityFromInt64(300),
 		TotalStake:   types.NewQuantityFromInt64(400),
 	}
-	// testValidator := "validator_stash1"
-	// var testEra int64 = 182
-	// var dbErr = errors.New("test err")
 
 	tests := []struct {
 		description    string
@@ -445,18 +441,21 @@ func Test_addRewardsFromEvents(t *testing.T) {
 			events:         []*eventpb.Event{testpbRewardEvent(0, "v1", "1500"), testpbRewardEvent(0, "nom1", "1000"), testpbRewardEvent(0, "nom2", "2000")},
 			expectRewards: []model.RewardEraSeq{
 				{
+					EraSequence:           &model.EraSequence{Era: 100},
 					ValidatorStashAccount: "v1",
 					StashAccount:          "v1",
 					Amount:                "1500",
 					Claimed:               true,
 				},
 				{
+					EraSequence:           &model.EraSequence{Era: 100},
 					ValidatorStashAccount: "v1",
 					StashAccount:          "nom1",
 					Amount:                "1000",
 					Claimed:               true,
 				},
 				{
+					EraSequence:           &model.EraSequence{Era: 100},
 					ValidatorStashAccount: "v1",
 					StashAccount:          "nom2",
 					Amount:                "2000",
@@ -475,12 +474,14 @@ func Test_addRewardsFromEvents(t *testing.T) {
 			},
 			expectRewards: []model.RewardEraSeq{
 				{
+					EraSequence:           &model.EraSequence{Era: 100},
 					ValidatorStashAccount: "v1",
 					StashAccount:          "v1",
 					Amount:                "1500",
 					Claimed:               true,
 				},
 				{
+					EraSequence:           &model.EraSequence{Era: 100},
 					ValidatorStashAccount: "v1",
 					StashAccount:          "nom1",
 					Amount:                "1000",
@@ -503,12 +504,14 @@ func Test_addRewardsFromEvents(t *testing.T) {
 			},
 			expectRewards: []model.RewardEraSeq{
 				{
+					EraSequence:           &model.EraSequence{Era: 100},
 					ValidatorStashAccount: "v1",
 					StashAccount:          "v1",
 					Amount:                "1500",
 					Claimed:               true,
 				},
 				{
+					EraSequence:           &model.EraSequence{Era: 100},
 					ValidatorStashAccount: "v1",
 					StashAccount:          "nom1",
 					Amount:                "1000",
@@ -529,36 +532,42 @@ func Test_addRewardsFromEvents(t *testing.T) {
 			},
 			expectRewards: []model.RewardEraSeq{
 				{
+					EraSequence:           &model.EraSequence{Era: 100},
 					ValidatorStashAccount: "v1",
 					StashAccount:          "v1",
 					Amount:                "1000",
 					Claimed:               true,
 				},
 				{
+					EraSequence:           &model.EraSequence{Era: 100},
 					ValidatorStashAccount: "v1",
 					StashAccount:          "nom1",
 					Amount:                "1500",
 					Claimed:               true,
 				},
 				{
+					EraSequence:           &model.EraSequence{Era: 101},
 					ValidatorStashAccount: "v1",
 					StashAccount:          "v1",
 					Amount:                "2000",
 					Claimed:               true,
 				},
 				{
+					EraSequence:           &model.EraSequence{Era: 101},
 					ValidatorStashAccount: "v1",
 					StashAccount:          "nom1",
 					Amount:                "2500",
 					Claimed:               true,
 				},
 				{
+					EraSequence:           &model.EraSequence{Era: 102},
 					ValidatorStashAccount: "v1",
 					StashAccount:          "v1",
 					Amount:                "3000",
 					Claimed:               true,
 				},
 				{
+					EraSequence:           &model.EraSequence{Era: 102},
 					ValidatorStashAccount: "v1",
 					StashAccount:          "nom1",
 					Amount:                "3500",
@@ -650,20 +659,21 @@ func Test_addRewardsFromEvents(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			rewardsMock := mock.NewMockRewards(ctrl)
 			validatorMock := mock.NewMockValidatorEraSeq(ctrl)
+			syncablesMock := mock.NewMockSyncables(ctrl)
 
 			for _, c := range tt.rawClaimsForTx {
 				rewardsMock.EXPECT().GetCount(c.ValidatorStash, c.Era).Return(zero, nil).Times(1)
 				validatorMock.EXPECT().FindByEraAndStashAccount(c.Era, c.ValidatorStash).Return(testValidatorEraSeq, nil).Times(1)
+				syncablesMock.EXPECT().FindLastInEra(c.Era).Return(&model.Syncable{Era: c.Era, Height: 9}, nil)
+				syncablesMock.EXPECT().FindLastInEra(c.Era-1).Return(&model.Syncable{Era: c.Era - 1, Height: 8}, nil)
 			}
 
-			task := NewTransactionParserTask(nil, nil, rewardsMock, nil, validatorMock)
+			task := NewTransactionParserTask(nil, nil, rewardsMock, syncablesMock, validatorMock)
 
 			rewards, err := task.getRewardsFromEvents(tt.txIdx, tt.rawClaimsForTx, tt.events)
 			if err != tt.expectErr {
 				t.Errorf("want %v; got %v", tt.expectErr, err)
 			}
-
-			spew.Dump(rewards)
 
 			if len(rewards) != len(tt.expectRewards) {
 				t.Errorf("Unexpected parsedReward.StakerRewards length, want: %v, got: %+v", len(tt.expectRewards), len(rewards))
@@ -672,8 +682,7 @@ func Test_addRewardsFromEvents(t *testing.T) {
 			for _, want := range tt.expectRewards {
 				var found bool
 				for _, got := range rewards {
-					// if got.StashAccount == want.StashAccount && got.ValidatorStashAccount == want.ValidatorStashAccount && got.Era == want.Era {
-					if got.StashAccount == want.StashAccount && got.ValidatorStashAccount == want.ValidatorStashAccount {
+					if got.StashAccount == want.StashAccount && got.ValidatorStashAccount == want.ValidatorStashAccount && got.Era == want.Era {
 						found = true
 						if got.Amount != want.Amount {
 							t.Errorf("Unexpected Amount for %v; want: %v, got: %+v", got.StashAccount, want.Amount, got.Amount)
