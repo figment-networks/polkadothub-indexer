@@ -32,12 +32,12 @@ func (s TransactionSeqStore) BulkUpsert(records []model.TransactionSeq) error {
 	})
 }
 
-// GetTransactionByTrxFilter gets transactions by TrxFilter
-func (s TransactionSeqStore) GetTransactionByTrxFilter(filter model.TrxFilter) ([]model.TransactionSeq, error) {
+// GetTransactionByTransactionKind gets transactions by kind
+func (s TransactionSeqStore) GetTransactionByTransactionKind(kind model.TransactionKind) ([]model.TransactionSeq, error) {
 	var results []model.TransactionSeq
 
 	err := s.db.
-		Where("method = ? AND section = ?", filter.Method, filter.Section).
+		Where("method = ? AND section = ?", kind.Method, kind.Section).
 		Find(&results).
 		Error
 

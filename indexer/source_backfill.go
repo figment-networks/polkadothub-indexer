@@ -16,7 +16,7 @@ var (
 	_ pipeline.Source = (*backfillSource)(nil)
 )
 
-func NewBackfillSource(cfg *config.Config, syncablesDb store.Syncables, client *client.Client, indexVersion int64, isLastInSession, isLastInEra bool, transactionDb store.Transactions, trxFilter []model.TrxFilter) (*backfillSource, error) {
+func NewBackfillSource(cfg *config.Config, syncablesDb store.Syncables, client *client.Client, indexVersion int64, isLastInSession, isLastInEra bool, transactionDb store.Transactions, trxFilter []model.TransactionKind) (*backfillSource, error) {
 	src := &backfillSource{
 		cfg:           cfg,
 		syncablesDb:   syncablesDb,
@@ -39,7 +39,7 @@ type backfillSource struct {
 	transactionDb       store.Transactions
 	client              *client.Client
 	useWhiteList        bool
-	heightsWhitelist    map[int64]int64
+	heightsWhitelist    map[int64]struct{}
 	whiteListStages     []pipeline.StageName
 	currentIndexVersion int64
 	currentHeight       int64
@@ -89,18 +89,18 @@ func (s *backfillSource) Len() int64 {
 	return s.endHeight - s.startHeight + 1
 }
 
-func (s *backfillSource) init(isLastInSession, isLastInEra bool, trxFilter []model.TrxFilter) error {
+func (s *backfillSource) init(isLastInSession, isLastInEra bool, kinds []model.TransactionKind) error {
 	useWhiteListForEra := isLastInSession || isLastInEra
-	s.heightsWhitelist = make(map[int64]int64)
+	s.heightsWhitelist = make(map[int64]struct{})
 	if useWhiteListForEra {
 		if err := s.setHeightsWhitelistForEra(isLastInSession, isLastInEra); err != nil {
 			return err
 		}
 	}
 
-	useWhiteListForTrxFilter := len(trxFilter) != 0
+	useWhiteListForTrxFilter := len(kinds) != 0
 	if useWhiteListForTrxFilter {
-		if err := s.setHeightsWhitelistForTrxFilter(trxFilter); err != nil {
+		if err := s.setHeightsWhitelistForTrxFilter(kinds); err != nil {
 			return err
 		}
 	}
@@ -154,21 +154,21 @@ func (s *backfillSource) setHeightsWhitelistForEra(isLastInSession, isLastInEra 
 	}
 
 	for i := 0; i < len(syncables); i++ {
-		s.heightsWhitelist[syncables[i].Height] = syncables[i].Height
+		s.heightsWhitelist[syncables[i].Height] = struct{}{}
 	}
 
 	return nil
 }
 
-func (s *backfillSource) setHeightsWhitelistForTrxFilter(trxFilters []model.TrxFilter) error {
-	for i := 0; i < len(trxFilters); i++ {
-		transactions, err := s.transactionDb.GetTransactionByTrxFilter(trxFilters[i])
+func (s *backfillSource) setHeightsWhitelistForTrxFilter(kinds []model.TransactionKind) error {
+	for _, kind := range kinds {
+		transactions, err := s.transactionDb.GetTransactionByTransactionKind(kind)
 		if err != nil {
 			return err
 		}
 
-		for i := 0; i < len(transactions); i++ {
-			s.heightsWhitelist[transactions[i].Height] = transactions[i].Height
+		for _, trx := range transactions {
+			s.heightsWhitelist[trx.Height] = struct{}{}
 		}
 	}
 	return nil

@@ -28,7 +28,7 @@ func (t *TransactionSeq) Valid() bool {
 	return true
 }
 
-type TrxFilter struct {
+type TransactionKind struct {
 	Section string `json:"section"`
 	Method  string `json:"method"`
 }
