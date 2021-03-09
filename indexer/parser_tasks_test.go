@@ -422,11 +422,17 @@ func Test_addRewardsFromEvents(t *testing.T) {
 		rawClaimsForTx []RewardsClaim
 		events         []*eventpb.Event
 		expectRewards  []model.RewardEraSeq
+		expectErr      bool
 	}{
 		{
 			description:    "expect no rewards if there's no events",
 			rawClaimsForTx: []RewardsClaim{{100, "v1"}},
 			events:         []*eventpb.Event{},
+		},
+		{
+			description:    "expect no rewards if there's no claims",
+			rawClaimsForTx: []RewardsClaim{},
+			events:         []*eventpb.Event{testpbRewardEvent(0, "v1", "1500"), testpbRewardEvent(0, "nom1", "1000"), testpbRewardEvent(0, "nom2", "2000")},
 		},
 		{
 			description:    "expect validator and nominator rewards if there are reward events",
@@ -581,6 +587,165 @@ func Test_addRewardsFromEvents(t *testing.T) {
 				},
 			},
 		},
+		{
+			description:    "expect validator rewards to be created for multiple claims",
+			rawClaimsForTx: []RewardsClaim{{100, "v1"}, {101, "v1"}, {102, "v2"}, {102, "v1"}},
+			events: []*eventpb.Event{
+				testpbRewardEvent(0, "v1", "1000"),
+				testpbRewardEvent(0, "v1", "2000"),
+				testpbRewardEvent(0, "v2", "3000"),
+				testpbRewardEvent(0, "v1", "4000"),
+			},
+			expectRewards: []model.RewardEraSeq{
+				{
+					EraSequence:           &model.EraSequence{Era: 100},
+					ValidatorStashAccount: "v1",
+					StashAccount:          "v1",
+					Kind:                  model.RewardCommissionAndReward,
+					Amount:                "1000",
+					Claimed:               true,
+				},
+				{
+					EraSequence:           &model.EraSequence{Era: 101},
+					ValidatorStashAccount: "v1",
+					StashAccount:          "v1",
+					Kind:                  model.RewardCommissionAndReward,
+					Amount:                "2000",
+					Claimed:               true,
+				},
+				{
+					EraSequence:           &model.EraSequence{Era: 102},
+					ValidatorStashAccount: "v2",
+					StashAccount:          "v2",
+					Kind:                  model.RewardCommissionAndReward,
+					Amount:                "3000",
+					Claimed:               true,
+				},
+				{
+					EraSequence:           &model.EraSequence{Era: 102},
+					ValidatorStashAccount: "v1",
+					StashAccount:          "v1",
+					Kind:                  model.RewardCommissionAndReward,
+					Amount:                "4000",
+					Claimed:               true,
+				},
+			},
+		},
+		{
+			description:    "expect validator rewards to be created for multiple claims when there's non reward events",
+			rawClaimsForTx: []RewardsClaim{{100, "v1"}, {101, "v1"}, {102, "v2"}, {102, "v1"}},
+			events: []*eventpb.Event{
+				{Section: "Foo", Method: "Foo"},
+				testpbRewardEvent(0, "v1", "1000"),
+				{Section: "Foo", Method: "Foo"},
+				{Section: "Foo", Method: "Foo"},
+				testpbRewardEvent(0, "v1", "2000"),
+				{Section: "Foo", Method: "Foo"},
+				testpbRewardEvent(0, "v2", "3000"),
+				{Section: "Foo", Method: "Foo"},
+				testpbRewardEvent(0, "v1", "4000"),
+				{Section: "Foo", Method: "Foo"},
+			},
+			expectRewards: []model.RewardEraSeq{
+				{
+					EraSequence:           &model.EraSequence{Era: 100},
+					ValidatorStashAccount: "v1",
+					StashAccount:          "v1",
+					Kind:                  model.RewardCommissionAndReward,
+					Amount:                "1000",
+					Claimed:               true,
+				},
+				{
+					EraSequence:           &model.EraSequence{Era: 101},
+					ValidatorStashAccount: "v1",
+					StashAccount:          "v1",
+					Kind:                  model.RewardCommissionAndReward,
+					Amount:                "2000",
+					Claimed:               true,
+				},
+				{
+					EraSequence:           &model.EraSequence{Era: 102},
+					ValidatorStashAccount: "v2",
+					StashAccount:          "v2",
+					Kind:                  model.RewardCommissionAndReward,
+					Amount:                "3000",
+					Claimed:               true,
+				},
+				{
+					EraSequence:           &model.EraSequence{Era: 102},
+					ValidatorStashAccount: "v1",
+					StashAccount:          "v1",
+					Kind:                  model.RewardCommissionAndReward,
+					Amount:                "4000",
+					Claimed:               true,
+				},
+			},
+		},
+		{
+			description:    "expect error if event for validator is missing from raw events (all same)",
+			rawClaimsForTx: []RewardsClaim{{100, "v1"}, {101, "v1"}, {102, "v1"}, {103, "v1"}},
+			events: []*eventpb.Event{
+				testpbRewardEvent(0, "v1", "1000"),
+				testpbRewardEvent(0, "v1", "2000"),
+				testpbRewardEvent(0, "v1", "4000"),
+			},
+			expectErr: true,
+		},
+		{
+			description:    "expect error if event for validator is missing from raw events (one different)",
+			rawClaimsForTx: []RewardsClaim{{100, "v1"}, {101, "v1"}, {102, "v2"}, {103, "v1"}},
+			events: []*eventpb.Event{
+				testpbRewardEvent(0, "v1", "1000"),
+				testpbRewardEvent(0, "v1", "2000"),
+				testpbRewardEvent(0, "v1", "4000"),
+			},
+			expectErr: true,
+		},
+		{
+			description:    "expect nominator rewards if  event for validator is missing from raw events but there's only one claim",
+			rawClaimsForTx: []RewardsClaim{{100, "v1"}},
+			events:         []*eventpb.Event{testpbRewardEvent(0, "nom1", "1000"), testpbRewardEvent(0, "nom2", "2000")},
+			expectRewards: []model.RewardEraSeq{
+				{
+					EraSequence:           &model.EraSequence{Era: 100},
+					ValidatorStashAccount: "v1",
+					StashAccount:          "nom1",
+					Kind:                  model.RewardReward,
+					Amount:                "1000",
+					Claimed:               true,
+				},
+				{
+					EraSequence:           &model.EraSequence{Era: 100},
+					ValidatorStashAccount: "v1",
+					StashAccount:          "nom2",
+					Kind:                  model.RewardReward,
+					Amount:                "2000",
+					Claimed:               true,
+				},
+			},
+		},
+		{
+			description:    "expect error if raw events are in reverse order",
+			rawClaimsForTx: []RewardsClaim{{100, "v1"}, {101, "v2"}, {102, "v3"}},
+			events: []*eventpb.Event{
+				testpbRewardEvent(0, "v3", "1000"),
+				testpbRewardEvent(0, "v2", "2000"),
+				testpbRewardEvent(0, "v1", "4000"),
+			},
+			expectErr: true,
+		},
+		{
+			description:    "expect error events are in scrambled order",
+			rawClaimsForTx: []RewardsClaim{{100, "v1"}, {101, "v2"}, {102, "v3"}, {102, "v4"}, {102, "v5"}},
+			events: []*eventpb.Event{
+				testpbRewardEvent(0, "v1", "1000"),
+				testpbRewardEvent(0, "v3", "2000"),
+				testpbRewardEvent(0, "v2", "4000"),
+				testpbRewardEvent(0, "v4", "2000"),
+				testpbRewardEvent(0, "v5", "2000"),
+			},
+			expectErr: true,
+		},
 	}
 
 	var zero int64
@@ -596,7 +761,6 @@ func Test_addRewardsFromEvents(t *testing.T) {
 
 			for _, c := range tt.rawClaimsForTx {
 				rewardsMock.EXPECT().GetCount(c.ValidatorStash, c.Era).Return(zero, nil).Times(1)
-				// validatorMock.EXPECT().FindByEraAndStashAccount(c.Era, c.ValidatorStash).Return(testValidatorEraSeq, nil).Times(1)
 				syncablesMock.EXPECT().FindLastInEra(c.Era).Return(&model.Syncable{Era: c.Era, Height: 9}, nil)
 				syncablesMock.EXPECT().FindLastInEra(c.Era-1).Return(&model.Syncable{Era: c.Era - 1, Height: 8}, nil)
 			}
@@ -604,8 +768,14 @@ func Test_addRewardsFromEvents(t *testing.T) {
 			task := NewTransactionParserTask(nil, nil, rewardsMock, syncablesMock, validatorMock)
 
 			rewards, err := task.getRewardsFromEvents(tt.txIdx, tt.rawClaimsForTx, tt.events)
-			if err != nil {
+			if tt.expectErr {
+				if err == nil {
+					t.Errorf("Expected run error; got nil")
+				}
+				return
+			} else if err != nil {
 				t.Errorf("Unexpected run error; got %v", err)
+				return
 			}
 
 			if len(rewards) != len(tt.expectRewards) {

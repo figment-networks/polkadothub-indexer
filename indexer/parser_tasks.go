@@ -313,6 +313,8 @@ func (t *transactionParserTask) getRewardsFromEvents(txIdx int64, claims []Rewar
 	for i, claim := range claims {
 		if i < len(claims)-1 {
 			nextVald = claims[i+1].ValidatorStash
+		} else {
+			nextVald = ""
 		}
 
 		eraSeq, err := t.getEraSeq(claim.Era)
@@ -320,10 +322,12 @@ func (t *transactionParserTask) getRewardsFromEvents(txIdx int64, claims []Rewar
 			return rewards, err
 		}
 
-		stakerRewards, ranged, err := t.getRewardsForClaim(claim, eraSeq, txIdx, nextVald, events[idx:])
+		extractedRewards, ranged, err := t.extractRewardsForClaimFromEvents(claim, eraSeq, txIdx, nextVald, events[idx:])
+		if err != nil {
+			return rewards, err
+		}
 		idx += ranged
 
-		// what if valid earned no rewards/commission ? then show error .. add check?
 		count, err := t.rewardsDb.GetCount(claim.ValidatorStash, claim.Era)
 		if err != nil {
 			return rewards, err
@@ -333,7 +337,7 @@ func (t *transactionParserTask) getRewardsFromEvents(txIdx int64, claims []Rewar
 		if count != 0 {
 			continue
 		}
-		rewards = append(rewards, stakerRewards...)
+		rewards = append(rewards, extractedRewards...)
 	}
 	return rewards, nil
 }
@@ -381,8 +385,9 @@ func (t *transactionParserTask) addRewardsClaimed(tx *transactionpb.Annotated, c
 	return
 }
 
-func (t *transactionParserTask) getRewardsForClaim(claim RewardsClaim, eraSeq model.EraSequence, txIdx int64, nextVald string, events []*eventpb.Event) ([]model.RewardEraSeq, int, error) {
+func (t *transactionParserTask) extractRewardsForClaimFromEvents(claim RewardsClaim, eraSeq model.EraSequence, txIdx int64, nextVald string, events []*eventpb.Event) ([]model.RewardEraSeq, int, error) {
 	var rewards []model.RewardEraSeq
+	var foundCurrVald bool
 
 	for i, event := range events {
 		if event.GetExtrinsicIndex() != txIdx || event.GetMethod() != eventMethodReward || event.GetSection() != sectionStaking {
@@ -394,8 +399,12 @@ func (t *transactionParserTask) getRewardsForClaim(claim RewardsClaim, eraSeq mo
 			return rewards, i, err
 		}
 
-		if stash == nextVald && i != 0 {
+		if foundCurrVald && stash == nextVald {
 			return rewards, i, nil
+		}
+
+		if stash == claim.ValidatorStash {
+			foundCurrVald = true
 		}
 
 		reward := model.RewardEraSeq{
@@ -413,6 +422,11 @@ func (t *transactionParserTask) getRewardsForClaim(claim RewardsClaim, eraSeq mo
 
 		rewards = append(rewards, reward)
 	}
+
+	if nextVald != "" {
+		return rewards, 0, fmt.Errorf("Could not extract rewards from events")
+	}
+
 	return rewards, 0, nil
 }
 
