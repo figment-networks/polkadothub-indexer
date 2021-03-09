@@ -301,6 +301,7 @@ func (t *transactionParserTask) Run(ctx context.Context, p pipeline.Payload) err
 	return nil
 }
 
+// getRewardsFromEvents extracts from rewardsevents checks if existing reward seq in db match reward events, and returns only new reward seq
 func (t *transactionParserTask) getRewardsFromEvents(txIdx int64, claims []RewardsClaim, events []*eventpb.Event) ([]model.RewardEraSeq, error) {
 	var rewards []model.RewardEraSeq
 
@@ -333,11 +334,17 @@ func (t *transactionParserTask) getRewardsFromEvents(txIdx int64, claims []Rewar
 			return rewards, err
 		}
 
-		// if already exists in db, then claim was added to RewardsClaimed, so don't add parsedRewards
-		if count != 0 {
+		if count == 0 {
+			rewards = append(rewards, extractedRewards...)
 			continue
 		}
-		rewards = append(rewards, extractedRewards...)
+
+		// if already exists in db, then claim was added to RewardsClaimed, so don't add parsedRewards
+		// instead check that count in db matches parsedRewards. Count may be +1 more since unclaimed validator rewards
+		// can be split into commission and reward
+		if int(count) != len(extractedRewards) && int(count) != len(extractedRewards)+1 {
+			return rewards, fmt.Errorf("Expected unclaimed rewards to match number of rewards from claim %v; got: %v want: %v (~-1)", claim, len(extractedRewards), count)
+		}
 	}
 	return rewards, nil
 }

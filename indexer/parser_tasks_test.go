@@ -805,6 +805,130 @@ func Test_addRewardsFromEvents(t *testing.T) {
 		})
 	}
 
+	testsForExistingRewards := []struct {
+		description         string
+		rawClaimsForTx      []RewardsClaim
+		returnCountForClaim map[RewardsClaim]int64
+		returnValidatorSeq  *model.ValidatorEraSeq
+		events              []*eventpb.Event
+		expectRewards       []model.RewardEraSeq
+		expectErr           bool
+	}{
+		{
+			description:         "expect rewards for only claims that don't exist in db",
+			rawClaimsForTx:      []RewardsClaim{{100, "v1"}, {101, "v1"}, {102, "v1"}},
+			returnCountForClaim: map[RewardsClaim]int64{{100, "v1"}: 0, {101, "v1"}: 2, {102, "v1"}: 0},
+			events: []*eventpb.Event{
+				testpbRewardEvent(0, "v1", "1000"),
+				testpbRewardEvent(0, "nom1", "1500"),
+				testpbRewardEvent(0, "v1", "2000"),
+				testpbRewardEvent(0, "nom1", "2500"),
+				testpbRewardEvent(0, "v1", "3000"),
+				testpbRewardEvent(0, "nom1", "3500"),
+			},
+			expectRewards: []model.RewardEraSeq{
+				{
+					EraSequence:           &model.EraSequence{Era: 100},
+					ValidatorStashAccount: "v1",
+					StashAccount:          "v1",
+					Kind:                  model.RewardCommissionAndReward,
+					Amount:                "1000",
+					Claimed:               true,
+				},
+				{
+					EraSequence:           &model.EraSequence{Era: 100},
+					ValidatorStashAccount: "v1",
+					StashAccount:          "nom1",
+					Kind:                  model.RewardReward,
+					Amount:                "1500",
+					Claimed:               true,
+				},
+				{
+					EraSequence:           &model.EraSequence{Era: 102},
+					ValidatorStashAccount: "v1",
+					StashAccount:          "v1",
+					Kind:                  model.RewardCommissionAndReward,
+					Amount:                "3000",
+					Claimed:               true,
+				},
+				{
+					EraSequence:           &model.EraSequence{Era: 102},
+					ValidatorStashAccount: "v1",
+					StashAccount:          "nom1",
+					Kind:                  model.RewardReward,
+					Amount:                "3500",
+					Claimed:               true,
+				},
+			},
+		},
+		{
+			description:         "expect error if rewards count < len(rewards)",
+			rawClaimsForTx:      []RewardsClaim{{100, "v1"}},
+			returnCountForClaim: map[RewardsClaim]int64{{100, "v1"}: 1},
+			events:              []*eventpb.Event{testpbRewardEvent(0, "v1", "1500"), testpbRewardEvent(0, "nom1", "1000"), testpbRewardEvent(0, "nom2", "2000")},
+			expectErr:           true,
+		},
+		{
+			description:         "expect error if rewards count > len(rewards)+2",
+			rawClaimsForTx:      []RewardsClaim{{100, "v1"}},
+			returnCountForClaim: map[RewardsClaim]int64{{100, "v1"}: 5},
+			events:              []*eventpb.Event{testpbRewardEvent(0, "v1", "1500"), testpbRewardEvent(0, "nom1", "1000"), testpbRewardEvent(0, "nom2", "2000")},
+			expectErr:           true,
+		},
+		{
+			description:         "expect no rewards and no error if rewards count == len(rewards)",
+			rawClaimsForTx:      []RewardsClaim{{100, "v1"}},
+			returnCountForClaim: map[RewardsClaim]int64{{100, "v1"}: 3},
+			events:              []*eventpb.Event{testpbRewardEvent(0, "v1", "1500"), testpbRewardEvent(0, "nom1", "1000"), testpbRewardEvent(0, "nom2", "2000")},
+		},
+		{
+			description:         "expect no rewards and no error if rewards count == len(rewards)+1",
+			rawClaimsForTx:      []RewardsClaim{{100, "v1"}},
+			returnCountForClaim: map[RewardsClaim]int64{{100, "v1"}: 4},
+			events:              []*eventpb.Event{testpbRewardEvent(0, "v1", "1500"), testpbRewardEvent(0, "nom1", "1000"), testpbRewardEvent(0, "nom2", "2000")},
+		},
+	}
+
+	for _, tt := range testsForExistingRewards {
+		tt := tt
+		t.Run(tt.description, func(t *testing.T) {
+			t.Parallel()
+
+			ctrl := gomock.NewController(t)
+			rewardsMock := mock.NewMockRewards(ctrl)
+			validatorMock := mock.NewMockValidatorEraSeq(ctrl)
+			syncablesMock := mock.NewMockSyncables(ctrl)
+
+			for _, c := range tt.rawClaimsForTx {
+				count, ok := tt.returnCountForClaim[c]
+				if !ok {
+					t.Errorf("Missing entry in tt.returnCountForClaim; want: %v", c)
+				}
+				rewardsMock.EXPECT().GetCount(c.ValidatorStash, c.Era).Return(count, nil).Times(1)
+				syncablesMock.EXPECT().FindLastInEra(c.Era).Return(&model.Syncable{Era: c.Era, Height: 9}, nil)
+				syncablesMock.EXPECT().FindLastInEra(c.Era-1).Return(&model.Syncable{Era: c.Era - 1, Height: 8}, nil)
+				validatorMock.EXPECT().FindByEraAndStashAccount(c.Era, c.ValidatorStash).Return(tt.returnValidatorSeq, nil).AnyTimes()
+			}
+
+			task := NewTransactionParserTask(nil, nil, rewardsMock, syncablesMock, validatorMock)
+
+			rewards, err := task.getRewardsFromEvents(0, tt.rawClaimsForTx, tt.events)
+			if tt.expectErr {
+				if err == nil {
+					t.Errorf("Expected run error; got nil")
+				}
+				return
+			} else if err != nil {
+				t.Errorf("Unexpected run error; got %v", err)
+				return
+			}
+
+			if len(rewards) != len(tt.expectRewards) {
+				t.Errorf("Unexpected parsedReward.StakerRewards length, want: %v, got: %+v", len(tt.expectRewards), len(rewards))
+			}
+		})
+	}
+
 	dbErr := errors.New("dbErr")
 	testDbErrs := []struct {
 		description          string
