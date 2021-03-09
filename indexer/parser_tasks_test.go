@@ -356,26 +356,95 @@ func TestValidatorParserTask_Run(t *testing.T) {
 			}
 		})
 	}
+}
 
+func TestTransactionParserTask_Run(t *testing.T) {
 	markClaimedTest := []struct {
 		description   string
 		txs           []*transactionpb.Annotated
-		expectErr     error
+		events        []*eventpb.Event
+		expectErr     bool
 		expectClaimed []RewardsClaim
 	}{
 		{
-			description:   "updates payload if there's a payout stakers transaction",
-			txs:           []*transactionpb.Annotated{testPayoutStakersTx(name1, 182)},
-			expectClaimed: []RewardsClaim{{182, name1}},
+			description: "updates payload if there's a payout stakers transaction",
+			txs:         []*transactionpb.Annotated{testPayoutStakersTx("v1", 182)},
+			events: []*eventpb.Event{
+				testpbRewardEvent(0, "v1", "1000"),
+			},
+			expectClaimed: []RewardsClaim{{182, "v1"}},
 		},
 		{
-			description:   "updates payload if there's multiple payout stakers transaction",
-			txs:           []*transactionpb.Annotated{testPayoutStakersTx(name1, 182), testPayoutStakersTx(name1, 180)},
-			expectClaimed: []RewardsClaim{{182, name1}, {180, name1}},
+			description: "updates payload if there's multiple payout stakers transaction",
+			txs:         []*transactionpb.Annotated{testPayoutStakersTx("v1", 182), testPayoutStakersTx("v1", 180), testPayoutStakersTx("v2", 180)},
+			events: []*eventpb.Event{
+				testpbRewardEvent(0, "v1", "1000"),
+				testpbRewardEvent(1, "v1", "2000"),
+				testpbRewardEvent(2, "v2", "2000"),
+			},
+			expectClaimed: []RewardsClaim{{182, "v1"}, {180, "v1"}, {180, "v2"}},
 		},
 		{
-			description: "does not update payload if there's no payout stakers transaction",
-			txs:         []*transactionpb.Annotated{{Section: "staking", Method: "Foo"}},
+			description: "does not update payload if there's a mix of transactions",
+			txs:         []*transactionpb.Annotated{{Section: "staking", Method: "Foo"}, testPayoutStakersTx("v1", 180)},
+			events: []*eventpb.Event{
+				testpbRewardEvent(1, "v1", "2000"),
+			},
+			expectClaimed: []RewardsClaim{{180, "v1"}},
+		},
+		{
+			description: "updates payload if there's a utility batch transaction containing payout stakers txs",
+			txs: []*transactionpb.Annotated{
+				{Method: "batch", Section: "utility", Args: `[[
+					{"args":["foo"],"method":"foo","section":"staking"},
+					{"args":["v1","199"],"method":"payoutStakers","section":"staking"},
+					{"args":["v1","202"],"method":"payoutStakers","section":"staking"},
+					{"args":["v2","202"],"method":"payoutStakers","section":"staking"}
+					]]`},
+			},
+			events: []*eventpb.Event{
+				testpbRewardEvent(0, "v1", "1000"),
+				testpbRewardEvent(0, "v1", "2000"),
+				testpbRewardEvent(0, "v2", "2000"),
+			},
+			expectClaimed: []RewardsClaim{{199, "v1"}, {202, "v1"}, {202, "v2"}},
+		},
+		{
+			description: "updates payload if there's a utility batchAll transaction containing payout stakers txs",
+			txs: []*transactionpb.Annotated{
+				{Method: "batchAll", Section: "utility", Args: `[[
+					{"args":["foo"],"method":"foo","section":"staking"},
+					{"args":["v1","199"],"method":"payoutStakers","section":"staking"},
+					{"args":["v1","202"],"method":"payoutStakers","section":"staking"},
+					{"args":["v2","202"],"method":"payoutStakers","section":"staking"}
+					]]`},
+			},
+			events: []*eventpb.Event{
+				testpbRewardEvent(0, "v1", "1000"),
+				testpbRewardEvent(0, "v1", "2000"),
+				testpbRewardEvent(0, "v2", "2000"),
+			},
+			expectClaimed: []RewardsClaim{{199, "v1"}, {202, "v1"}, {202, "v2"}},
+		},
+		{
+			description: "expect error if utility.batch args is in unknown format",
+			txs: []*transactionpb.Annotated{
+				{Method: "batchAll", Section: "utility", Args: `[
+					{"args":["v1","199"],"method":"payoutStakers","section":"staking"},
+					]`},
+			},
+			events: []*eventpb.Event{
+				testpbRewardEvent(0, "v1", "1000"),
+			},
+			expectErr: true,
+		},
+		{
+			description: "expect error if staking.payoutStakers args is in unknown format",
+			txs:         []*transactionpb.Annotated{{Section: "staking", Method: "payoutStakers", Args: "foo"}},
+			events: []*eventpb.Event{
+				testpbRewardEvent(1, "v1", "2000"),
+			},
+			expectErr: true,
 		},
 	}
 
@@ -390,18 +459,29 @@ func TestValidatorParserTask_Run(t *testing.T) {
 			rewardsMock := mock.NewMockRewards(ctrl)
 			rewardsMock.EXPECT().GetCount(gomock.Any(), gomock.Any()).Return(int64(1), nil).AnyTimes()
 
-			task := NewValidatorsParserTask(nil, nil, rewardsMock, nil, nil)
+			syncablesMock := mock.NewMockSyncables(ctrl)
+			syncablesMock.EXPECT().FindLastInEra(gomock.Any()).Return(&model.Syncable{}, nil).AnyTimes()
+
+			task := NewTransactionParserTask(nil, nil, rewardsMock, syncablesMock, nil)
 
 			pl := &payload{
 				RawTransactions: tt.txs,
+				RawEvents:       tt.events,
 			}
 
-			if err := task.Run(ctx, pl); err != tt.expectErr {
-				t.Errorf("want %v; got %v", tt.expectErr, err)
+			err := task.Run(ctx, pl)
+			if err != nil && !tt.expectErr {
+				t.Errorf("Unexpected error: got %v", err)
+				return
 			}
 
 			if len(pl.RewardsClaimed) != len(tt.expectClaimed) {
 				t.Errorf("unexpected RewardsClaimed count, want %v; got %v", len(tt.expectClaimed), len(pl.RewardsClaimed))
+				return
+			}
+
+			if len(pl.RewardEraSequences) != 0 {
+				t.Errorf("Unexpected Rewards in payload.RewardEraSequences, got %v", pl.RewardsClaimed)
 				return
 			}
 
@@ -425,14 +505,15 @@ func Test_addRewardsFromEvents(t *testing.T) {
 		expectErr      bool
 	}{
 		{
-			description:    "expect no rewards if there's no events",
-			rawClaimsForTx: []RewardsClaim{{100, "v1"}},
+			description:    "expect no rewards if there's no claims",
+			rawClaimsForTx: []RewardsClaim{},
 			events:         []*eventpb.Event{},
 		},
 		{
-			description:    "expect no rewards if there's no claims",
-			rawClaimsForTx: []RewardsClaim{},
-			events:         []*eventpb.Event{testpbRewardEvent(0, "v1", "1500"), testpbRewardEvent(0, "nom1", "1000"), testpbRewardEvent(0, "nom2", "2000")},
+			description:    "expect error if there's a claim and no events",
+			rawClaimsForTx: []RewardsClaim{{100, "v1"}},
+			events:         []*eventpb.Event{},
+			expectErr:      true,
 		},
 		{
 			description:    "expect validator and nominator rewards if there are reward events",
@@ -767,7 +848,7 @@ func Test_addRewardsFromEvents(t *testing.T) {
 
 			task := NewTransactionParserTask(nil, nil, rewardsMock, syncablesMock, validatorMock)
 
-			rewards, err := task.getRewardsFromEvents(tt.txIdx, tt.rawClaimsForTx, tt.events)
+			rewards, claims, err := task.getRewardsFromEvents(tt.txIdx, tt.rawClaimsForTx, tt.events)
 			if tt.expectErr {
 				if err == nil {
 					t.Errorf("Expected run error; got nil")
@@ -775,6 +856,11 @@ func Test_addRewardsFromEvents(t *testing.T) {
 				return
 			} else if err != nil {
 				t.Errorf("Unexpected run error; got %v", err)
+				return
+			}
+
+			if len(claims) != 0 {
+				t.Errorf("Expect no claims, got %v", claims)
 				return
 			}
 
@@ -812,10 +898,11 @@ func Test_addRewardsFromEvents(t *testing.T) {
 		returnValidatorSeq  *model.ValidatorEraSeq
 		events              []*eventpb.Event
 		expectRewards       []model.RewardEraSeq
+		expectClaimed       []RewardsClaim
 		expectErr           bool
 	}{
 		{
-			description:         "expect rewards for only claims that don't exist in db",
+			description:         "expect claim only for rewards that exist in db",
 			rawClaimsForTx:      []RewardsClaim{{100, "v1"}, {101, "v1"}, {102, "v1"}},
 			returnCountForClaim: map[RewardsClaim]int64{{100, "v1"}: 0, {101, "v1"}: 2, {102, "v1"}: 0},
 			events: []*eventpb.Event{
@@ -826,6 +913,7 @@ func Test_addRewardsFromEvents(t *testing.T) {
 				testpbRewardEvent(0, "v1", "3000"),
 				testpbRewardEvent(0, "nom1", "3500"),
 			},
+			expectClaimed: []RewardsClaim{{101, "v1"}},
 			expectRewards: []model.RewardEraSeq{
 				{
 					EraSequence:           &model.EraSequence{Era: 100},
@@ -876,16 +964,18 @@ func Test_addRewardsFromEvents(t *testing.T) {
 			expectErr:           true,
 		},
 		{
-			description:         "expect no rewards and no error if rewards count == len(rewards)",
+			description:         "expect claim if rewards count == len(rewards)",
 			rawClaimsForTx:      []RewardsClaim{{100, "v1"}},
 			returnCountForClaim: map[RewardsClaim]int64{{100, "v1"}: 3},
 			events:              []*eventpb.Event{testpbRewardEvent(0, "v1", "1500"), testpbRewardEvent(0, "nom1", "1000"), testpbRewardEvent(0, "nom2", "2000")},
+			expectClaimed:       []RewardsClaim{{100, "v1"}},
 		},
 		{
-			description:         "expect no rewards and no error if rewards count == len(rewards)+1",
+			description:         "expect claim if rewards count == len(rewards)+1",
 			rawClaimsForTx:      []RewardsClaim{{100, "v1"}},
 			returnCountForClaim: map[RewardsClaim]int64{{100, "v1"}: 4},
 			events:              []*eventpb.Event{testpbRewardEvent(0, "v1", "1500"), testpbRewardEvent(0, "nom1", "1000"), testpbRewardEvent(0, "nom2", "2000")},
+			expectClaimed:       []RewardsClaim{{100, "v1"}},
 		},
 	}
 
@@ -912,7 +1002,7 @@ func Test_addRewardsFromEvents(t *testing.T) {
 
 			task := NewTransactionParserTask(nil, nil, rewardsMock, syncablesMock, validatorMock)
 
-			rewards, err := task.getRewardsFromEvents(0, tt.rawClaimsForTx, tt.events)
+			rewards, claims, err := task.getRewardsFromEvents(0, tt.rawClaimsForTx, tt.events)
 			if tt.expectErr {
 				if err == nil {
 					t.Errorf("Expected run error; got nil")
@@ -924,7 +1014,23 @@ func Test_addRewardsFromEvents(t *testing.T) {
 			}
 
 			if len(rewards) != len(tt.expectRewards) {
-				t.Errorf("Unexpected parsedReward.StakerRewards length, want: %v, got: %+v", len(tt.expectRewards), len(rewards))
+				t.Errorf("Unexpected rewards length, want: %v, got: %+v", len(tt.expectRewards), len(rewards))
+			}
+
+			if len(claims) != len(tt.expectClaimed) {
+				t.Errorf("Unexpected claims length, want: %v, got: %+v", len(tt.expectClaimed), len(claims))
+			}
+
+			for _, want := range tt.expectClaimed {
+				var found bool
+				for _, got := range claims {
+					if got.Era == want.Era && got.ValidatorStash == want.ValidatorStash {
+						found = true
+					}
+				}
+				if !found {
+					t.Errorf("Missing entry %v in claims; got entries: %v", want, claims)
+				}
 			}
 		})
 	}
@@ -975,7 +1081,7 @@ func Test_addRewardsFromEvents(t *testing.T) {
 
 			task := NewTransactionParserTask(nil, nil, rewardsMock, syncablesMock, validatorMock)
 
-			_, err := task.getRewardsFromEvents(tt.txIdx, tt.rawClaimsForTx, tt.events)
+			_, _, err := task.getRewardsFromEvents(tt.txIdx, tt.rawClaimsForTx, tt.events)
 			if err != tt.expectErr {
 				t.Errorf("Unexpected error on run; got %v, want: %v", err, tt.expectErr)
 				return

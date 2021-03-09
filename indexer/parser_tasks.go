@@ -20,7 +20,6 @@ import (
 	"github.com/figment-networks/polkadothub-indexer/utils/logger"
 	"github.com/figment-networks/polkadothub-proxy/grpc/event/eventpb"
 	"github.com/figment-networks/polkadothub-proxy/grpc/staking/stakingpb"
-	"github.com/figment-networks/polkadothub-proxy/grpc/transaction/transactionpb"
 	"github.com/figment-networks/polkadothub-proxy/grpc/validatorperformance/validatorperformancepb"
 )
 
@@ -284,29 +283,25 @@ func (t *transactionParserTask) Run(ctx context.Context, p pipeline.Payload) err
 			}
 		}
 
-		shouldParseEvents, err := t.addRewardsClaimed(tx, claims, &payload.RewardsClaimed)
-
-		if !shouldParseEvents || len(payload.RawEvents) == 0 {
-			return nil
-		}
-
-		rewards, err := t.getRewardsFromEvents(tx.GetExtrinsicIndex(), claims, payload.RawEvents)
+		rewards, rewardclaims, err := t.getRewardsFromEvents(tx.GetExtrinsicIndex(), claims, payload.RawEvents)
 		if err != nil {
 			return err
 		}
 
+		payload.RewardsClaimed = append(payload.RewardsClaimed, rewardclaims...)
 		payload.RewardEraSequences = append(payload.RewardEraSequences, rewards...)
 	}
 
 	return nil
 }
 
-// getRewardsFromEvents extracts from rewardsevents checks if existing reward seq in db match reward events, and returns only new reward seq
-func (t *transactionParserTask) getRewardsFromEvents(txIdx int64, claims []RewardsClaim, events []*eventpb.Event) ([]model.RewardEraSeq, error) {
+// getRewardsFromEvents rreturns claims if rewards exist already in db, and returns new reward seqs if reward seqs don't exist in db
+func (t *transactionParserTask) getRewardsFromEvents(txIdx int64, claims []RewardsClaim, events []*eventpb.Event) ([]model.RewardEraSeq, []RewardsClaim, error) {
 	var rewards []model.RewardEraSeq
+	var rewardClaims []RewardsClaim
 
-	if len(events) == 0 {
-		return rewards, nil
+	if len(events) == 0 && len(claims) != 0 {
+		return rewards, rewardClaims, fmt.Errorf("[getRewardsFromEvents] expected events to not be empty")
 	}
 
 	var idx int
@@ -320,18 +315,18 @@ func (t *transactionParserTask) getRewardsFromEvents(txIdx int64, claims []Rewar
 
 		eraSeq, err := t.getEraSeq(claim.Era)
 		if err != nil {
-			return rewards, err
+			return rewards, rewardClaims, err
 		}
 
 		extractedRewards, ranged, err := t.extractRewardsForClaimFromEvents(claim, eraSeq, txIdx, nextVald, events[idx:])
 		if err != nil {
-			return rewards, err
+			return rewards, rewardClaims, err
 		}
 		idx += ranged
 
 		count, err := t.rewardsDb.GetCount(claim.ValidatorStash, claim.Era)
 		if err != nil {
-			return rewards, err
+			return rewards, rewardClaims, err
 		}
 
 		if count == 0 {
@@ -343,10 +338,12 @@ func (t *transactionParserTask) getRewardsFromEvents(txIdx int64, claims []Rewar
 		// instead check that count in db matches parsedRewards. Count may be +1 more since unclaimed validator rewards
 		// can be split into commission and reward
 		if int(count) != len(extractedRewards) && int(count) != len(extractedRewards)+1 {
-			return rewards, fmt.Errorf("Expected unclaimed rewards to match number of rewards from claim %v; got: %v want: %v (~-1)", claim, len(extractedRewards), count)
+			return rewards, rewardClaims, fmt.Errorf("Expected unclaimed rewards to match number of rewards from claim %v; got: %v want: %v (~-1)", claim, len(extractedRewards), count)
+		} else {
+			rewardClaims = append(rewardClaims, claim)
 		}
 	}
-	return rewards, nil
+	return rewards, rewardClaims, nil
 }
 
 func (t *transactionParserTask) getEraSeq(era int64) (model.EraSequence, error) {
@@ -372,24 +369,6 @@ func (t *transactionParserTask) getEraSeq(era int64) (model.EraSequence, error) 
 		EndHeight:   lastSyncableInEra.Height,
 		Time:        lastSyncableInEra.Time,
 	}, nil
-}
-
-func (t *transactionParserTask) addRewardsClaimed(tx *transactionpb.Annotated, claims []RewardsClaim, rewardClaims *[]RewardsClaim) (shouldParseEvents bool, err error) {
-	var count int64
-	for _, claim := range claims {
-		count, err = t.rewardsDb.GetCount(claim.ValidatorStash, claim.Era)
-		if err != nil {
-			return
-		}
-		if count == 0 {
-			// doesn't exist in db, so need to create reward seqs from raw events
-			shouldParseEvents = true
-			continue
-		}
-		// exists in db, so can mark all claimed
-		*rewardClaims = append(*rewardClaims, claim)
-	}
-	return
 }
 
 func (t *transactionParserTask) extractRewardsForClaimFromEvents(claim RewardsClaim, eraSeq model.EraSequence, txIdx int64, nextVald string, events []*eventpb.Event) ([]model.RewardEraSeq, int, error) {
