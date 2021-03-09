@@ -320,7 +320,7 @@ func (t *transactionParserTask) getRewardsFromEvents(txIdx int64, claims []Rewar
 			return rewards, err
 		}
 
-		stakerRewards, validatorReward, ranged, err := t.getRewardsForClaim(claim, eraSeq, txIdx, nextVald, events[idx:])
+		stakerRewards, ranged, err := t.getRewardsForClaim(claim, eraSeq, txIdx, nextVald, events[idx:])
 		idx += ranged
 
 		// what if valid earned no rewards/commission ? then show error .. add check?
@@ -334,12 +334,6 @@ func (t *transactionParserTask) getRewardsFromEvents(txIdx int64, claims []Rewar
 			continue
 		}
 		rewards = append(rewards, stakerRewards...)
-
-		err = t.updateValidatorRewardKind(&validatorReward, claim)
-		if err != nil {
-			return rewards, err
-		}
-		rewards = append(rewards, validatorReward)
 	}
 	return rewards, nil
 }
@@ -387,9 +381,8 @@ func (t *transactionParserTask) addRewardsClaimed(tx *transactionpb.Annotated, c
 	return
 }
 
-func (t *transactionParserTask) getRewardsForClaim(claim RewardsClaim, eraSeq model.EraSequence, txIdx int64, nextVald string, events []*eventpb.Event) ([]model.RewardEraSeq, model.RewardEraSeq, int, error) {
+func (t *transactionParserTask) getRewardsForClaim(claim RewardsClaim, eraSeq model.EraSequence, txIdx int64, nextVald string, events []*eventpb.Event) ([]model.RewardEraSeq, int, error) {
 	var rewards []model.RewardEraSeq
-	var validatorReward model.RewardEraSeq
 
 	for i, event := range events {
 		if event.GetExtrinsicIndex() != txIdx || event.GetMethod() != eventMethodReward || event.GetSection() != sectionStaking {
@@ -398,14 +391,15 @@ func (t *transactionParserTask) getRewardsForClaim(claim RewardsClaim, eraSeq mo
 
 		stash, amount, err := t.getStashAndAmountFromData(event)
 		if err != nil {
-			return rewards, validatorReward, i, err
+			return rewards, i, err
 		}
 
 		if stash == nextVald && i != 0 {
-			return rewards, validatorReward, i, nil
+			return rewards, i, nil
 		}
 
 		reward := model.RewardEraSeq{
+			Kind:                  model.RewardReward,
 			EraSequence:           &eraSeq,
 			StashAccount:          stash,
 			Amount:                amount.String(),
@@ -415,37 +409,11 @@ func (t *transactionParserTask) getRewardsForClaim(claim RewardsClaim, eraSeq mo
 
 		if stash == claim.ValidatorStash {
 			reward.Kind = model.RewardCommissionAndReward
-			validatorReward = reward
-			continue
 		}
 
-		reward.Kind = model.RewardReward
 		rewards = append(rewards, reward)
 	}
-	return rewards, validatorReward, 0, nil
-}
-
-func (t *transactionParserTask) updateValidatorRewardKind(reward *model.RewardEraSeq, claim RewardsClaim) error {
-	if reward.Amount == "0" {
-		return nil
-	}
-
-	validator, err := t.validatorDb.FindByEraAndStashAccount(claim.Era, claim.ValidatorStash)
-	if err != nil {
-		return err
-	}
-
-	if validator.Commission == hundredpermill || validator.OwnStake.Cmp(&zero) <= 0 {
-		reward.Kind = model.RewardCommission
-		return nil
-	}
-
-	if validator.Commission == 0 {
-		reward.Kind = model.RewardReward
-		return nil
-	}
-
-	return nil
+	return rewards, 0, nil
 }
 
 func (t *transactionParserTask) getStashAndAmountFromData(event *eventpb.Event) (stash string, amount types.Quantity, err error) {
