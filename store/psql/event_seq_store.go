@@ -133,6 +133,22 @@ func (s *EventSeqStore) DeleteOlderThan(purgeThreshold time.Time) (*int64, error
 	return &tx.RowsAffected, nil
 }
 
+// FindRewardsForTimePeriod find rewards events for an account for given time period
+func (s *EventSeqStore) FindRewardsForTimePeriod(address string, start, end time.Time) ([]model.EventSeq, error) {
+	var results []model.EventSeq
+
+	tx := s.db.Where("section='staking' AND method='Reward' AND (data->0->>'value'=?)", address)
+	if !start.IsZero() {
+		tx = tx.Where("time>=?", start)
+	}
+	if !end.IsZero() {
+		tx = tx.Where("time<?", end)
+	}
+
+	err := tx.Order("time ASC").Find(&results).Error
+	return results, checkErr(err)
+}
+
 func (s EventSeqStore) findForEventSeqWithTxHashQuery(section, method, address string) ([]model.EventSeqWithTxHash, error) {
 	var result []model.EventSeqWithTxHash
 

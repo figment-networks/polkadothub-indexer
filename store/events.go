@@ -1,6 +1,10 @@
 package store
 
-import "github.com/figment-networks/polkadothub-indexer/model"
+import (
+	"time"
+
+	"github.com/figment-networks/polkadothub-indexer/model"
+)
 
 type EventSeq interface {
 	BulkUpsert(records []model.EventSeq) error
@@ -8,6 +12,7 @@ type EventSeq interface {
 	FindBalanceDeposits(address string) ([]model.EventSeqWithTxHash, error)
 	FindBalanceTransfers(address string) ([]model.EventSeqWithTxHash, error)
 	FindBonded(address string) ([]model.EventSeqWithTxHash, error)
+	FindRewardsForTimePeriod(address string, start, end time.Time) ([]model.EventSeq, error)
 	FindUnbonded(address string) ([]model.EventSeqWithTxHash, error)
 	FindWithdrawn(address string) ([]model.EventSeqWithTxHash, error)
 }
