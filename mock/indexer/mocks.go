@@ -6,6 +6,7 @@ package mock_indexer
 
 import (
 	pipeline "github.com/figment-networks/indexing-engine/pipeline"
+	model "github.com/figment-networks/polkadothub-indexer/model"
 	heightpb "github.com/figment-networks/polkadothub-proxy/grpc/height/heightpb"
 	gomock "github.com/golang/mock/gomock"
 	big "math/big"
@@ -120,6 +121,20 @@ func (m *MockConfigParser) GetTasksByVersionIds(arg0 []int64) ([]pipeline.TaskNa
 func (mr *MockConfigParserMockRecorder) GetTasksByVersionIds(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTasksByVersionIds", reflect.TypeOf((*MockConfigParser)(nil).GetTasksByVersionIds), arg0)
+}
+
+// GetTransactionKinds mocks base method
+func (m *MockConfigParser) GetTransactionKinds() []model.TransactionKind {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTransactionKinds")
+	ret0, _ := ret[0].([]model.TransactionKind)
+	return ret0
+}
+
+// GetTransactionKinds indicates an expected call of GetTransactionKinds
+func (mr *MockConfigParserMockRecorder) GetTransactionKinds() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTransactionKinds", reflect.TypeOf((*MockConfigParser)(nil).GetTransactionKinds))
 }
 
 // IsAnyVersionSequential mocks base method

@@ -496,6 +496,21 @@ func (mr *MockEventSeqMockRecorder) FindByHeightAndIndex(arg0, arg1 interface{})
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByHeightAndIndex", reflect.TypeOf((*MockEventSeq)(nil).FindByHeightAndIndex), arg0, arg1)
 }
 
+// FindRewardsForTimePeriod mocks base method
+func (m *MockEventSeq) FindRewardsForTimePeriod(arg0 string, arg1, arg2 time.Time) ([]model.EventSeq, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindRewardsForTimePeriod", arg0, arg1, arg2)
+	ret0, _ := ret[0].([]model.EventSeq)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindRewardsForTimePeriod indicates an expected call of FindRewardsForTimePeriod
+func (mr *MockEventSeqMockRecorder) FindRewardsForTimePeriod(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindRewardsForTimePeriod", reflect.TypeOf((*MockEventSeq)(nil).FindRewardsForTimePeriod), arg0, arg1, arg2)
+}
+
 // FindUnbonded mocks base method
 func (m *MockEventSeq) FindUnbonded(arg0 string) ([]model.EventSeqWithTxHash, error) {
 	m.ctrl.T.Helper()
@@ -1057,6 +1072,21 @@ func (m *MockTransactionSeq) BulkUpsert(arg0 []model.TransactionSeq) error {
 func (mr *MockTransactionSeqMockRecorder) BulkUpsert(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BulkUpsert", reflect.TypeOf((*MockTransactionSeq)(nil).BulkUpsert), arg0)
+}
+
+// GetTransactionByTransactionKind mocks base method
+func (m *MockTransactionSeq) GetTransactionByTransactionKind(arg0 model.TransactionKind) ([]model.TransactionSeq, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTransactionByTransactionKind", arg0)
+	ret0, _ := ret[0].([]model.TransactionSeq)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTransactionByTransactionKind indicates an expected call of GetTransactionByTransactionKind
+func (mr *MockTransactionSeqMockRecorder) GetTransactionByTransactionKind(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTransactionByTransactionKind", reflect.TypeOf((*MockTransactionSeq)(nil).GetTransactionByTransactionKind), arg0)
 }
 
 // MockValidatorAgg is a mock of ValidatorAgg interface
