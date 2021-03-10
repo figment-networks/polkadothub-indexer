@@ -27,6 +27,7 @@ func NewHttpHandlers(cfg *config.Config, cli *client.Client, accountDb store.Acc
 		GetTransactionsByHeight:    transaction.NewGetByHeightHttpHandler(cli, syncableDb),
 		GetAccountByHeight:         account.NewGetByHeightHttpHandler(cli, syncableDb),
 		GetAccountDetails:          account.NewGetDetailsHttpHandler(cli, accountDb, eventDb, syncableDb),
+		GetAccountRewards:          account.NewGetRewardsHttpHandler(eventDb, syncableDb),
 		GetSystemEventsForAddress:  system_event.NewGetForAddressHttpHandler(cli, systemEventDb),
 		GetValidatorsByHeight:      validator.NewGetByHeightHttpHandler(cfg, cli, accountDb, blockDb, databaseDb, eventDb, reportDb, rewardDb, syncableDb, systemEventDb, transactionDb, validatorDb),
 		GetValidatorByStashAccount: validator.NewGetByStashAccountHttpHandler(accountDb, validatorDb),
@@ -44,6 +45,7 @@ type HttpHandlers struct {
 	GetBlockByHeight           types.HttpHandler
 	GetTransactionsByHeight    types.HttpHandler
 	GetAccountByHeight         types.HttpHandler
+	GetAccountRewards          types.HttpHandler
 	GetAccountDetails          types.HttpHandler
 	GetSystemEventsForAddress  types.HttpHandler
 	GetValidatorsByHeight      types.HttpHandler

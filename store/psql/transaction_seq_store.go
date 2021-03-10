@@ -31,3 +31,15 @@ func (s TransactionSeqStore) BulkUpsert(records []model.TransactionSeq) error {
 		}
 	})
 }
+
+// GetTransactionByTransactionKind gets transactions by kind
+func (s TransactionSeqStore) GetTransactionByTransactionKind(kind model.TransactionKind) ([]model.TransactionSeq, error) {
+	var results []model.TransactionSeq
+
+	err := s.db.
+		Where("method = ? AND section = ?", kind.Method, kind.Section).
+		Find(&results).
+		Error
+
+	return results, checkErr(err)
+}

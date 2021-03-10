@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/figment-networks/polkadothub-indexer/model"
 	"io/ioutil"
 
 	"github.com/figment-networks/indexing-engine/pipeline"
@@ -25,6 +26,7 @@ type ConfigParser interface {
 	GetCurrentVersionId() int64
 	IsLastInSession() bool
 	IsLastInEra() bool
+	GetTransactionKinds() []model.TransactionKind
 	GetAllVersionedVersionIds() []int64
 	IsAnyVersionSequential(versionIds []int64) bool
 	GetAllAvailableTasks() []pipeline.TaskName
@@ -40,11 +42,12 @@ type indexerConfig struct {
 }
 
 type version struct {
-	ID            int64   `json:"id"`
-	Targets       []int64 `json:"targets"`
-	Parallel      bool    `json:"parallel"`
-	LastInSession bool    `json:"last_in_session"`
-	LastInEra     bool    `json:"last_in_era"`
+	ID            int64                   `json:"id"`
+	Targets       []int64                 `json:"targets"`
+	Parallel      bool                    `json:"parallel"`
+	LastInSession bool                    `json:"last_in_session"`
+	LastInEra     bool                    `json:"last_in_era"`
+	TrxKinds      []model.TransactionKind `json:"transaction_kind"`
 }
 
 type target struct {
@@ -106,6 +109,11 @@ func (o *configParser) IsLastInSession() bool {
 //IsLastInEra check if this version is for last of eras
 func (o *configParser) IsLastInEra() bool {
 	return o.getCurrentVersion().LastInEra
+}
+
+//GetTransactionKinds gets transaction kinds info
+func (o *configParser) GetTransactionKinds() []model.TransactionKind {
+	return o.getCurrentVersion().TrxKinds
 }
 
 // GetAllAvailableTasks get lists of tasks for all available targets

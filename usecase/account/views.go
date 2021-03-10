@@ -3,9 +3,12 @@ package account
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strings"
+	"time"
 
 	"github.com/figment-networks/polkadothub-indexer/model"
+	"github.com/figment-networks/polkadothub-indexer/types"
 	"github.com/figment-networks/polkadothub-indexer/usecase/common"
 	"github.com/figment-networks/polkadothub-proxy/grpc/account/accountpb"
 )
@@ -13,6 +16,10 @@ import (
 var (
 	ErrCouldNotMarshalJSON   = errors.New("could not marshal data to JSON")
 	ErrUnmarshalingEventData = errors.New("error when trying to unmarshal event data")
+)
+
+const (
+	balanceKey string = "Balance"
 )
 
 type HeightDetailsView struct {
@@ -89,6 +96,63 @@ func ToDetailsView(address string, rawAccountIdentity *accountpb.AccountIdentity
 	return view, nil
 }
 
+type RewardsView struct {
+	Account     string    `json:"account"`
+	Start       time.Time `json:"start_time"`
+	End         time.Time `json:"end_time"`
+	TotalAmount string    `json:"total_amount"`
+	Rewards     []Reward  `json:"rewards"`
+}
+
+type Reward struct {
+	Height int64     `json:"height"`
+	Time   time.Time `json:"time"`
+	Amount string    `json:"amount"`
+}
+
+func toRewardsView(events []model.EventSeq, account string, start, end time.Time) (RewardsView, error) {
+	rewards := make([]Reward, len(events))
+	totalAmount := types.NewQuantityFromInt64(0)
+	for i, e := range events {
+		eventData, err := unmarshalEventData(e.Data)
+		if err != nil {
+			return RewardsView{}, err
+		}
+
+		var amountStr string
+		for _, val := range eventData {
+			if val.Name == balanceKey {
+				amountStr = val.Value
+			}
+		}
+
+		if amountStr == "" {
+			return RewardsView{}, fmt.Errorf("expected to find key %v in event data", balanceKey)
+		}
+
+		amount, err := types.NewQuantityFromString(amountStr)
+		if err != nil {
+			return RewardsView{}, fmt.Errorf("could not convert %v to amount", amountStr)
+		}
+
+		totalAmount.Add(amount)
+
+		rewards[i] = Reward{
+			Amount: amountStr,
+			Height: e.Height,
+			Time:   e.Time.UTC(),
+		}
+	}
+
+	return RewardsView{
+		Account:     account,
+		Start:       start.UTC(),
+		End:         end.UTC(),
+		TotalAmount: totalAmount.String(),
+		Rewards:     rewards,
+	}, nil
+}
+
 type Identity struct {
 	Deposit     string `json:"deposit"`
 	DisplayName string `json:"display_name"`
@@ -145,7 +209,7 @@ type BalanceTransfer struct {
 func ToBalanceTransfers(forAddress string, balanceTransferEvents []model.EventSeqWithTxHash) ([]*BalanceTransfer, error) {
 	balanceTransfers := make([]*BalanceTransfer, len(balanceTransferEvents))
 	for i, eventSeq := range balanceTransferEvents {
-		eventData, err := unmarshalEventData(eventSeq)
+		eventData, err := unmarshalEventData(eventSeq.Data)
 		if err != nil {
 			return nil, err
 		}
@@ -183,7 +247,7 @@ type BalanceDeposit struct {
 func ToBalanceDeposits(balanceDepositsEvents []model.EventSeqWithTxHash) ([]*BalanceDeposit, error) {
 	balanceDeposits := make([]*BalanceDeposit, len(balanceDepositsEvents))
 	for i, eventSeq := range balanceDepositsEvents {
-		eventData, err := unmarshalEventData(eventSeq)
+		eventData, err := unmarshalEventData(eventSeq.Data)
 		if err != nil {
 			return nil, err
 		}
@@ -212,7 +276,7 @@ type Bonded struct {
 func ToBondedList(bondedEvents []model.EventSeqWithTxHash) ([]*Bonded, error) {
 	bondedList := make([]*Bonded, len(bondedEvents))
 	for i, eventSeq := range bondedEvents {
-		eventData, err := unmarshalEventData(eventSeq)
+		eventData, err := unmarshalEventData(eventSeq.Data)
 		if err != nil {
 			return nil, err
 		}
@@ -240,7 +304,7 @@ type Unbonded struct {
 func ToUnbondedList(bondedEvents []model.EventSeqWithTxHash) ([]*Unbonded, error) {
 	unbondedList := make([]*Unbonded, len(bondedEvents))
 	for i, eventSeq := range bondedEvents {
-		eventData, err := unmarshalEventData(eventSeq)
+		eventData, err := unmarshalEventData(eventSeq.Data)
 		if err != nil {
 			return nil, err
 		}
@@ -268,7 +332,7 @@ type Withdrawn struct {
 func ToWithdrawnList(withdrawnEvents []model.EventSeqWithTxHash) ([]*Withdrawn, error) {
 	withdrawnList := make([]*Withdrawn, len(withdrawnEvents))
 	for i, eventSeq := range withdrawnEvents {
-		eventData, err := unmarshalEventData(eventSeq)
+		eventData, err := unmarshalEventData(eventSeq.Data)
 		if err != nil {
 			return nil, err
 		}
@@ -287,11 +351,10 @@ func ToWithdrawnList(withdrawnEvents []model.EventSeqWithTxHash) ([]*Withdrawn, 
 	return withdrawnList, nil
 }
 
-func unmarshalEventData(eventSeq model.EventSeqWithTxHash) ([]*EventData, error) {
-	bytes, err := eventSeq.Data.RawMessage.MarshalJSON()
+func unmarshalEventData(data types.Jsonb) ([]*EventData, error) {
+	bytes, err := data.RawMessage.MarshalJSON()
 	if err != nil {
-		err := ErrCouldNotMarshalJSON
-		return nil, err
+		return nil, ErrCouldNotMarshalJSON
 	}
 	var eventData []*EventData
 	if err := json.Unmarshal(bytes, &eventData); err != nil {

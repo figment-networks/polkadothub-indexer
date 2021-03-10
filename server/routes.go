@@ -9,6 +9,7 @@ func (s *Server) setupRoutes() {
 	s.engine.GET("/blocks_summary", s.handlers.GetBlockSummary.Handle)
 	s.engine.GET("/transactions", s.handlers.GetTransactionsByHeight.Handle)
 	s.engine.GET("/account_details/:stash_account", s.handlers.GetAccountDetails.Handle)
+	s.engine.GET("/account_rewards/:stash_account", s.handlers.GetAccountRewards.Handle)
 	s.engine.GET("/account/:stash_account", s.handlers.GetAccountByHeight.Handle)
 	s.engine.GET("/system_events/:address", s.handlers.GetSystemEventsForAddress.Handle)
 	s.engine.GET("/validator/:stash_account", s.handlers.GetValidatorByStashAccount.Handle)
