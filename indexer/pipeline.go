@@ -67,6 +67,7 @@ func NewPipeline(cfg *config.Config, cli *client.Client, accountDb store.Account
 		pipeline.NewAsyncStageWithTasks(
 			pipeline.StageParser,
 			NewBlockParserTask(),
+			NewTransactionParserTask(cfg, rewardDb, syncableDb, validatorDb),
 			pipeline.RetryingTask(NewValidatorsParserTask(cfg, cli.Account, rewardDb, syncableDb, validatorDb), isTransient, 1),
 		),
 	)

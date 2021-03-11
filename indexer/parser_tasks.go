@@ -225,20 +225,18 @@ func (t *validatorsParserTask) getUnclaimedRewardData(calc RewardsCalculator, ra
 	return data
 }
 
-func NewTransactionParserTask(cfg *config.Config, accountClient client.AccountClient, rewardsDb store.Rewards, syncablesDb store.Syncables, validatorDb store.ValidatorEraSeq) *transactionParserTask {
+func NewTransactionParserTask(cfg *config.Config, rewardsDb store.Rewards, syncablesDb store.Syncables, validatorDb store.ValidatorEraSeq) *transactionParserTask {
 	return &transactionParserTask{
-		cfg:           cfg,
-		accountClient: accountClient,
-		rewardsDb:     rewardsDb,
-		syncablesDb:   syncablesDb,
-		validatorDb:   validatorDb,
+		cfg: cfg,
+
+		rewardsDb:   rewardsDb,
+		syncablesDb: syncablesDb,
+		validatorDb: validatorDb,
 	}
 }
 
 type transactionParserTask struct {
 	cfg *config.Config
-
-	accountClient client.AccountClient
 
 	rewardsDb   store.Rewards
 	syncablesDb store.Syncables
@@ -279,6 +277,7 @@ func (t *transactionParserTask) Run(ctx context.Context, p pipeline.Payload) err
 
 		if tx.GetSection() == sectionStaking && tx.GetMethod() == txMethodPayoutStakers {
 			claim, err := getRewardsClaimFromPayoutStakersTx(tx.GetArgs())
+			claim.TxHash = tx.GetHash()
 			if err != nil {
 				return err
 			}
@@ -291,6 +290,7 @@ func (t *transactionParserTask) Run(ctx context.Context, p pipeline.Payload) err
 					if err != nil {
 						return err
 					}
+					claim.TxHash = tx.GetHash()
 					claims = append(claims, claim)
 				}
 			}
@@ -356,6 +356,7 @@ func (t *transactionParserTask) getRewardsFromEvents(txIdx int64, claims []Rewar
 			rewardClaims = append(rewardClaims, claim)
 		}
 	}
+
 	return rewards, rewardClaims, nil
 }
 
@@ -413,6 +414,7 @@ func (t *transactionParserTask) extractRewardsForClaimFromEvents(claim RewardsCl
 			Amount:                amount.String(),
 			ValidatorStashAccount: claim.ValidatorStash,
 			Claimed:               true,
+			TxHash:                claim.TxHash,
 		}
 
 		if stash == claim.ValidatorStash {
@@ -447,11 +449,16 @@ func getRewardsClaimFromPayoutStakersTx(args string) (RewardsClaim, error) {
 	var data []string
 
 	err := json.Unmarshal([]byte(args), &data)
-	if err != nil {
-		return RewardsClaim{}, err
+	if err == nil {
+		return getStashAndEraFromPayoutArgs(data)
 	}
 
-	return getStashAndEraFromPayoutArgs(data)
+	parts := strings.Split(args, ",")
+	if len(parts) != 2 {
+		return RewardsClaim{}, errUnexpectedEventDataFormat
+	}
+
+	return getStashAndEraFromPayoutArgs(parts)
 }
 
 func getStashAndEraFromPayoutArgs(data []string) (RewardsClaim, error) {

@@ -31,7 +31,7 @@ type Reports interface {
 
 type Rewards interface {
 	BulkUpsert(records []model.RewardEraSeq) error
-	MarkAllClaimed(validatorStash string, era int64) error
+	MarkAllClaimed(validatorStash string, era int64, txHash string) error
 	GetAll(address string, start, end int64) ([]model.RewardEraSeq, error)
 	GetCount(validatorStash string, era int64) (int64, error)
 }

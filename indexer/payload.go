@@ -30,6 +30,7 @@ func (pf *payloadFactory) GetPayload(currentHeight int64) pipeline.Payload {
 type RewardsClaim struct {
 	Era            int64
 	ValidatorStash string
+	TxHash         string
 }
 
 type payload struct {

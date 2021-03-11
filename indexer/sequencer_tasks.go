@@ -22,7 +22,6 @@ const (
 	AccountEraSeqCreatorTaskName       = "AccountEraSeqCreator"
 	TransactionSeqCreatorTaskName      = "TransactionSeqCreator"
 	RewardEraSeqCreatorTaskName        = "RewardEraSeqCreator"
-	ClaimedRewardEraSeqCreatorTaskName = "ClaimedRewardEraSeqCreator"
 )
 
 var (

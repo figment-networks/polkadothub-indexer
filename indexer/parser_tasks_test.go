@@ -368,29 +368,29 @@ func TestTransactionParserTask_Run(t *testing.T) {
 	}{
 		{
 			description: "expect claims if there's a payout stakers transaction",
-			txs:         []*transactionpb.Transaction{testPayoutStakersTx("v1", 182)},
+			txs:         []*transactionpb.Transaction{testPayoutStakersTx("v1", 182, "abc")},
 			events: []*eventpb.Event{
 				testpbRewardEvent(0, "v1", "1000"),
 			},
-			expectClaimed: []RewardsClaim{{182, "v1"}},
+			expectClaimed: []RewardsClaim{{182, "v1", "abc"}},
 		},
 		{
 			description: "expect claims if there's multiple payout stakers transaction",
-			txs:         []*transactionpb.Transaction{testPayoutStakersTx("v1", 182), testPayoutStakersTx("v1", 180), testPayoutStakersTx("v2", 180)},
+			txs:         []*transactionpb.Transaction{testPayoutStakersTx("v1", 182, "abc"), testPayoutStakersTx("v1", 180, "d"), testPayoutStakersTx("v2", 180, "e")},
 			events: []*eventpb.Event{
 				testpbRewardEvent(0, "v1", "1000"),
 				testpbRewardEvent(1, "v1", "2000"),
 				testpbRewardEvent(2, "v2", "2000"),
 			},
-			expectClaimed: []RewardsClaim{{182, "v1"}, {180, "v1"}, {180, "v2"}},
+			expectClaimed: []RewardsClaim{{182, "v1", "abc"}, {180, "v1", "d"}, {180, "v2", "e"}},
 		},
 		{
 			description: "expect claims only for payout stakers tx",
-			txs:         []*transactionpb.Transaction{{Section: "staking", Method: "Foo", IsSuccess: true}, testPayoutStakersTx("v1", 180)},
+			txs:         []*transactionpb.Transaction{{Section: "staking", Method: "Foo", IsSuccess: true, Hash: "foo"}, testPayoutStakersTx("v1", 180, "abc")},
 			events: []*eventpb.Event{
 				testpbRewardEvent(1, "v1", "2000"),
 			},
-			expectClaimed: []RewardsClaim{{180, "v1"}},
+			expectClaimed: []RewardsClaim{{180, "v1", "abc"}},
 		},
 		{
 			description: "expect claims if there's a utility batch transaction containing payout stakers txs",
@@ -401,14 +401,16 @@ func TestTransactionParserTask_Run(t *testing.T) {
 						{Method: "payoutStakers", Section: "staking", Value: `["v1","202"]`},
 						{Method: "payoutStakers", Section: "staking", Value: `["v2","202"]`},
 					},
-					IsSuccess: true},
+					IsSuccess: true,
+					Hash:      "abc",
+				},
 			},
 			events: []*eventpb.Event{
 				testpbRewardEvent(0, "v1", "1000"),
 				testpbRewardEvent(0, "v1", "2000"),
 				testpbRewardEvent(0, "v2", "2000"),
 			},
-			expectClaimed: []RewardsClaim{{199, "v1"}, {202, "v1"}, {202, "v2"}},
+			expectClaimed: []RewardsClaim{{199, "v1", "abc"}, {202, "v1", "abc"}, {202, "v2", "abc"}},
 		},
 		{
 			description: "expect claims if there's a utility batchAll transaction containing payout stakers txs",
@@ -419,14 +421,16 @@ func TestTransactionParserTask_Run(t *testing.T) {
 						{Method: "payoutStakers", Section: "staking", Value: `["v1","202"]`},
 						{Method: "payoutStakers", Section: "staking", Value: `["v2","202"]`},
 					},
-					IsSuccess: true},
+					IsSuccess: true,
+					Hash:      "abc",
+				},
 			},
 			events: []*eventpb.Event{
 				testpbRewardEvent(0, "v1", "1000"),
 				testpbRewardEvent(0, "v1", "2000"),
 				testpbRewardEvent(0, "v2", "2000"),
 			},
-			expectClaimed: []RewardsClaim{{199, "v1"}, {202, "v1"}, {202, "v2"}},
+			expectClaimed: []RewardsClaim{{199, "v1", "abc"}, {202, "v1", "abc"}, {202, "v2", "abc"}},
 		},
 		{
 			description: "expect claims if there's a proxy proxy transaction containing payout stakers txs",
@@ -437,6 +441,7 @@ func TestTransactionParserTask_Run(t *testing.T) {
 						{Method: "payoutStakers", Section: "staking", Value: `["v1","202"]`},
 						{Method: "payoutStakers", Section: "staking", Value: `["v2","202"]`},
 					},
+					Hash:      "abc",
 					IsSuccess: true},
 			},
 			events: []*eventpb.Event{
@@ -444,7 +449,7 @@ func TestTransactionParserTask_Run(t *testing.T) {
 				testpbRewardEvent(0, "v1", "2000"),
 				testpbRewardEvent(0, "v2", "2000"),
 			},
-			expectClaimed: []RewardsClaim{{199, "v1"}, {202, "v1"}, {202, "v2"}},
+			expectClaimed: []RewardsClaim{{199, "v1", "abc"}, {202, "v1", "abc"}, {202, "v2", "abc"}},
 		},
 		{
 			description: "does not expect claims if tx is not a success",
@@ -452,7 +457,9 @@ func TestTransactionParserTask_Run(t *testing.T) {
 				{Method: "batchAll", Section: "utility",
 					CallArgs: []*transactionpb.CallArg{
 						{Method: "payoutStakers", Section: "staking", Value: `["v1","199"]`},
-					}, IsSuccess: false},
+					},
+					Hash:      "abc",
+					IsSuccess: false},
 			},
 			events: []*eventpb.Event{
 				testpbRewardEvent(0, "v1", "1000"),
@@ -466,6 +473,7 @@ func TestTransactionParserTask_Run(t *testing.T) {
 					CallArgs: []*transactionpb.CallArg{
 						{Method: "payoutStakers", Section: "staking", Value: `[validatorId: "v1", era: "199"]`},
 					},
+					Hash:      "abc",
 					IsSuccess: true},
 			},
 			events: []*eventpb.Event{
@@ -489,7 +497,7 @@ func TestTransactionParserTask_Run(t *testing.T) {
 			syncablesMock := mock.NewMockSyncables(ctrl)
 			syncablesMock.EXPECT().FindLastInEra(gomock.Any()).Return(&model.Syncable{}, nil).AnyTimes()
 
-			task := NewTransactionParserTask(nil, nil, rewardsMock, syncablesMock, nil)
+			task := NewTransactionParserTask(nil, rewardsMock, syncablesMock, nil)
 
 			pl := &payload{
 				RawBlock: &blockpb.Block{
@@ -540,13 +548,13 @@ func Test_addRewardsFromEvents(t *testing.T) {
 		},
 		{
 			description:    "expect error if there's a claim and no events",
-			rawClaimsForTx: []RewardsClaim{{100, "v1"}},
+			rawClaimsForTx: []RewardsClaim{{100, "v1", "abc"}},
 			events:         []*eventpb.Event{},
 			expectErr:      true,
 		},
 		{
 			description:    "expect validator and nominator rewards if there are reward events",
-			rawClaimsForTx: []RewardsClaim{{100, "v1"}},
+			rawClaimsForTx: []RewardsClaim{{100, "v1", "abc"}},
 			events:         []*eventpb.Event{testpbRewardEvent(0, "v1", "1500"), testpbRewardEvent(0, "nom1", "1000"), testpbRewardEvent(0, "nom2", "2000")},
 			expectRewards: []model.RewardEraSeq{
 				{
@@ -556,6 +564,7 @@ func Test_addRewardsFromEvents(t *testing.T) {
 					Kind:                  model.RewardCommissionAndReward,
 					Amount:                "1500",
 					Claimed:               true,
+					TxHash:                "abc",
 				},
 				{
 					EraSequence:           &model.EraSequence{Era: 100},
@@ -564,6 +573,7 @@ func Test_addRewardsFromEvents(t *testing.T) {
 					Kind:                  model.RewardReward,
 					Amount:                "1000",
 					Claimed:               true,
+					TxHash:                "abc",
 				},
 				{
 					EraSequence:           &model.EraSequence{Era: 100},
@@ -572,12 +582,13 @@ func Test_addRewardsFromEvents(t *testing.T) {
 					Kind:                  model.RewardReward,
 					Amount:                "2000",
 					Claimed:               true,
+					TxHash:                "abc",
 				},
 			},
 		},
 		{
 			description:    "expect no rewards  from non-reward events",
-			rawClaimsForTx: []RewardsClaim{{100, "v1"}},
+			rawClaimsForTx: []RewardsClaim{{100, "v1", "abc"}},
 			events: []*eventpb.Event{
 				{Section: sectionStaking, Method: "Foo"},
 				testpbRewardEvent(0, "v1", "1500"),
@@ -592,6 +603,7 @@ func Test_addRewardsFromEvents(t *testing.T) {
 					Kind:                  model.RewardCommissionAndReward,
 					Amount:                "1500",
 					Claimed:               true,
+					TxHash:                "abc",
 				},
 				{
 					EraSequence:           &model.EraSequence{Era: 100},
@@ -600,12 +612,13 @@ func Test_addRewardsFromEvents(t *testing.T) {
 					Kind:                  model.RewardReward,
 					Amount:                "1000",
 					Claimed:               true,
+					TxHash:                "abc",
 				},
 			},
 		},
 		{
 			description:    "expect rewards only from events from same transaction",
-			rawClaimsForTx: []RewardsClaim{{100, "v1"}},
+			rawClaimsForTx: []RewardsClaim{{100, "v1", "abc"}},
 			txIdx:          1,
 			events: []*eventpb.Event{
 				testpbRewardEvent(0, "v0", "2000"),
@@ -624,6 +637,7 @@ func Test_addRewardsFromEvents(t *testing.T) {
 					Kind:                  model.RewardCommissionAndReward,
 					Amount:                "1500",
 					Claimed:               true,
+					TxHash:                "abc",
 				},
 				{
 					EraSequence:           &model.EraSequence{Era: 100},
@@ -632,12 +646,13 @@ func Test_addRewardsFromEvents(t *testing.T) {
 					Kind:                  model.RewardReward,
 					Amount:                "1000",
 					Claimed:               true,
+					TxHash:                "abc",
 				},
 			},
 		},
 		{
 			description:    "expect rewards to be created for multiple claims",
-			rawClaimsForTx: []RewardsClaim{{100, "v1"}, {101, "v1"}, {102, "v1"}},
+			rawClaimsForTx: []RewardsClaim{{100, "v1", "abc"}, {101, "v1", "abc"}, {102, "v1", "abc"}},
 			events: []*eventpb.Event{
 				testpbRewardEvent(0, "v1", "1000"),
 				testpbRewardEvent(0, "nom1", "1500"),
@@ -654,6 +669,7 @@ func Test_addRewardsFromEvents(t *testing.T) {
 					Kind:                  model.RewardCommissionAndReward,
 					Amount:                "1000",
 					Claimed:               true,
+					TxHash:                "abc",
 				},
 				{
 					EraSequence:           &model.EraSequence{Era: 100},
@@ -662,6 +678,7 @@ func Test_addRewardsFromEvents(t *testing.T) {
 					Kind:                  model.RewardReward,
 					Amount:                "1500",
 					Claimed:               true,
+					TxHash:                "abc",
 				},
 				{
 					EraSequence:           &model.EraSequence{Era: 101},
@@ -670,6 +687,7 @@ func Test_addRewardsFromEvents(t *testing.T) {
 					Kind:                  model.RewardCommissionAndReward,
 					Amount:                "2000",
 					Claimed:               true,
+					TxHash:                "abc",
 				},
 				{
 					EraSequence:           &model.EraSequence{Era: 101},
@@ -678,6 +696,7 @@ func Test_addRewardsFromEvents(t *testing.T) {
 					Kind:                  model.RewardReward,
 					Amount:                "2500",
 					Claimed:               true,
+					TxHash:                "abc",
 				},
 				{
 					EraSequence:           &model.EraSequence{Era: 102},
@@ -686,6 +705,7 @@ func Test_addRewardsFromEvents(t *testing.T) {
 					Kind:                  model.RewardCommissionAndReward,
 					Amount:                "3000",
 					Claimed:               true,
+					TxHash:                "abc",
 				},
 				{
 					EraSequence:           &model.EraSequence{Era: 102},
@@ -694,12 +714,13 @@ func Test_addRewardsFromEvents(t *testing.T) {
 					Kind:                  model.RewardReward,
 					Amount:                "3500",
 					Claimed:               true,
+					TxHash:                "abc",
 				},
 			},
 		},
 		{
 			description:    "expect validator rewards to be created for multiple claims",
-			rawClaimsForTx: []RewardsClaim{{100, "v1"}, {101, "v1"}, {102, "v2"}, {102, "v1"}},
+			rawClaimsForTx: []RewardsClaim{{100, "v1", "abc"}, {101, "v1", "abc"}, {102, "v2", "abc"}, {102, "v1", "abc"}},
 			events: []*eventpb.Event{
 				testpbRewardEvent(0, "v1", "1000"),
 				testpbRewardEvent(0, "v1", "2000"),
@@ -714,6 +735,7 @@ func Test_addRewardsFromEvents(t *testing.T) {
 					Kind:                  model.RewardCommissionAndReward,
 					Amount:                "1000",
 					Claimed:               true,
+					TxHash:                "abc",
 				},
 				{
 					EraSequence:           &model.EraSequence{Era: 101},
@@ -722,6 +744,7 @@ func Test_addRewardsFromEvents(t *testing.T) {
 					Kind:                  model.RewardCommissionAndReward,
 					Amount:                "2000",
 					Claimed:               true,
+					TxHash:                "abc",
 				},
 				{
 					EraSequence:           &model.EraSequence{Era: 102},
@@ -730,6 +753,7 @@ func Test_addRewardsFromEvents(t *testing.T) {
 					Kind:                  model.RewardCommissionAndReward,
 					Amount:                "3000",
 					Claimed:               true,
+					TxHash:                "abc",
 				},
 				{
 					EraSequence:           &model.EraSequence{Era: 102},
@@ -738,12 +762,13 @@ func Test_addRewardsFromEvents(t *testing.T) {
 					Kind:                  model.RewardCommissionAndReward,
 					Amount:                "4000",
 					Claimed:               true,
+					TxHash:                "abc",
 				},
 			},
 		},
 		{
 			description:    "expect validator rewards to be created for multiple claims when there's non reward events",
-			rawClaimsForTx: []RewardsClaim{{100, "v1"}, {101, "v1"}, {102, "v2"}, {102, "v1"}},
+			rawClaimsForTx: []RewardsClaim{{100, "v1", "abc"}, {101, "v1", "abc"}, {102, "v2", "abc"}, {102, "v1", "abc"}},
 			events: []*eventpb.Event{
 				{Section: "Foo", Method: "Foo"},
 				testpbRewardEvent(0, "v1", "1000"),
@@ -764,6 +789,7 @@ func Test_addRewardsFromEvents(t *testing.T) {
 					Kind:                  model.RewardCommissionAndReward,
 					Amount:                "1000",
 					Claimed:               true,
+					TxHash:                "abc",
 				},
 				{
 					EraSequence:           &model.EraSequence{Era: 101},
@@ -772,6 +798,7 @@ func Test_addRewardsFromEvents(t *testing.T) {
 					Kind:                  model.RewardCommissionAndReward,
 					Amount:                "2000",
 					Claimed:               true,
+					TxHash:                "abc",
 				},
 				{
 					EraSequence:           &model.EraSequence{Era: 102},
@@ -780,6 +807,7 @@ func Test_addRewardsFromEvents(t *testing.T) {
 					Kind:                  model.RewardCommissionAndReward,
 					Amount:                "3000",
 					Claimed:               true,
+					TxHash:                "abc",
 				},
 				{
 					EraSequence:           &model.EraSequence{Era: 102},
@@ -788,12 +816,13 @@ func Test_addRewardsFromEvents(t *testing.T) {
 					Kind:                  model.RewardCommissionAndReward,
 					Amount:                "4000",
 					Claimed:               true,
+					TxHash:                "abc",
 				},
 			},
 		},
 		{
 			description:    "expect error if event for validator is missing from raw events (all same)",
-			rawClaimsForTx: []RewardsClaim{{100, "v1"}, {101, "v1"}, {102, "v1"}, {103, "v1"}},
+			rawClaimsForTx: []RewardsClaim{{100, "v1", "abc"}, {101, "v1", "abc"}, {102, "v1", "abc"}, {103, "v1", "abc"}},
 			events: []*eventpb.Event{
 				testpbRewardEvent(0, "v1", "1000"),
 				testpbRewardEvent(0, "v1", "2000"),
@@ -803,7 +832,7 @@ func Test_addRewardsFromEvents(t *testing.T) {
 		},
 		{
 			description:    "expect error if event for validator is missing from raw events (one different)",
-			rawClaimsForTx: []RewardsClaim{{100, "v1"}, {101, "v1"}, {102, "v2"}, {103, "v1"}},
+			rawClaimsForTx: []RewardsClaim{{100, "v1", "abc"}, {101, "v1", "abc"}, {102, "v2", "abc"}, {103, "v1", "abc"}},
 			events: []*eventpb.Event{
 				testpbRewardEvent(0, "v1", "1000"),
 				testpbRewardEvent(0, "v1", "2000"),
@@ -813,7 +842,7 @@ func Test_addRewardsFromEvents(t *testing.T) {
 		},
 		{
 			description:    "expect nominator rewards if  event for validator is missing from raw events but there's only one claim",
-			rawClaimsForTx: []RewardsClaim{{100, "v1"}},
+			rawClaimsForTx: []RewardsClaim{{100, "v1", "abc"}},
 			events:         []*eventpb.Event{testpbRewardEvent(0, "nom1", "1000"), testpbRewardEvent(0, "nom2", "2000")},
 			expectRewards: []model.RewardEraSeq{
 				{
@@ -823,6 +852,7 @@ func Test_addRewardsFromEvents(t *testing.T) {
 					Kind:                  model.RewardReward,
 					Amount:                "1000",
 					Claimed:               true,
+					TxHash:                "abc",
 				},
 				{
 					EraSequence:           &model.EraSequence{Era: 100},
@@ -831,12 +861,13 @@ func Test_addRewardsFromEvents(t *testing.T) {
 					Kind:                  model.RewardReward,
 					Amount:                "2000",
 					Claimed:               true,
+					TxHash:                "abc",
 				},
 			},
 		},
 		{
 			description:    "expect error if raw events are in reverse order",
-			rawClaimsForTx: []RewardsClaim{{100, "v1"}, {101, "v2"}, {102, "v3"}},
+			rawClaimsForTx: []RewardsClaim{{100, "v1", "abc"}, {101, "v2", "d"}, {102, "v3", "e"}},
 			events: []*eventpb.Event{
 				testpbRewardEvent(0, "v3", "1000"),
 				testpbRewardEvent(0, "v2", "2000"),
@@ -846,7 +877,7 @@ func Test_addRewardsFromEvents(t *testing.T) {
 		},
 		{
 			description:    "expect error events are in scrambled order",
-			rawClaimsForTx: []RewardsClaim{{100, "v1"}, {101, "v2"}, {102, "v3"}, {102, "v4"}, {102, "v5"}},
+			rawClaimsForTx: []RewardsClaim{{100, "v1", "abc"}, {101, "v2", "abc"}, {102, "v3", "abc"}, {102, "v4", "abc"}, {102, "v5", "abc"}},
 			events: []*eventpb.Event{
 				testpbRewardEvent(0, "v1", "1000"),
 				testpbRewardEvent(0, "v3", "2000"),
@@ -875,7 +906,7 @@ func Test_addRewardsFromEvents(t *testing.T) {
 				syncablesMock.EXPECT().FindLastInEra(c.Era-1).Return(&model.Syncable{Era: c.Era - 1, Height: 8}, nil)
 			}
 
-			task := NewTransactionParserTask(nil, nil, rewardsMock, syncablesMock, validatorMock)
+			task := NewTransactionParserTask(nil, rewardsMock, syncablesMock, validatorMock)
 
 			rewards, claims, err := task.getRewardsFromEvents(tt.txIdx, tt.rawClaimsForTx, tt.events)
 			if tt.expectErr {
@@ -911,6 +942,9 @@ func Test_addRewardsFromEvents(t *testing.T) {
 						if got.Kind != want.Kind {
 							t.Errorf("Unexpected reward kind for %v, want: %v, got: %+v", got.StashAccount, want.Kind, got.Kind)
 						}
+						if got.TxHash != want.TxHash {
+							t.Errorf("Unexpected tx hash for %v, want: %v, got: %+v", got.StashAccount, want.TxHash, got.TxHash)
+						}
 					}
 				}
 				if !found {
@@ -932,8 +966,8 @@ func Test_addRewardsFromEvents(t *testing.T) {
 	}{
 		{
 			description:         "expect claim only for rewards that exist in db",
-			rawClaimsForTx:      []RewardsClaim{{100, "v1"}, {101, "v1"}, {102, "v1"}},
-			returnCountForClaim: map[RewardsClaim]int64{{100, "v1"}: 0, {101, "v1"}: 2, {102, "v1"}: 0},
+			rawClaimsForTx:      []RewardsClaim{{100, "v1", "abc"}, {101, "v1", "abc"}, {102, "v1", "abc"}},
+			returnCountForClaim: map[RewardsClaim]int64{{100, "v1", "abc"}: 0, {101, "v1", "abc"}: 2, {102, "v1", "abc"}: 0},
 			events: []*eventpb.Event{
 				testpbRewardEvent(0, "v1", "1000"),
 				testpbRewardEvent(0, "nom1", "1500"),
@@ -942,7 +976,7 @@ func Test_addRewardsFromEvents(t *testing.T) {
 				testpbRewardEvent(0, "v1", "3000"),
 				testpbRewardEvent(0, "nom1", "3500"),
 			},
-			expectClaimed: []RewardsClaim{{101, "v1"}},
+			expectClaimed: []RewardsClaim{{101, "v1", "abc"}},
 			expectRewards: []model.RewardEraSeq{
 				{
 					EraSequence:           &model.EraSequence{Era: 100},
@@ -980,31 +1014,31 @@ func Test_addRewardsFromEvents(t *testing.T) {
 		},
 		{
 			description:         "expect error if rewards count < len(rewards)",
-			rawClaimsForTx:      []RewardsClaim{{100, "v1"}},
-			returnCountForClaim: map[RewardsClaim]int64{{100, "v1"}: 1},
+			rawClaimsForTx:      []RewardsClaim{{100, "v1", "abc"}},
+			returnCountForClaim: map[RewardsClaim]int64{{100, "v1", "abc"}: 1},
 			events:              []*eventpb.Event{testpbRewardEvent(0, "v1", "1500"), testpbRewardEvent(0, "nom1", "1000"), testpbRewardEvent(0, "nom2", "2000")},
 			expectErr:           true,
 		},
 		{
 			description:         "expect error if rewards count > len(rewards)+2",
-			rawClaimsForTx:      []RewardsClaim{{100, "v1"}},
-			returnCountForClaim: map[RewardsClaim]int64{{100, "v1"}: 5},
+			rawClaimsForTx:      []RewardsClaim{{100, "v1", "abc"}},
+			returnCountForClaim: map[RewardsClaim]int64{{100, "v1", "abc"}: 5},
 			events:              []*eventpb.Event{testpbRewardEvent(0, "v1", "1500"), testpbRewardEvent(0, "nom1", "1000"), testpbRewardEvent(0, "nom2", "2000")},
 			expectErr:           true,
 		},
 		{
 			description:         "expect claim if rewards count == len(rewards)",
-			rawClaimsForTx:      []RewardsClaim{{100, "v1"}},
-			returnCountForClaim: map[RewardsClaim]int64{{100, "v1"}: 3},
+			rawClaimsForTx:      []RewardsClaim{{100, "v1", "abc"}},
+			returnCountForClaim: map[RewardsClaim]int64{{100, "v1", "abc"}: 3},
 			events:              []*eventpb.Event{testpbRewardEvent(0, "v1", "1500"), testpbRewardEvent(0, "nom1", "1000"), testpbRewardEvent(0, "nom2", "2000")},
-			expectClaimed:       []RewardsClaim{{100, "v1"}},
+			expectClaimed:       []RewardsClaim{{100, "v1", "abc"}},
 		},
 		{
 			description:         "expect claim if rewards count == len(rewards)+1",
-			rawClaimsForTx:      []RewardsClaim{{100, "v1"}},
-			returnCountForClaim: map[RewardsClaim]int64{{100, "v1"}: 4},
+			rawClaimsForTx:      []RewardsClaim{{100, "v1", "abc"}},
+			returnCountForClaim: map[RewardsClaim]int64{{100, "v1", "abc"}: 4},
 			events:              []*eventpb.Event{testpbRewardEvent(0, "v1", "1500"), testpbRewardEvent(0, "nom1", "1000"), testpbRewardEvent(0, "nom2", "2000")},
-			expectClaimed:       []RewardsClaim{{100, "v1"}},
+			expectClaimed:       []RewardsClaim{{100, "v1", "abc"}},
 		},
 	}
 
@@ -1029,7 +1063,7 @@ func Test_addRewardsFromEvents(t *testing.T) {
 				validatorMock.EXPECT().FindByEraAndStashAccount(c.Era, c.ValidatorStash).Return(tt.returnValidatorSeq, nil).AnyTimes()
 			}
 
-			task := NewTransactionParserTask(nil, nil, rewardsMock, syncablesMock, validatorMock)
+			task := NewTransactionParserTask(nil, rewardsMock, syncablesMock, validatorMock)
 
 			rewards, claims, err := task.getRewardsFromEvents(0, tt.rawClaimsForTx, tt.events)
 			if tt.expectErr {
@@ -1076,19 +1110,19 @@ func Test_addRewardsFromEvents(t *testing.T) {
 	}{
 		{
 			description:    "expect no error when db returns no error",
-			rawClaimsForTx: []RewardsClaim{{100, "v1"}},
+			rawClaimsForTx: []RewardsClaim{{100, "v1", "abc"}},
 			events:         []*eventpb.Event{testpbRewardEvent(0, "v1", "1500")},
 		},
 		{
 			description:        "expect error when rewards db returns error",
-			rawClaimsForTx:     []RewardsClaim{{100, "v1"}},
+			rawClaimsForTx:     []RewardsClaim{{100, "v1", "abc"}},
 			events:             []*eventpb.Event{testpbRewardEvent(0, "v1", "1500")},
 			returnRewardsDbErr: dbErr,
 			expectErr:          dbErr,
 		},
 		{
 			description:          "expect error when syncables db returns error",
-			rawClaimsForTx:       []RewardsClaim{{100, "v1"}},
+			rawClaimsForTx:       []RewardsClaim{{100, "v1", "abc"}},
 			events:               []*eventpb.Event{testpbRewardEvent(0, "v1", "1500")},
 			returnSyncablesDbErr: dbErr,
 			expectErr:            dbErr,
@@ -1108,7 +1142,7 @@ func Test_addRewardsFromEvents(t *testing.T) {
 			rewardsMock.EXPECT().GetCount(gomock.Any(), gomock.Any()).Return(zero, tt.returnRewardsDbErr).AnyTimes()
 			syncablesMock.EXPECT().FindLastInEra(gomock.Any()).Return(&model.Syncable{}, tt.returnSyncablesDbErr).AnyTimes()
 
-			task := NewTransactionParserTask(nil, nil, rewardsMock, syncablesMock, validatorMock)
+			task := NewTransactionParserTask(nil, rewardsMock, syncablesMock, validatorMock)
 
 			_, _, err := task.getRewardsFromEvents(tt.txIdx, tt.rawClaimsForTx, tt.events)
 			if err != tt.expectErr {
@@ -1124,8 +1158,9 @@ func testpbRewardEvent(txIdx int64, stash, amount string) *eventpb.Event {
 	return &eventpb.Event{ExtrinsicIndex: txIdx, Method: "Reward", Section: "staking", Data: []*eventpb.EventData{{Name: "AccountId", Value: stash}, {Name: "Balance", Value: amount}}}
 }
 
-func testPayoutStakersTx(stash string, era int64) *transactionpb.Transaction {
+func testPayoutStakersTx(stash string, era int64, hash string) *transactionpb.Transaction {
 	return &transactionpb.Transaction{
+		Hash:      hash,
 		Method:    txMethodPayoutStakers,
 		Section:   sectionStaking,
 		IsSuccess: true,
