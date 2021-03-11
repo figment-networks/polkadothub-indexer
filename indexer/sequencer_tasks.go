@@ -501,31 +501,6 @@ func (t *rewardEraSeqCreatorTask) getEraSeq(era int64, currentSyncable *model.Sy
 	}, nil
 }
 
-// func (t *rewardEraSeqCreatorTask) getEraSeq(era int64) (model.EraSequence, error) {
-// 	var firstHeightInEra int64
-// 	lastSyncableInPrevEra, err := t.syncablesDb.FindLastInEra(era - 1)
-// 	if err != nil {
-// 		if err != store.ErrNotFound {
-// 			return model.EraSequence{}, err
-// 		}
-// 		firstHeightInEra = t.cfg.FirstBlockHeight
-// 	} else {
-// 		firstHeightInEra = lastSyncableInPrevEra.Height + 1
-// 	}
-
-// 	lastSyncableInEra, err := t.syncablesDb.FindLastInEra(era)
-// 	if err != nil {
-// 		return model.EraSequence{}, err
-// 	}
-
-// 	return model.EraSequence{
-// 		Era:         era,
-// 		StartHeight: firstHeightInEra,
-// 		EndHeight:   lastSyncableInEra.Height,
-// 		Time:        lastSyncableInEra.Time,
-// 	}, nil
-// }
-
 // getRewardsFromEvents rreturns claims if rewards exist already in db, and returns new reward seqs if reward seqs don't exist in db
 func (t *rewardEraSeqCreatorTask) getRewardsFromEvents(txIdx int64, claims []RewardsClaim, events []*eventpb.Event) ([]model.RewardEraSeq, []RewardsClaim, error) {
 	var rewards []model.RewardEraSeq

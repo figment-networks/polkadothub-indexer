@@ -187,12 +187,10 @@ func (t *validatorsParserTask) getUnclaimedRewardData(calc RewardsCalculator, ra
 	if commPayout.Cmp(&zero) > 0 {
 		data.Commission = commPayout.String()
 	}
-	if leftoverPayout.Cmp(&zero) <= 0 { // TODO check 100% commission
-		return data
-	}
 
 	validatorStake := *big.NewInt(rawValidator.GetTotalStake())
 	rewardPayout := calc.nominatorPayout(leftoverPayout, *big.NewInt(rawValidator.GetOwnStake()), validatorStake)
+
 	if rewardPayout.Cmp(&zero) > 0 {
 		data.Reward = rewardPayout.String()
 	}
@@ -203,9 +201,6 @@ func (t *validatorsParserTask) getUnclaimedRewardData(calc RewardsCalculator, ra
 		}
 
 		amount := calc.nominatorPayout(leftoverPayout, *big.NewInt(n.GetStake()), validatorStake)
-		if amount.Cmp(&zero) <= 0 {
-			continue
-		}
 
 		reward := stakerReward{
 			Amount: amount.String(),
