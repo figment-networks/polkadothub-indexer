@@ -32,8 +32,8 @@ func (s TransactionSeqStore) BulkUpsert(records []model.TransactionSeq) error {
 	})
 }
 
-// GetTransactionByTransactionKind gets transactions by kind
-func (s TransactionSeqStore) GetTransactionByTransactionKind(kind model.TransactionKind) ([]model.TransactionSeq, error) {
+// GetTransactionsByTransactionKind gets transactions by kind
+func (s TransactionSeqStore) GetTransactionsByTransactionKind(kind model.TransactionKind) ([]model.TransactionSeq, error) {
 	var results []model.TransactionSeq
 
 	err := s.db.

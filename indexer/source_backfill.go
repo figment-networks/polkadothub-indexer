@@ -162,7 +162,7 @@ func (s *backfillSource) setHeightsWhitelistForEra(isLastInSession, isLastInEra 
 
 func (s *backfillSource) setHeightsWhitelistForTrxFilter(kinds []model.TransactionKind) error {
 	for _, kind := range kinds {
-		transactions, err := s.transactionDb.GetTransactionByTransactionKind(kind)
+		transactions, err := s.transactionDb.GetTransactionsByTransactionKind(kind)
 		if err != nil {
 			return err
 		}
@@ -171,6 +171,7 @@ func (s *backfillSource) setHeightsWhitelistForTrxFilter(kinds []model.Transacti
 			s.heightsWhitelist[trx.Height] = struct{}{}
 		}
 	}
+
 	return nil
 }
 

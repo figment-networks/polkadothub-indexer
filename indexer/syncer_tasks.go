@@ -3,7 +3,6 @@ package indexer
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/figment-networks/polkadothub-indexer/metric"
