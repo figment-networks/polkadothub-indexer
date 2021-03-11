@@ -36,8 +36,11 @@ const (
 	txMethodPayoutStakers = "payoutStakers"
 	txMethodBatch         = "batch"
 	txMethodBatchAll      = "batchAll"
+	txMethodProxy         = "proxy"
+	txMethodSudo          = "sudo"
 	sectionUtility        = "utility"
 	sectionStaking        = "staking"
+	sectionProxy          = "proxy"
 
 	accountKey = "AccountId"
 	balanceKey = "Balance"
@@ -266,9 +269,13 @@ func (t *transactionParserTask) Run(ctx context.Context, p pipeline.Payload) err
 
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StageParser, t.GetName(), payload.CurrentHeight))
 
-	for _, tx := range payload.RawTransactions {
+	for _, tx := range payload.RawBlock.GetExtrinsics() {
 		var claims []RewardsClaim
 		var err error
+
+		if !tx.GetIsSuccess() {
+			continue
+		}
 
 		if tx.GetSection() == sectionStaking && tx.GetMethod() == txMethodPayoutStakers {
 			claim, err := getRewardsClaimFromPayoutStakersTx(tx.GetArgs())
@@ -276,10 +283,16 @@ func (t *transactionParserTask) Run(ctx context.Context, p pipeline.Payload) err
 				return err
 			}
 			claims = append(claims, claim)
-		} else if tx.GetSection() == sectionUtility && (tx.GetMethod() == txMethodBatch || tx.GetMethod() == txMethodBatchAll) {
-			claims, err = getRewardsClaimFromBatchTx(tx.GetArgs())
-			if err != nil {
-				return err
+		} else if (tx.GetSection() == sectionUtility && (tx.GetMethod() == txMethodBatch || tx.GetMethod() == txMethodBatchAll)) ||
+			(tx.GetSection() == sectionProxy && tx.GetMethod() == txMethodProxy) {
+			for _, callArg := range tx.GetCallArgs() {
+				if callArg.GetSection() == sectionStaking && callArg.GetMethod() == txMethodPayoutStakers {
+					claim, err := getRewardsClaimFromPayoutStakersTx(callArg.GetValue())
+					if err != nil {
+						return err
+					}
+					claims = append(claims, claim)
+				}
 			}
 		}
 
@@ -455,37 +468,4 @@ func getStashAndEraFromPayoutArgs(data []string) (RewardsClaim, error) {
 		Era:            era,
 		ValidatorStash: data[0],
 	}, nil
-}
-
-type batchArgs struct {
-	Method  string   `json:"method"`
-	Section string   `json:"section"`
-	Args    []string `json:"args"`
-}
-
-func getRewardsClaimFromBatchTx(args string) ([]RewardsClaim, error) {
-	var resp []RewardsClaim
-	var data [][]batchArgs
-
-	err := json.Unmarshal([]byte(args), &data)
-	if err != nil {
-		return resp, err
-	}
-
-	if len(data) != 1 {
-		return resp, errUnexpectedTxDataFormat
-	}
-
-	for _, batch := range data[0] {
-		if batch.Method != "payoutStakers" {
-			continue
-		}
-		r, err := getStashAndEraFromPayoutArgs(batch.Args)
-		if err != nil {
-			return resp, err
-		}
-		resp = append(resp, r)
-	}
-
-	return resp, nil
 }

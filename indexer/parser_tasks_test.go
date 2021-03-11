@@ -27,7 +27,7 @@ func TestBlockParserTask_Run(t *testing.T) {
 	}{
 		{"updates ParsedBlockData with signed extrinsic",
 			&blockpb.Block{
-				Extrinsics: []*blockpb.Extrinsic{
+				Extrinsics: []*transactionpb.Transaction{
 					{IsSignedTransaction: true},
 				},
 			},
@@ -39,7 +39,7 @@ func TestBlockParserTask_Run(t *testing.T) {
 		},
 		{"updates ParsedBlockData with unsigned extrinsic",
 			&blockpb.Block{
-				Extrinsics: []*blockpb.Extrinsic{
+				Extrinsics: []*transactionpb.Transaction{
 					{IsSignedTransaction: false},
 				},
 			},
@@ -51,7 +51,7 @@ func TestBlockParserTask_Run(t *testing.T) {
 		},
 		{"updates ParsedBlockData with multiple extrinsics",
 			&blockpb.Block{
-				Extrinsics: []*blockpb.Extrinsic{
+				Extrinsics: []*transactionpb.Transaction{
 					{IsSignedTransaction: false},
 					{IsSignedTransaction: false},
 					{IsSignedTransaction: false},
@@ -361,22 +361,22 @@ func TestValidatorParserTask_Run(t *testing.T) {
 func TestTransactionParserTask_Run(t *testing.T) {
 	markClaimedTest := []struct {
 		description   string
-		txs           []*transactionpb.Annotated
+		txs           []*transactionpb.Transaction
 		events        []*eventpb.Event
 		expectErr     bool
 		expectClaimed []RewardsClaim
 	}{
 		{
-			description: "updates payload if there's a payout stakers transaction",
-			txs:         []*transactionpb.Annotated{testPayoutStakersTx("v1", 182)},
+			description: "expect claims if there's a payout stakers transaction",
+			txs:         []*transactionpb.Transaction{testPayoutStakersTx("v1", 182)},
 			events: []*eventpb.Event{
 				testpbRewardEvent(0, "v1", "1000"),
 			},
 			expectClaimed: []RewardsClaim{{182, "v1"}},
 		},
 		{
-			description: "updates payload if there's multiple payout stakers transaction",
-			txs:         []*transactionpb.Annotated{testPayoutStakersTx("v1", 182), testPayoutStakersTx("v1", 180), testPayoutStakersTx("v2", 180)},
+			description: "expect claims if there's multiple payout stakers transaction",
+			txs:         []*transactionpb.Transaction{testPayoutStakersTx("v1", 182), testPayoutStakersTx("v1", 180), testPayoutStakersTx("v2", 180)},
 			events: []*eventpb.Event{
 				testpbRewardEvent(0, "v1", "1000"),
 				testpbRewardEvent(1, "v1", "2000"),
@@ -385,22 +385,23 @@ func TestTransactionParserTask_Run(t *testing.T) {
 			expectClaimed: []RewardsClaim{{182, "v1"}, {180, "v1"}, {180, "v2"}},
 		},
 		{
-			description: "does not update payload if there's a mix of transactions",
-			txs:         []*transactionpb.Annotated{{Section: "staking", Method: "Foo"}, testPayoutStakersTx("v1", 180)},
+			description: "expect claims only for payout stakers tx",
+			txs:         []*transactionpb.Transaction{{Section: "staking", Method: "Foo", IsSuccess: true}, testPayoutStakersTx("v1", 180)},
 			events: []*eventpb.Event{
 				testpbRewardEvent(1, "v1", "2000"),
 			},
 			expectClaimed: []RewardsClaim{{180, "v1"}},
 		},
 		{
-			description: "updates payload if there's a utility batch transaction containing payout stakers txs",
-			txs: []*transactionpb.Annotated{
-				{Method: "batch", Section: "utility", Args: `[[
-					{"args":["foo"],"method":"foo","section":"staking"},
-					{"args":["v1","199"],"method":"payoutStakers","section":"staking"},
-					{"args":["v1","202"],"method":"payoutStakers","section":"staking"},
-					{"args":["v2","202"],"method":"payoutStakers","section":"staking"}
-					]]`},
+			description: "expect claims if there's a utility batch transaction containing payout stakers txs",
+			txs: []*transactionpb.Transaction{
+				{Method: "batch", Section: "utility",
+					CallArgs: []*transactionpb.CallArg{
+						{Method: "payoutStakers", Section: "staking", Value: `["v1","199"]`},
+						{Method: "payoutStakers", Section: "staking", Value: `["v1","202"]`},
+						{Method: "payoutStakers", Section: "staking", Value: `["v2","202"]`},
+					},
+					IsSuccess: true},
 			},
 			events: []*eventpb.Event{
 				testpbRewardEvent(0, "v1", "1000"),
@@ -410,14 +411,15 @@ func TestTransactionParserTask_Run(t *testing.T) {
 			expectClaimed: []RewardsClaim{{199, "v1"}, {202, "v1"}, {202, "v2"}},
 		},
 		{
-			description: "updates payload if there's a utility batchAll transaction containing payout stakers txs",
-			txs: []*transactionpb.Annotated{
-				{Method: "batchAll", Section: "utility", Args: `[[
-					{"args":["foo"],"method":"foo","section":"staking"},
-					{"args":["v1","199"],"method":"payoutStakers","section":"staking"},
-					{"args":["v1","202"],"method":"payoutStakers","section":"staking"},
-					{"args":["v2","202"],"method":"payoutStakers","section":"staking"}
-					]]`},
+			description: "expect claims if there's a utility batchAll transaction containing payout stakers txs",
+			txs: []*transactionpb.Transaction{
+				{Method: "batchAll", Section: "utility",
+					CallArgs: []*transactionpb.CallArg{
+						{Method: "payoutStakers", Section: "staking", Value: `["v1","199"]`},
+						{Method: "payoutStakers", Section: "staking", Value: `["v1","202"]`},
+						{Method: "payoutStakers", Section: "staking", Value: `["v2","202"]`},
+					},
+					IsSuccess: true},
 			},
 			events: []*eventpb.Event{
 				testpbRewardEvent(0, "v1", "1000"),
@@ -427,22 +429,47 @@ func TestTransactionParserTask_Run(t *testing.T) {
 			expectClaimed: []RewardsClaim{{199, "v1"}, {202, "v1"}, {202, "v2"}},
 		},
 		{
-			description: "expect error if utility.batch args is in unknown format",
-			txs: []*transactionpb.Annotated{
-				{Method: "batchAll", Section: "utility", Args: `[
-					{"args":["v1","199"],"method":"payoutStakers","section":"staking"},
-					]`},
+			description: "expect claims if there's a proxy proxy transaction containing payout stakers txs",
+			txs: []*transactionpb.Transaction{
+				{Method: "proxy", Section: "proxy",
+					CallArgs: []*transactionpb.CallArg{
+						{Method: "payoutStakers", Section: "staking", Value: `["v1","199"]`},
+						{Method: "payoutStakers", Section: "staking", Value: `["v1","202"]`},
+						{Method: "payoutStakers", Section: "staking", Value: `["v2","202"]`},
+					},
+					IsSuccess: true},
+			},
+			events: []*eventpb.Event{
+				testpbRewardEvent(0, "v1", "1000"),
+				testpbRewardEvent(0, "v1", "2000"),
+				testpbRewardEvent(0, "v2", "2000"),
+			},
+			expectClaimed: []RewardsClaim{{199, "v1"}, {202, "v1"}, {202, "v2"}},
+		},
+		{
+			description: "does not expect claims if tx is not a success",
+			txs: []*transactionpb.Transaction{
+				{Method: "batchAll", Section: "utility",
+					CallArgs: []*transactionpb.CallArg{
+						{Method: "payoutStakers", Section: "staking", Value: `["v1","199"]`},
+					}, IsSuccess: false},
 			},
 			events: []*eventpb.Event{
 				testpbRewardEvent(0, "v1", "1000"),
 			},
-			expectErr: true,
+			expectClaimed: []RewardsClaim{},
 		},
 		{
-			description: "expect error if staking.payoutStakers args is in unknown format",
-			txs:         []*transactionpb.Annotated{{Section: "staking", Method: "payoutStakers", Args: "foo"}},
+			description: "expect error if there's a batch transaction with call args in unknown format",
+			txs: []*transactionpb.Transaction{
+				{Method: "batchAll", Section: "utility",
+					CallArgs: []*transactionpb.CallArg{
+						{Method: "payoutStakers", Section: "staking", Value: `[validatorId: "v1", era: "199"]`},
+					},
+					IsSuccess: true},
+			},
 			events: []*eventpb.Event{
-				testpbRewardEvent(1, "v1", "2000"),
+				testpbRewardEvent(0, "v1", "1000"),
 			},
 			expectErr: true,
 		},
@@ -465,8 +492,10 @@ func TestTransactionParserTask_Run(t *testing.T) {
 			task := NewTransactionParserTask(nil, nil, rewardsMock, syncablesMock, nil)
 
 			pl := &payload{
-				RawTransactions: tt.txs,
-				RawEvents:       tt.events,
+				RawBlock: &blockpb.Block{
+					Extrinsics: tt.txs,
+				},
+				RawEvents: tt.events,
 			}
 
 			err := task.Run(ctx, pl)
@@ -1095,10 +1124,11 @@ func testpbRewardEvent(txIdx int64, stash, amount string) *eventpb.Event {
 	return &eventpb.Event{ExtrinsicIndex: txIdx, Method: "Reward", Section: "staking", Data: []*eventpb.EventData{{Name: "AccountId", Value: stash}, {Name: "Balance", Value: amount}}}
 }
 
-func testPayoutStakersTx(stash string, era int64) *transactionpb.Annotated {
-	return &transactionpb.Annotated{
-		Method:  txMethodPayoutStakers,
-		Section: sectionStaking,
-		Args:    fmt.Sprintf("[\"%v\",\"%v\"]", stash, era),
+func testPayoutStakersTx(stash string, era int64) *transactionpb.Transaction {
+	return &transactionpb.Transaction{
+		Method:    txMethodPayoutStakers,
+		Section:   sectionStaking,
+		IsSuccess: true,
+		Args:      fmt.Sprintf(`["%v","%v"]`, stash, era),
 	}
 }

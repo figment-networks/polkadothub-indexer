@@ -207,11 +207,11 @@ func ToAccountEraSequence(syncable *model.Syncable, firstHeight int64, rawStakin
 	return accountEraSeqs, nil
 }
 
-func ToTransactionSequence(syncable *model.Syncable, rawTransactions []*transactionpb.Annotated) ([]model.TransactionSeq, error) {
+func ToTransactionSequence(syncable *model.Syncable, rawTransactions []*transactionpb.Transaction) ([]model.TransactionSeq, error) {
 	var transactions []model.TransactionSeq
 
 	for _, rawTx := range rawTransactions {
-		if !rawTx.GetIsSigned() && rawTx.GetSection() != "sudo" {
+		if !rawTx.GetIsSignedTransaction() && rawTx.GetSection() != txMethodSudo {
 			continue
 		}
 

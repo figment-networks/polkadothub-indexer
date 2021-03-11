@@ -320,7 +320,7 @@ func (t *transactionSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload)
 
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StageSequencer, t.GetName(), payload.CurrentHeight))
 
-	mappedTxSeqs, err := ToTransactionSequence(payload.Syncable, payload.RawTransactions)
+	mappedTxSeqs, err := ToTransactionSequence(payload.Syncable, payload.RawBlock.GetExtrinsics())
 	if err != nil {
 		return err
 	}
