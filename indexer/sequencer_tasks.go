@@ -601,9 +601,10 @@ func (t *rewardEraSeqCreatorTask) extractRewardsForClaimFromEvents(claim Rewards
 
 func (t *rewardEraSeqCreatorTask) getStashAndAmountFromData(event *eventpb.Event) (stash string, amount types.Quantity, err error) {
 	for _, d := range event.GetData() {
-		if d.GetName() == accountKey {
+		switch d.GetName() {
+		case accountKey:
 			stash = d.Value
-		} else if d.GetName() == balanceKey {
+		case balanceKey:
 			amount, err = types.NewQuantityFromString(d.Value)
 		}
 	}

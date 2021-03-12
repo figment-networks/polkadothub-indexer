@@ -1075,7 +1075,7 @@ func (mr *MockTransactionSeqMockRecorder) BulkUpsert(arg0 interface{}) *gomock.C
 }
 
 // GetTransactionsByTransactionKind mocks base method
-func (m *MockTransactionSeq) GetTransactionsByTransactionKind(arg0 []model.TransactionKind) ([]model.TransactionSeq, error) {
+func (m *MockTransactionSeq) GetTransactionsByTransactionKind(arg0 model.TransactionKind) ([]model.TransactionSeq, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetTransactionsByTransactionKind", arg0)
 	ret0, _ := ret[0].([]model.TransactionSeq)

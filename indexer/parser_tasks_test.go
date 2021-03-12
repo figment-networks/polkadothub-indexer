@@ -208,7 +208,7 @@ func TestValidatorParserTask_Run(t *testing.T) {
 			totalRewardPoints: 100,
 			totalRewardPayout: "",
 		},
-		{description: "Does not create staker rewards if commission is 100%",
+		{description: "Creates staker rewards if commission is 100%",
 			rawValidator: &stakingpb.Validator{
 				RewardPoints: 50,
 				Commission:   1000000000,
@@ -225,7 +225,7 @@ func TestValidatorParserTask_Run(t *testing.T) {
 			expectCommission:       true,
 			expectNumStakerRewards: 2,
 		},
-		{description: "Does not create commission if commission is 100%",
+		{description: "Does not create commission if commission is 0",
 			rawValidator: &stakingpb.Validator{
 				RewardPoints: 50,
 				Commission:   0,
@@ -241,7 +241,7 @@ func TestValidatorParserTask_Run(t *testing.T) {
 			expectEra:              syncableEra,
 			expectNumStakerRewards: 2,
 		},
-		{description: "Does not create staker reward if reward is 0",
+		{description: "Create staker reward if reward is 0",
 			rawValidator: &stakingpb.Validator{
 				RewardPoints: 50,
 				Commission:   300000000,
@@ -256,7 +256,7 @@ func TestValidatorParserTask_Run(t *testing.T) {
 			totalRewardPayout:      "4000",
 			expectCommission:       true,
 			expectEra:              syncableEra,
-			expectNumStakerRewards: 1,
+			expectNumStakerRewards: 2,
 		},
 		{description: "expect validtor reward if validator is staked",
 			rawValidator: &stakingpb.Validator{
