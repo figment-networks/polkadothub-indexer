@@ -442,10 +442,10 @@ func (t *rewardEraSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) e
 
 		if tx.GetSection() == sectionStaking && tx.GetMethod() == txMethodPayoutStakers {
 			claim, err := getRewardsClaimFromPayoutStakersTx(tx.GetArgs())
-			claim.TxHash = tx.GetHash()
 			if err != nil {
 				return err
 			}
+			claim.TxHash = tx.GetHash()
 			claims = append(claims, claim)
 		} else if (tx.GetSection() == sectionUtility && (tx.GetMethod() == txMethodBatch || tx.GetMethod() == txMethodBatchAll)) ||
 			(tx.GetSection() == sectionProxy && tx.GetMethod() == txMethodProxy) {
