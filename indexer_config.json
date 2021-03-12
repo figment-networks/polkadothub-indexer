@@ -36,6 +36,13 @@
           "parallel": true,
           "last_in_era": true,
           "transaction_kind": [{"section": "utility", "method": "batch"}, {"section": "utility", "method": "batchAll"},{"section": "staking", "method": "payoutStakers"}]
+        },
+        {
+          "id": 8,
+          "targets": [12],
+          "parallel": true,
+          "last_in_era": true,
+          "transaction_kind": [{"section": "utility", "method": "batch"}, {"section": "utility", "method": "batchAll"},{"section": "staking", "method": "payoutStakers"}]
         }
     ],
     "shared_tasks": [
