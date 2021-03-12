@@ -316,7 +316,7 @@ func (t *RewardEraSeqPersistorTask) Run(ctx context.Context, p pipeline.Payload)
 	}
 
 	for _, claim := range payload.RewardsClaimed {
-		err = t.rewardsDb.MarkAllClaimed(claim.ValidatorStash, claim.Era)
+		err = t.rewardsDb.MarkAllClaimed(claim.ValidatorStash, claim.Era, claim.TxHash)
 		if err != nil {
 			return err
 		}

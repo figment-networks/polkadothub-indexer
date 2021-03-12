@@ -1,0 +1,1 @@
+ALTER TABLE reward_era_sequences DROP COLUMN tx_hash;

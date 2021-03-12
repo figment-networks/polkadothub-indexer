@@ -21,6 +21,7 @@ type RewardEraSeq struct {
 	Amount                string     `json:"amount"`
 	Kind                  RewardKind `json:"kind"`
 	Claimed               bool       `json:"claimed"`
+	TxHash                string     `json:"tx_hash"`
 }
 
 func (RewardEraSeq) TableName() string {

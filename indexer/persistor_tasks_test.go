@@ -433,7 +433,7 @@ func TestRewardPersistor_Run(t *testing.T) {
 		},
 		{
 			description: "calls db with rewards claims",
-			claims:      []RewardsClaim{{100, "acct1"}, {102, "acct2"}},
+			claims:      []RewardsClaim{{100, "acct1", "abc"}, {102, "acct2", "def"}},
 			expectErr:   nil,
 		},
 	}
@@ -457,7 +457,7 @@ func TestRewardPersistor_Run(t *testing.T) {
 			dbMock.EXPECT().BulkUpsert(tt.rewards).Return(tt.upsertErr).Times(1)
 
 			for _, claim := range tt.claims {
-				dbMock.EXPECT().MarkAllClaimed(claim.ValidatorStash, claim.Era).Return(nil).Times(1)
+				dbMock.EXPECT().MarkAllClaimed(claim.ValidatorStash, claim.Era, claim.TxHash).Return(nil).Times(1)
 			}
 			if err := task.Run(ctx, pl); err != tt.expectErr {
 				t.Errorf("want %v; got %v", tt.expectErr, err)

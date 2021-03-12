@@ -80,7 +80,7 @@ func NewPipeline(cfg *config.Config, cli *client.Client, accountDb store.Account
 			pipeline.RetryingTask(NewEventSeqCreatorTask(eventDb), isTransient, maxRetries),
 			pipeline.RetryingTask(NewAccountEraSeqCreatorTask(cfg, accountDb, syncableDb), isTransient, maxRetries),
 			pipeline.RetryingTask(NewTransactionSeqCreatorTask(transactionDb), isTransient, maxRetries),
-			pipeline.RetryingTask(NewRewardEraSeqCreatorTask(cfg, syncableDb), isTransient, maxRetries),
+			pipeline.RetryingTask(NewRewardEraSeqCreatorTask(cfg, rewardDb, syncableDb, validatorDb), isTransient, maxRetries),
 		),
 	)
 

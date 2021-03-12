@@ -23,22 +23,20 @@ const (
 )
 
 type HeightDetailsView struct {
-	Nonce           int64  `json:"nonce"`
-	ReferendumCount int64  `json:"referendum_count"`
-	Free            string `json:"free"`
-	Reserved        string `json:"reserved"`
-	MiscFrozen      string `json:"misc_frozen"`
-	FeeFrozen       string `json:"fee_frozen"`
+	Nonce      int64  `json:"nonce"`
+	Free       string `json:"free"`
+	Reserved   string `json:"reserved"`
+	MiscFrozen string `json:"misc_frozen"`
+	FeeFrozen  string `json:"fee_frozen"`
 }
 
 func ToHeightDetailsView(rawAccount *accountpb.Account) *HeightDetailsView {
 	return &HeightDetailsView{
-		Nonce:           rawAccount.GetNonce(),
-		ReferendumCount: rawAccount.GetReferendumCount(),
-		Free:            rawAccount.GetFree(),
-		Reserved:        rawAccount.GetReserved(),
-		MiscFrozen:      rawAccount.GetMiscFrozen(),
-		FeeFrozen:       rawAccount.GetFeeFrozen(),
+		Nonce:      rawAccount.GetNonce(),
+		Free:       rawAccount.GetFree(),
+		Reserved:   rawAccount.GetReserved(),
+		MiscFrozen: rawAccount.GetMiscFrozen(),
+		FeeFrozen:  rawAccount.GetFeeFrozen(),
 	}
 }
 
