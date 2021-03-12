@@ -6,7 +6,6 @@ import (
 	"github.com/figment-networks/polkadothub-proxy/grpc/block/blockpb"
 	"github.com/figment-networks/polkadothub-proxy/grpc/event/eventpb"
 	"github.com/figment-networks/polkadothub-proxy/grpc/staking/stakingpb"
-	"github.com/figment-networks/polkadothub-proxy/grpc/transaction/transactionpb"
 	"github.com/figment-networks/polkadothub-proxy/grpc/validator/validatorpb"
 	"github.com/figment-networks/polkadothub-proxy/grpc/validatorperformance/validatorperformancepb"
 )
@@ -31,6 +30,7 @@ func (pf *payloadFactory) GetPayload(currentHeight int64) pipeline.Payload {
 type RewardsClaim struct {
 	Era            int64
 	ValidatorStash string
+	TxHash         string
 }
 
 type payload struct {
@@ -42,7 +42,6 @@ type payload struct {
 	RawValidatorPerformance []*validatorperformancepb.Validator
 	RawStaking              *stakingpb.Staking
 	RawEvents               []*eventpb.Event
-	RawTransactions         []*transactionpb.Annotated
 	RawValidators           []*validatorpb.Validator
 
 	// Syncer stage

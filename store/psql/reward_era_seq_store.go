@@ -45,6 +45,7 @@ func (s RewardEraSeqStore) BulkUpsert(records []model.RewardEraSeq) error {
 				r.Amount,
 				r.Kind,
 				r.Claimed,
+				r.TxHash,
 			}
 		})
 		if err != nil {
@@ -55,11 +56,12 @@ func (s RewardEraSeqStore) BulkUpsert(records []model.RewardEraSeq) error {
 }
 
 // MarkAllClaimed updates all rewards for validatorStash and era as claimed. Returns error if nothing updates
-func (s RewardEraSeqStore) MarkAllClaimed(validatorStash string, era int64) error {
+func (s RewardEraSeqStore) MarkAllClaimed(validatorStash string, era int64, txHash string) error {
 	// Update with conditions
 	result := s.db.Model(&model.RewardEraSeq{}).
 		Where("validator_stash_account = ? AND era = ?", validatorStash, era).
-		Update("claimed", true)
+		Update("claimed", true).
+		Update("tx_hash", txHash)
 	if result.Error != nil {
 		return result.Error
 	}

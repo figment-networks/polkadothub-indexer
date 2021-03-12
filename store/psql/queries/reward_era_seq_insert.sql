@@ -7,7 +7,8 @@ INSERT INTO reward_era_sequences (
   validator_stash_account,
   amount,
   kind,
-  claimed
+  claimed,
+  tx_hash
 )
 VALUES @values
 
