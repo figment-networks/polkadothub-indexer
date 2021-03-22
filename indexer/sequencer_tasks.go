@@ -3,6 +3,7 @@ package indexer
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -44,6 +45,8 @@ const (
 var (
 	_ pipeline.Task = (*blockSeqCreatorTask)(nil)
 	_ pipeline.Task = (*validatorSessionSeqCreatorTask)(nil)
+
+	errCannotCalculateRewards = errors.New("cannot calculate rewards")
 )
 
 const (
@@ -374,7 +377,7 @@ func (t *rewardEraSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) e
 
 	payload := p.(*payload)
 
-	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StageParser, t.GetName(), payload.CurrentHeight))
+	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StageSequencer, t.GetName(), payload.CurrentHeight))
 
 	currentEraSeq, err := t.getEraSeq(payload.Syncable.Era, payload.Syncable)
 	if err != nil {
@@ -466,12 +469,21 @@ func (t *rewardEraSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) e
 
 		legitimateClaims, rewardArgs, err := t.getLegitimateClaimsAndRewardArgs(claims, payload.RawEvents, tx.GetExtrinsicIndex())
 		if err != nil {
-			// TODO impossible to extract rewards for this claim
-			continue
+			if errors.Is(err, errCannotCalculateRewards) {
+				// impossible to extract rewards for this claim, so report error and keep going (should be calulcated successfully via backfill)
+				logger.Error(err, logger.Field("height", payload.CurrentHeight), logger.Field("task", t.GetName()), logger.Field("stage", pipeline.StageSequencer))
+				continue
+			}
+			return err
 		}
 
 		rewards, rewardclaims, err := t.extractRewards(legitimateClaims, rewardArgs)
 		if err != nil {
+			if errors.Is(err, errCannotCalculateRewards) {
+				// don't stop pipeline on error, report error to investigate later and keep going
+				logger.Error(err, logger.Field("height", payload.CurrentHeight), logger.Field("task", t.GetName()), logger.Field("stage", pipeline.StageSequencer))
+				continue
+			}
 			return err
 		}
 
@@ -576,7 +588,7 @@ func (t *rewardEraSeqCreatorTask) getLegitimateClaimsAndRewardArgs(claims []Rewa
 			eraset := t.removeDuplicates(claimEras)
 
 			if len(eraset) != eventcount {
-				return legitimate, args, fmt.Errorf("cannot determine legitimate claim for validator %v", c.ValidatorStash)
+				return legitimate, args, fmt.Errorf("cannot detemine legitimate claim for %s %d: %w", c.ValidatorStash, c.Era, errCannotCalculateRewards)
 			}
 		}
 		for _, era := range claimEras {
@@ -612,7 +624,7 @@ func (t *rewardEraSeqCreatorTask) extractRewards(claims []RewardsClaim, rewardAr
 	var rewardClaims []RewardsClaim
 
 	if len(rewardArgs) == 0 && len(claims) != 0 {
-		return rewards, rewardClaims, fmt.Errorf("[extractRewards] expected rewardArgs to not be empty")
+		return rewards, rewardClaims, fmt.Errorf("expected rewardArgs to not be empty: %w", errCannotCalculateRewards)
 	}
 
 	var idx int
