@@ -517,16 +517,28 @@ func (t *rewardEraSeqCreatorTask) getLegitimateClaimsAndRewardArgs(claims []Rewa
 	var legitimate []RewardsClaim
 	var args []rewardEventArgs
 
-	validatorClaimMap := make(map[string]int)
+	// check if validator is eligible for rewards for claim era, and that it hasn't previously claimed rewards
+	claimErasForValidatorMap := make(map[string][]int64)
 	for _, c := range claims {
-		// must be an era validator to claim rewards
 		_, err := t.validatorDb.FindByEraAndStashAccount(c.Era, c.ValidatorStash)
 		if err == store.ErrNotFound {
 			continue
 		} else if err != nil {
 			return legitimate, args, err
 		}
-		validatorClaimMap[c.ValidatorStash]++
+
+		reward, err := t.rewardsDb.GetByStashAndEra(c.ValidatorStash, c.ValidatorStash, c.Era)
+		if err != nil && err != store.ErrNotFound {
+			return legitimate, args, err
+		}
+		if reward.Claimed {
+			continue
+		}
+
+		if _, ok := claimErasForValidatorMap[c.ValidatorStash]; !ok {
+			claimErasForValidatorMap[c.ValidatorStash] = []int64{}
+		}
+		claimErasForValidatorMap[c.ValidatorStash] = append(claimErasForValidatorMap[c.ValidatorStash], c.Era)
 	}
 
 	validatorHasEvent := make(map[string]int)
@@ -540,26 +552,58 @@ func (t *rewardEraSeqCreatorTask) getLegitimateClaimsAndRewardArgs(claims []Rewa
 			return legitimate, args, err
 		}
 
-		if _, ok := validatorClaimMap[arg.stash]; ok {
+		if _, ok := claimErasForValidatorMap[arg.stash]; ok {
 			validatorHasEvent[arg.stash]++
 		}
 		args = append(args, arg)
 	}
 
+	claimMap := make(map[RewardsClaim]struct{})
 	for _, c := range claims {
 		eventcount, ok := validatorHasEvent[c.ValidatorStash]
 		if !ok {
 			continue
 		}
-		claimcount, _ := validatorClaimMap[c.ValidatorStash]
-		if claimcount != eventcount {
-			return legitimate, args, fmt.Errorf("cannot determine legitimate claim for validator %v", c.ValidatorStash)
+		if _, ok := claimMap[c]; ok {
+			// already claimed, so skip
+			continue
 		}
+		claimEras, _ := claimErasForValidatorMap[c.ValidatorStash]
 
-		legitimate = append(legitimate, c)
+		// expect each claim for a validator to have a corresponding event
+		if len(claimEras) != eventcount {
+			// check for duplicate claims
+			eraset := t.removeDuplicates(claimEras)
+
+			if len(eraset) != eventcount {
+				return legitimate, args, fmt.Errorf("cannot determine legitimate claim for validator %v", c.ValidatorStash)
+			}
+		}
+		for _, era := range claimEras {
+			if era == c.Era {
+				legitimate = append(legitimate, c)
+				claimMap[c] = struct{}{}
+				break
+			}
+		}
 	}
 
 	return legitimate, args, nil
+}
+
+func (t *rewardEraSeqCreatorTask) removeDuplicates(eras []int64) []int64 {
+	eramap := make(map[int64]struct{})
+
+	for _, era := range eras {
+		eramap[era] = struct{}{}
+	}
+
+	newEras := make([]int64, 0, len(eramap))
+	for i, _ := range eramap {
+		newEras = append(newEras, i)
+	}
+
+	return newEras
 }
 
 // extractRewards rreturns claims if rewards exist already in db, and returns new reward seqs if reward seqs don't exist in db
