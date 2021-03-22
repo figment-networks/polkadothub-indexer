@@ -120,8 +120,8 @@ github.com/erikstmartin/go-testdb v0.0.0-20160219214506-8d10e4a1bae5/go.mod h1:a
 github.com/fatih/color v1.7.0/go.mod h1:Zm6kSWBoL9eyXnKyktHP6abPY2pDugNf5KwzbycvMj4=
 github.com/figment-networks/indexing-engine v0.1.14 h1:CUC2jJL9lfebzZ4TB+63UwmmKo3KIe8nsJywF2196HU=
 github.com/figment-networks/indexing-engine v0.1.14/go.mod h1:qNrfV0A+kpAprbHS/aK1CZU2OgmVr1xkug26DO2QbY8=
-github.com/figment-networks/polkadothub-proxy/grpc v0.0.0-20201210164304-d5b9edfe1f12 h1:33Hha3KTYeOffUEbJWSEt13q231KCH9g8GD0AtQNQ1w=
-github.com/figment-networks/polkadothub-proxy/grpc v0.0.0-20201210164304-d5b9edfe1f12/go.mod h1:Uf48ek6W9HhZw6QIrW7HEfgGUanK+kbUTeCBZaB8/NM=
+github.com/figment-networks/polkadothub-proxy/grpc v0.0.0-20210301141136-f080237bb721 h1:PMLVB5yDq40B/epS7Jrsuug+Uy2FIwehKNxghB4YUTI=
+github.com/figment-networks/polkadothub-proxy/grpc v0.0.0-20210301141136-f080237bb721/go.mod h1:Uf48ek6W9HhZw6QIrW7HEfgGUanK+kbUTeCBZaB8/NM=
 github.com/franela/goblin v0.0.0-20200105215937-c9ffbefa60db/go.mod h1:7dvUGVsVBjqR7JHJk0brhHOZYGmfBYOrK0ZhYMEtBr4=
 github.com/franela/goreq v0.0.0-20171204163338-bcd34c9993f8/go.mod h1:ZhphrRTfi2rbfLwlschooIH4+wKKDR4Pdxhh+TRoA20=
 github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMoQvtojpjFo=
