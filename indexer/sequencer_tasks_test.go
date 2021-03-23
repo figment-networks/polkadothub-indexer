@@ -347,6 +347,7 @@ func TestRewardEraSeqCreatorTask_Run(t *testing.T) {
 
 			rewardsMock := mock.NewMockRewards(ctrl)
 			rewardsMock.EXPECT().GetCount(gomock.Any(), gomock.Any()).Return(int64(1), nil).AnyTimes()
+			rewardsMock.EXPECT().GetByStashAndEra(gomock.Any(), gomock.Any(), gomock.Any()).Return(model.RewardEraSeq{}, nil).AnyTimes()
 
 			syncablesMock := mock.NewMockSyncables(ctrl)
 			syncablesMock.EXPECT().FindLastInEra(gomock.Any()).Return(&model.Syncable{}, nil).AnyTimes()
