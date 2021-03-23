@@ -114,7 +114,7 @@ func (s *RewardEraSeqStore) GetByStashAndEra(validatorStash, stash string, era i
 	err := s.db.
 		Table(model.RewardEraSeq{}.TableName()).
 		Where("validator_stash_account = ? AND stash_account = ? AND era = ?", validatorStash, stash, era).
-		Count(&result).
+		Find(&result).
 		Error
 
 	return result, checkErr(err)
