@@ -158,7 +158,7 @@ func (t *validatorsParserTask) Run(ctx context.Context, p pipeline.Payload) erro
 
 		if c != nil {
 			parsedRewards := t.getUnclaimedRewardData(c, rawValidatorStakingInfo)
-			parsedRewards.Era = payload.Syncable.Era
+			parsedRewards.Era = payload.HeightMeta.ActiveEra
 			parsedData.parsedRewards = parsedRewards
 		}
 		parsedValidatorsData[stashAccount] = parsedData
