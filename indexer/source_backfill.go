@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/figment-networks/polkadothub-indexer/model"
+	"sort"
 
 	"github.com/figment-networks/indexing-engine/pipeline"
 	"github.com/figment-networks/polkadothub-indexer/client"
@@ -40,6 +41,8 @@ type backfillSource struct {
 	client              *client.Client
 	useWhiteList        bool
 	heightsWhitelist    map[int64]struct{}
+	sortedWhiteListKeys []int64
+	sortedIndex         int64
 	whiteListStages     []pipeline.StageName
 	currentIndexVersion int64
 	currentHeight       int64
@@ -49,9 +52,16 @@ type backfillSource struct {
 }
 
 func (s *backfillSource) Next(context.Context, pipeline.Payload) bool {
-	if s.err == nil && s.currentHeight < s.endHeight {
-		s.currentHeight = s.currentHeight + 1
-		return true
+	if !s.UseWhiteList() {
+		if s.err == nil && s.currentHeight < s.endHeight {
+			s.currentHeight = s.currentHeight + 1
+			return true
+		}
+	} else {
+		s.currentHeight = s.sortedWhiteListKeys[s.sortedIndex]
+		if s.currentHeight < s.endHeight {
+			return true
+		}
 	}
 	return false
 }
@@ -106,6 +116,14 @@ func (s *backfillSource) init(isLastInSession, isLastInEra bool, kinds []model.T
 	}
 
 	s.useWhiteList = useWhiteListForEra || useWhiteListForTrxFilter
+	if s.UseWhiteList() {
+		keysWhitelist := make([]int64, 0, len(s.heightsWhitelist))
+		for k := range s.heightsWhitelist {
+			keysWhitelist = append(keysWhitelist, k)
+		}
+		sort.Slice(keysWhitelist, func(i, j int) bool { return keysWhitelist[i] < keysWhitelist[j] })
+		s.sortedWhiteListKeys = keysWhitelist
+	}
 
 	if err := s.setStartHeight(); err != nil {
 		return err
