@@ -58,8 +58,9 @@ func (s *backfillSource) Next(context.Context, pipeline.Payload) bool {
 			return true
 		}
 	} else {
-		s.currentHeight = s.sortedWhiteListKeys[s.sortedIndex]
-		if s.currentHeight < s.endHeight {
+		s.sortedIndex = s.sortedIndex + 1
+		if s.currentHeight < s.endHeight && s.sortedIndex+1 <= int64(len(s.sortedWhiteListKeys)) {
+			s.currentHeight = s.sortedWhiteListKeys[s.sortedIndex]
 			return true
 		}
 	}
@@ -131,6 +132,10 @@ func (s *backfillSource) init(isLastInSession, isLastInEra bool, kinds []model.T
 	if err := s.setEndHeight(); err != nil {
 		return err
 	}
+	if s.UseWhiteList() {
+		s.currentHeight = s.sortedWhiteListKeys[0]
+	}
+
 	return nil
 }
 

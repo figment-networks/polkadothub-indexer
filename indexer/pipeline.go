@@ -283,8 +283,10 @@ func (p *indexingPipeline) Backfill(ctx context.Context, backfillCfg BackfillCon
 		return err
 	}
 
-	if err := p.syncableDb.UpdateSkippedByHeights(sink.versionNumber, source.startHeight, source.endHeight, source.sortedWhiteListKeys); err != nil {
-		return err
+	if source.UseWhiteList() && len(source.sortedWhiteListKeys) > 0 {
+		if err := p.syncableDb.UpdateSkippedByHeights(sink.versionNumber, source.startHeight, source.endHeight, source.sortedWhiteListKeys); err != nil {
+			return err
+		}
 	}
 
 	logger.Info(fmt.Sprintf("pipeline completed [Err: %+v]", err))
