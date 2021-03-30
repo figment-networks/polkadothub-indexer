@@ -17,7 +17,7 @@ func (s *Server) setupRoutes() {
 	//
 	//     Responses:
 	//       200: ChainDetailsView
-	// 		 400: BadRequestResponse
+	//       400: BadRequestResponse
 	s.engine.GET("/status", s.handlers.GetStatus.Handle)
 	// swagger:route GET /block getBlockByHeight
 	//
@@ -33,7 +33,7 @@ func (s *Server) setupRoutes() {
 	//
 	//     Responses:
 	//       200: BlockDetailsView
-	// 		 400: BadRequestResponse
+	//       400: BadRequestResponse
 	s.engine.GET("/block", s.handlers.GetBlockByHeight.Handle)
 	// swagger:route GET /block_times/:limit getBlockTimes
 	//
@@ -47,7 +47,7 @@ func (s *Server) setupRoutes() {
 	//
 	//     Responses:
 	//       200: BlockTimesView
-	// 		 400: BadRequestResponse
+	//       400: BadRequestResponse
 	s.engine.GET("/block_times/:limit", s.handlers.GetBlockTimes.Handle)
 	// swagger:route GET /blocks_summary getBlocksSummary
 	//
@@ -63,7 +63,7 @@ func (s *Server) setupRoutes() {
 	//
 	//     Responses:
 	//       200: BlockSummary
-	// 		 400: BadRequestResponse
+	//       400: BadRequestResponse
 	s.engine.GET("/blocks_summary", s.handlers.GetBlockSummary.Handle)
 	// swagger:route GET /transactions getTransactions
 	//
@@ -80,7 +80,7 @@ func (s *Server) setupRoutes() {
 	//
 	//     Responses:
 	//       200: TransactionsView
-	// 		 400: BadRequestResponse
+	//       400: BadRequestResponse
 	s.engine.GET("/transactions", s.handlers.GetTransactionsByHeight.Handle)
 	// swagger:route GET /account_details/:stash_account getAccountDetails
 	//
@@ -96,7 +96,7 @@ func (s *Server) setupRoutes() {
 	//
 	//     Responses:
 	//       200: AccountDetailsView
-	// 		 400: BadRequestResponse
+	//       400: BadRequestResponse
 	s.engine.GET("/account_details/:stash_account", s.handlers.GetAccountDetails.Handle)
 	// swagger:route GET /account_rewards/:stash_account getAccountRewards
 	//
@@ -113,7 +113,7 @@ func (s *Server) setupRoutes() {
 	//
 	//     Responses:
 	//       200: AccountRewardsView
-	// 		 400: BadRequestResponse
+	//       400: BadRequestResponse
 	s.engine.GET("/account_rewards/:stash_account", s.handlers.GetAccountRewards.Handle)
 	// swagger:route GET /account/:stash_account getAccountByHeight
 	//
@@ -127,7 +127,7 @@ func (s *Server) setupRoutes() {
 	//
 	//     Responses:
 	//       200: AccountHeightDetailsView
-	// 		 400: BadRequestResponse
+	//       400: BadRequestResponse
 	s.engine.GET("/account/:stash_account", s.handlers.GetAccountByHeight.Handle)
 	// swagger:route GET /system_events/:address getSystemEventsForAddress
 	//
@@ -144,7 +144,7 @@ func (s *Server) setupRoutes() {
 	//
 	//     Responses:
 	//       200: SystemEventsView
-	// 		 400: BadRequestResponse
+	//       400: BadRequestResponse
 	s.engine.GET("/system_events/:address", s.handlers.GetSystemEventsForAddress.Handle)
 	// swagger:route GET /validator/:stash_account getValidatorByStash
 	//
@@ -161,7 +161,7 @@ func (s *Server) setupRoutes() {
 	//
 	//     Responses:
 	//       200: ValidatorAggregateView
-	// 		 400: BadRequestResponse
+	//       400: BadRequestResponse
 	s.engine.GET("/validator/:stash_account", s.handlers.GetValidatorByStashAccount.Handle)
 	// swagger:route GET /validators/for_min_height/:height getValidatorForMinHeight
 	//
@@ -177,7 +177,7 @@ func (s *Server) setupRoutes() {
 	//
 	//     Responses:
 	//       200: ValidatorAggregatesView
-	// 		 400: BadRequestResponse
+	//       400: BadRequestResponse
 	s.engine.GET("/validators/for_min_height/:height", s.handlers.GetValidatorsForMinHeight.Handle)
 	// swagger:route GET /validators getValidatorsByHeight
 	//
@@ -193,7 +193,7 @@ func (s *Server) setupRoutes() {
 	//
 	//     Responses:
 	//       200: ValidatorsView
-	// 		 400: BadRequestResponse
+	//       400: BadRequestResponse
 	s.engine.GET("/validators", s.handlers.GetValidatorsByHeight.Handle)
 	// swagger:route GET /validators_summary getValidatorSummary
 	//
@@ -209,7 +209,7 @@ func (s *Server) setupRoutes() {
 	//
 	//     Responses:
 	//       200: ValidatorsSummariesView
-	// 		 400: BadRequestResponse
+	//       400: BadRequestResponse
 	s.engine.GET("/validators_summary", s.handlers.GetValidatorSummary.Handle)
 	// swagger:route GET /rewards/:stash_account getRewards
 	//
@@ -226,6 +226,6 @@ func (s *Server) setupRoutes() {
 	//
 	//     Responses:
 	//       200: RewardsForErasView
-	// 		 400: BadRequestResponse
+	//       400: BadRequestResponse
 	s.engine.GET("/rewards/:stash_account", s.handlers.GetRewardsForStashAccount.Handle)
 }
