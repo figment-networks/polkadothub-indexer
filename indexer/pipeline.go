@@ -271,8 +271,11 @@ func (p *indexingPipeline) Backfill(ctx context.Context, backfillCfg BackfillCon
 		return err
 	}
 
-	if err := p.syncableDb.SetProcessedAtForRange(reportCreator.report.ID, source.startHeight, source.endHeight); err != nil {
-		return err
+	skipSettingProcessedAt := !(source.UseWhiteList() && backfillCfg.Force)
+	if skipSettingProcessedAt {
+		if err := p.syncableDb.SetProcessedAtForRange(reportCreator.report.ID, source.startHeight, source.endHeight); err != nil {
+			return err
+		}
 	}
 
 	ctxWithReport := context.WithValue(ctx, CtxReport, reportCreator.report)
@@ -284,15 +287,8 @@ func (p *indexingPipeline) Backfill(ctx context.Context, backfillCfg BackfillCon
 	}
 
 	if source.UseWhiteList() && len(source.sortedWhiteListKeys) > 0 {
-		chunkSize := 1000
-		for i := 0; i < len(source.sortedWhiteListKeys); i += chunkSize {
-			end := i + chunkSize
-			if end > len(source.sortedWhiteListKeys) {
-				end = len(source.sortedWhiteListKeys)
-			}
-			if err := p.syncableDb.UpdateSkippedByHeights(sink.versionNumber, source.startHeight, source.endHeight, source.sortedWhiteListKeys[i:end]); err != nil {
-				return err
-			}
+		if err := p.syncableDb.UpdateSkippedHeights(sink.versionNumber, source.startHeight, source.endHeight); err != nil {
+			return err
 		}
 	}
 
