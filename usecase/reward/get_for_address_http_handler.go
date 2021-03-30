@@ -27,10 +27,21 @@ func NewGetForStashAccountHttpHandler(rewardDb store.Rewards) *getForStashAccoun
 	}
 }
 
+// swagger:parameters getRewards
 type GetForStashAccountRequest struct {
-	StashAccount string `uri:"stash_account" binding:"required"`
-	Start        int64  `form:"start" binding:"-"`
-	End          int64  `form:"end" binding:"-"`
+	// StashAccount
+	//
+	// required: true
+	// in: path
+	StashAccount string `json:"stash_account" uri:"stash_account" binding:"required"`
+	// Start
+	//
+	// in: path
+	Start int64 `json:"start"  form:"start" binding:"-"`
+	// End
+	//
+	// in: path
+	End int64 `json:"end"  form:"end" binding:"-"`
 }
 
 func (h *getForStashAccountHttpHandler) Handle(c *gin.Context) {

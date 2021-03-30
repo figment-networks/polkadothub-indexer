@@ -10,6 +10,7 @@ var (
 	zero big.Int
 )
 
+// Quantity is a wrapper for big.Int
 type Quantity struct {
 	big.Int
 }

@@ -31,8 +31,12 @@ func NewGetStatusHttpHandler(client *client.Client, syncablesDb store.Syncables)
 	}
 }
 
+// swagger:parameters getStatus
 type GetStatusRequest struct {
-	IncludeChainStatus bool `form:"include_chain" binding:"-"`
+	// IncludeChainStatus
+	//
+	// in: query
+	IncludeChainStatus bool `json:"include_chain" form:"include_chain" binding:"-"`
 }
 
 func (h *getStatusHttpHandler) Handle(c *gin.Context) {

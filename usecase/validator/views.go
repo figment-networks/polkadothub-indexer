@@ -8,6 +8,7 @@ import (
 	"github.com/lib/pq"
 )
 
+// swagger:response ValidatorAggregatesView
 type AggListView struct {
 	Items []model.ValidatorAgg `json:"items"`
 }
@@ -18,6 +19,7 @@ func ToAggListView(ms []model.ValidatorAgg) *AggListView {
 	}
 }
 
+// swagger:response ValidatorAggregateView
 type AggDetailsView struct {
 	*model.Model
 	*model.Aggregate
@@ -71,6 +73,7 @@ type EraSeqListItem struct {
 	StakersCount      int            `json:"stakers_count"`
 }
 
+// swagger:response ValidatorsView
 type SeqListView struct {
 	SessionItems []SessionSeqListItem `json:"session_items"`
 	EraItems     []EraSeqListItem     `json:"era_items"`
@@ -119,6 +122,7 @@ type syncableInfo struct {
 	Time types.Time `json:"time"`
 }
 
+// swagger:response ValidatorsSummariesView
 type summaryListView struct {
 	Items       []store.ValidatorSummaryRow `json:"items"`
 	LastSession *syncableInfo               `json:"last_indexed_session,omitempty"`

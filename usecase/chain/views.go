@@ -7,6 +7,7 @@ import (
 	"github.com/figment-networks/polkadothub-proxy/grpc/chain/chainpb"
 )
 
+// swagger:response ChainDetailsView
 type DetailsView struct {
 	AppName    string `json:"app_name"`
 	AppVersion string `json:"app_version"`
@@ -26,17 +27,27 @@ type DetailsView struct {
 
 	GenesisHash string `json:"genesis_hash,omitempty"`
 
-	IndexingStarted          bool       `json:"indexing_started"`
-	LastIndexVersion         int64      `json:"last_index_version,omitempty"`
-	LastIndexedHeight        int64      `json:"last_indexed_height,omitempty"`
-	LastIndexedSession       int64      `json:"last_indexed_session,omitempty"`
-	LastIndexedSessionHeight int64      `json:"last_indexed_session_height,omitempty"`
-	LastIndexedEra           int64      `json:"last_indexed_era,omitempty"`
-	LastIndexedEraHeight     int64      `json:"last_indexed_era_height,omitempty"`
-	LastSpecVersion          string     `json:"chain_spec_version,omitempty"`
-	LastIndexedTime          types.Time `json:"last_indexed_time,omitempty"`
-	LastIndexedAt            types.Time `json:"last_indexed_at,omitempty"`
-	Lag                      int64      `json:"indexing_lag,omitempty"`
+	// IndexingStarted is false if indexer has never run before, otherwise returns true
+	IndexingStarted bool `json:"indexing_started"`
+	// LastIndexVersion is config version of last indexed block
+	LastIndexVersion int64 `json:"last_index_version,omitempty"`
+	// LastIndexedHeight is height of last indexed block
+	LastIndexedHeight int64 `json:"last_indexed_height,omitempty"`
+	// LastIndexedSession is session of last indexed block
+	LastIndexedSession int64 `json:"last_indexed_session,omitempty"`
+	// LastIndexedSessionHeight is last indexed height where session was last in session
+	LastIndexedSessionHeight int64 `json:"last_indexed_session_height,omitempty"`
+	// LastIndexedEra is era of last indexed block
+	LastIndexedEra int64 `json:"last_indexed_era,omitempty"`
+	// LastIndexedEraHeight is last indexed height where era was last in era
+	LastIndexedEraHeight int64  `json:"last_indexed_era_height,omitempty"`
+	LastSpecVersion      string `json:"chain_spec_version,omitempty"`
+	// LastIndexedTime is last indexed block time
+	LastIndexedTime types.Time `json:"last_indexed_time,omitempty"`
+	// LastIndexedAt is last time a block was indexed
+	LastIndexedAt types.Time `json:"last_indexed_at,omitempty"`
+	// Lag is how many blocks the indexer is behind the current head of the chain
+	Lag int64 `json:"indexing_lag,omitempty"`
 }
 
 func ToDetailsView(recentSyncable *model.Syncable, headResponse *chainpb.GetHeadResponse, statusResponse *chainpb.GetStatusResponse,

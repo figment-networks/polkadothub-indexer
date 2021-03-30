@@ -30,9 +30,17 @@ func NewGetByHeightHttpHandler(c *client.Client, syncablesDb store.FindMostRecen
 	}
 }
 
+// swagger:parameters getAccountByHeight
 type GetByHeightRequest struct {
-	StashAccount string `uri:"stash_account" binding:"required"`
-	Height       *int64 `form:"height" binding:"-"`
+	// StashAccount
+	//
+	// required: true
+	// in: path
+	StashAccount string `json:"stash_account" uri:"stash_account" binding:"required"`
+	// Height of block
+	//
+	// in: query
+	Height *int64 `json:"height" form:"height" binding:"-"`
 }
 
 func (h *getByHeightHttpHandler) Handle(c *gin.Context) {

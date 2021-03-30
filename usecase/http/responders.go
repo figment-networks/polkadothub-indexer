@@ -44,9 +44,9 @@ func jsonError(c *gin.Context, status int, err interface{}) {
 		message = v
 	}
 
-	c.AbortWithStatusJSON(status, gin.H{
-		"status": status,
-		"error":  message,
+	c.AbortWithStatusJSON(status, ErrorResponse{
+		Status: status,
+		Error:  message,
 	})
 }
 
@@ -64,3 +64,11 @@ func ShouldReturn(c *gin.Context, err error) bool {
 
 	return true
 }
+
+type ErrorResponse struct {
+	Status int         `json:"status"`
+	Error  interface{} `json:"error"`
+}
+
+// swagger:response BadRequestResponse
+type BadRequestResponse = ErrorResponse

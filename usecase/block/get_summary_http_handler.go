@@ -29,9 +29,19 @@ func NewGetBlockSummaryHttpHandler(blockSummaryDb store.BlockSummary) *getBlockS
 	}
 }
 
+// swagger:parameters getBlocksSummary
 type GetBlockTimesForIntervalRequest struct {
-	Interval types.SummaryInterval `form:"interval" binding:"required"`
-	Period   string                `form:"period" binding:"required"`
+	// Interval
+	//
+	// required: true
+	// in: query
+	// example: hour
+	Interval types.SummaryInterval `json:"interval" :"interval" binding:"required"`
+	// Period
+	//
+	// required: true
+	// in: query
+	Period string `json:"period" form:"period" binding:"required"`
 }
 
 func (h *getBlockSummaryHttpHandler) Handle(c *gin.Context) {
