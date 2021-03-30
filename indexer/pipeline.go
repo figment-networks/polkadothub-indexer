@@ -284,8 +284,15 @@ func (p *indexingPipeline) Backfill(ctx context.Context, backfillCfg BackfillCon
 	}
 
 	if source.UseWhiteList() && len(source.sortedWhiteListKeys) > 0 {
-		if err := p.syncableDb.UpdateSkippedByHeights(sink.versionNumber, source.startHeight, source.endHeight, source.sortedWhiteListKeys); err != nil {
-			return err
+		chunkSize := 1000
+		for i := 0; i < len(source.sortedWhiteListKeys); i += chunkSize {
+			end := i + chunkSize
+			if end > len(source.sortedWhiteListKeys) {
+				end = len(source.sortedWhiteListKeys)
+			}
+			if err := p.syncableDb.UpdateSkippedByHeights(sink.versionNumber, source.startHeight, source.endHeight, source.sortedWhiteListKeys[i:end]); err != nil {
+				return err
+			}
 		}
 	}
 
