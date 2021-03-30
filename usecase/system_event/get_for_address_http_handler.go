@@ -39,15 +39,16 @@ type GetForAddressRequest struct {
 	//
 	// required: true
 	// in: path
-	Address string `uri:"address" binding:"required"`
+	Address string `json:"address" uri:"address" binding:"required"`
 	// After
 	//
 	// in: query
-	After *int64 `form:"after" binding:"-"`
+	After *int64 `json:"after" form:"after" binding:"-"`
 	// Kind
 	//
 	// in: query
-	Kind *model.SystemEventKind `form:"kind" binding:"-"`
+	// example: active_balance_change_1
+	Kind *model.SystemEventKind `json:"form" form:"kind" binding:"-"`
 }
 
 func (h *getForAddressHttpHandler) Handle(c *gin.Context) {

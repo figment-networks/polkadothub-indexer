@@ -35,12 +35,13 @@ type GetBlockTimesForIntervalRequest struct {
 	//
 	// required: true
 	// in: query
-	Interval types.SummaryInterval `form:"interval" binding:"required"`
+	// example: hour
+	Interval types.SummaryInterval `json:"interval" :"interval" binding:"required"`
 	// Period
 	//
 	// required: true
 	// in: query
-	Period string `form:"period" binding:"required"`
+	Period string `json:"period" form:"period" binding:"required"`
 }
 
 func (h *getBlockSummaryHttpHandler) Handle(c *gin.Context) {

@@ -36,7 +36,7 @@ type Request struct {
 	// Height
 	//
 	// in: query
-	Height *int64 `form:"height" binding:"-"`
+	Height *int64 `json:"height" form:"height" binding:"-"`
 }
 
 func (h *getByHeightHttpHandler) Handle(c *gin.Context) {

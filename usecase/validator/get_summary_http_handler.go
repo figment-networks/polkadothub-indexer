@@ -36,17 +36,17 @@ type GetSummaryRequest struct {
 	//
 	// required: true
 	// in: query
-	Interval types.SummaryInterval `form:"interval" binding:"required"`
+	Interval types.SummaryInterval `json:"interval" form:"interval" binding:"required"`
 	// Period
 	//
 	// required: true
 	// in: query
-	Period string `form:"period" binding:"required"`
+	Period string `json:"period" form:"period" binding:"required"`
 	// StashAccount
 	//
 	// required: true
 	// in: query
-	StashAccount string `form:"stash_account" binding:"-"`
+	StashAccount string `json:"stash_account" form:"stash_account" binding:"-"`
 }
 
 func (h *getSummaryHttpHandler) Handle(c *gin.Context) {

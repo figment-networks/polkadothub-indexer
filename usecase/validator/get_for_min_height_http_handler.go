@@ -35,7 +35,7 @@ type GetForMinHeightRequest struct {
 	//
 	// required: true
 	// in: query
-	Height *int64 `uri:"height" binding:"required"`
+	Height *int64 `json:"height" uri:"height" binding:"required"`
 }
 
 func (h *getForMinHeightHttpHandler) Handle(c *gin.Context) {

@@ -33,15 +33,15 @@ type GetForStashAccountRequest struct {
 	//
 	// required: true
 	// in: path
-	StashAccount string `uri:"stash_account" binding:"required"`
+	StashAccount string `json:"stash_account" uri:"stash_account" binding:"required"`
 	// Start
 	//
 	// in: path
-	Start int64 `form:"start" binding:"-"`
+	Start int64 `json:"start"  form:"start" binding:"-"`
 	// End
 	//
 	// in: path
-	End int64 `form:"end" binding:"-"`
+	End int64 `json:"end"  form:"end" binding:"-"`
 }
 
 func (h *getForStashAccountHttpHandler) Handle(c *gin.Context) {

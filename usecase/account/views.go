@@ -22,7 +22,7 @@ const (
 	balanceKey string = "Balance"
 )
 
-// swagger:response HeightDetailsView
+// swagger:response AccountHeightDetailsView
 type HeightDetailsView struct {
 	Nonce int64 `json:"nonce"`
 	// Free balance of account
@@ -48,8 +48,10 @@ func ToHeightDetailsView(rawAccount *accountpb.Account) *HeightDetailsView {
 // swagger:response AccountDetailsView
 type DetailsView struct {
 	// Address of account
-	Address string   `json:"address"`
+	Address string `json:"address"`
+	// Account is balance information for an account
 	Account *Account `json:"account"`
+	// Identity is identity details for an account
 	*Identity
 
 	// Transfers is a list of all balances.Transfer events for account
@@ -197,11 +199,16 @@ func ToIdentity(rawAccountIdentity *accountpb.AccountIdentity) *Identity {
 	}
 }
 
+// Account is balance information for an account
 type Account struct {
-	Free       string `json:"free"`
-	Reserved   string `json:"reserved"`
+	// Free balance of account
+	Free string `json:"free"`
+	// Reserved balance of account
+	Reserved string `json:"reserved"`
+	// MiscFrozen balance of account
 	MiscFrozen string `json:"misc_frozen"`
-	FeeFrozen  string `json:"fee_frozen"`
+	// FeeFrozen balance of account
+	FeeFrozen string `json:"fee_frozen"`
 }
 
 func ToAccount(rawAccount *accountpb.Account) *Account {

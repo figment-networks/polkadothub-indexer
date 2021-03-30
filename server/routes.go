@@ -126,10 +126,10 @@ func (s *Server) setupRoutes() {
 	//     - application/json
 	//
 	//     Responses:
-	//       200: AccountRewardsView
+	//       200: AccountHeightDetailsView
 	// 		 400: BadRequestResponse
 	s.engine.GET("/account/:stash_account", s.handlers.GetAccountByHeight.Handle)
-	// swagger:route GET /system_events/:address getAccountByHeight
+	// swagger:route GET /system_events/:address getSystemEventsForAddress
 	//
 	// Gets system events for an address
 	//
@@ -165,7 +165,7 @@ func (s *Server) setupRoutes() {
 	s.engine.GET("/validator/:stash_account", s.handlers.GetValidatorByStashAccount.Handle)
 	// swagger:route GET /validators/for_min_height/:height getValidatorForMinHeight
 	//
-	// Gets all validator aggregate information after height
+	// Gets all validator aggregates for validators which are active after min height
 	//
 	// Returns list of most recent aggreate information for all validator accounts that have been validators after provided min height
 	//

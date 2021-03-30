@@ -4,7 +4,7 @@ import (
 	"github.com/figment-networks/polkadothub-proxy/grpc/transaction/transactionpb"
 )
 
-type ListItem struct {
+type TransactionListItem struct {
 	Signature  string `json:"signature"`
 	PublicKey  string `json:"public_key"`
 	Nonce      int64  `json:"nonce"`
@@ -18,13 +18,13 @@ type ListItem struct {
 
 // swagger:response TransactionsView
 type ListView struct {
-	Items []ListItem `json:"items"`
+	Items []TransactionListItem `json:"items"`
 }
 
 func ToListView(rawTransactions []*transactionpb.Transaction) *ListView {
-	var items []ListItem
+	var items []TransactionListItem
 	for _, rawTransaction := range rawTransactions {
-		items = append(items, ListItem{
+		items = append(items, TransactionListItem{
 			Signature:  rawTransaction.GetSignature(),
 			PublicKey:  rawTransaction.GetSigner(),
 			Nonce:      rawTransaction.GetNonce(),

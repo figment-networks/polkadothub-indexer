@@ -35,15 +35,15 @@ type GetByEntityUidRequest struct {
 	//
 	// required: true
 	// in: query
-	StashAccount string `uri:"stash_account" binding:"required"`
+	StashAccount string `json:"stash_account" uri:"stash_account" binding:"required"`
 	// SessionsLimit
 	//
 	// in: query
-	SessionsLimit int64 `form:"sessions_limit" binding:"-"`
+	SessionsLimit int64 `json:"sessions_limit" form:"sessions_limit" binding:"-"`
 	// ErasLimit
 	//
 	// in: query
-	ErasLimit int64 `form:"eras_limit" binding:"-"`
+	ErasLimit int64 `json:"eras_limit" form:"eras_limit" binding:"-"`
 }
 
 func (h *getByStashAccountHttpHandler) Handle(c *gin.Context) {

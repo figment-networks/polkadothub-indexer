@@ -37,7 +37,7 @@ type uriParams struct {
 	//
 	// required: true
 	// in: path
-	Address string `uri:"stash_account" binding:"required"`
+	Address string `json:"stash_account" uri:"stash_account" binding:"required"`
 }
 
 // swagger:parameters getAccountRewards
@@ -46,11 +46,13 @@ type queryParams struct {
 	//
 	// required: true
 	// in: path
-	Start time.Time `form:"start" binding:"required" time_format:"2006-01-02 15:04:05"`
+	// example: 2006-01-02 15:04:05
+	Start time.Time `json:"start" form:"start" binding:"required" time_format:"2006-01-02 15:04:05"`
 	// End
 	//
 	// in: path
-	End time.Time `form:"end" binding:"-" time_format:"2006-01-02 15:04:05"`
+	// example: 2006-01-02 15:04:05
+	End time.Time `json:"end" form:"end" binding:"-" time_format:"2006-01-02 15:04:05"`
 }
 
 func (h *getRewardsHttpHandler) Handle(c *gin.Context) {

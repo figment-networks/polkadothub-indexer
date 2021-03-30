@@ -42,7 +42,7 @@ type GetDetailsRequest struct {
 	//
 	// required: true
 	// in: path
-	StashAccount string `uri:"stash_account" binding:"required"`
+	StashAccount string `json:"stash_account" uri:"stash_account" binding:"required"`
 }
 
 func (h *getDetailsHttpHandler) Handle(c *gin.Context) {

@@ -3,14 +3,13 @@
   "paths": {
     "/account/:stash_account": {
       "get": {
-        "description": "Returns lists of system events of given \"kind\" if specified in query (eg.\"active_balance_change_1\", \"commission_change_1\", left_set\", \"joined_set\", \"missed_n_consecutive\", etc. )\nafter given block height if provided. Otherwise returns all system events for account.",
+        "description": "Gets account balance details for given height",
         "consumes": [
           "application/json"
         ],
         "produces": [
           "application/json"
         ],
-        "summary": "Gets system events for an address",
         "operationId": "getAccountByHeight",
         "parameters": [
           {
@@ -32,7 +31,7 @@
         ],
         "responses": {
           "200": {
-            "$ref": "#/responses/SystemEventsView"
+            "$ref": "#/responses/AccountHeightDetailsView"
           },
           "400": {
             "$ref": "#/responses/BadRequestResponse"
@@ -54,8 +53,9 @@
         "parameters": [
           {
             "type": "string",
+            "x-go-name": "StashAccount",
             "description": "StashAccount",
-            "name": "StashAccount",
+            "name": "stash_account",
             "in": "path",
             "required": true
           }
@@ -84,24 +84,29 @@
         "parameters": [
           {
             "type": "string",
+            "x-go-name": "Address",
             "description": "Address",
-            "name": "Address",
+            "name": "stash_account",
             "in": "path",
             "required": true
           },
           {
             "type": "string",
             "format": "date-time",
+            "example": "2006-01-02 15:04:05",
+            "x-go-name": "Start",
             "description": "Start",
-            "name": "Start",
+            "name": "start",
             "in": "path",
             "required": true
           },
           {
             "type": "string",
             "format": "date-time",
+            "example": "2006-01-02 15:04:05",
+            "x-go-name": "End",
             "description": "End",
-            "name": "End",
+            "name": "end",
             "in": "path",
             "required": true
           }
@@ -131,8 +136,9 @@
           {
             "type": "integer",
             "format": "int64",
+            "x-go-name": "Height",
             "description": "Height",
-            "name": "Height",
+            "name": "height",
             "in": "query"
           }
         ],
@@ -160,8 +166,9 @@
           {
             "type": "integer",
             "format": "int64",
+            "x-go-name": "Limit",
             "description": "Limit",
-            "name": "Limit",
+            "name": "limit",
             "in": "path",
             "required": true
           }
@@ -190,15 +197,18 @@
         "parameters": [
           {
             "type": "string",
+            "example": "hour",
+            "x-go-name": "Interval",
             "description": "Interval",
-            "name": "Interval",
+            "name": "interval",
             "in": "query",
             "required": true
           },
           {
             "type": "string",
+            "x-go-name": "Period",
             "description": "Period",
-            "name": "Period",
+            "name": "period",
             "in": "query",
             "required": true
           }
@@ -227,24 +237,27 @@
         "parameters": [
           {
             "type": "string",
+            "x-go-name": "StashAccount",
             "description": "StashAccount",
-            "name": "StashAccount",
+            "name": "stash_account",
             "in": "path",
             "required": true
           },
           {
             "type": "integer",
             "format": "int64",
+            "x-go-name": "Start",
             "description": "Start",
-            "name": "Start",
+            "name": "start",
             "in": "path",
             "required": true
           },
           {
             "type": "integer",
             "format": "int64",
+            "x-go-name": "End",
             "description": "End",
-            "name": "End",
+            "name": "end",
             "in": "path",
             "required": true
           }
@@ -273,8 +286,9 @@
         "parameters": [
           {
             "type": "boolean",
+            "x-go-name": "IncludeChainStatus",
             "description": "IncludeChainStatus",
-            "name": "IncludeChainStatus",
+            "name": "include_chain",
             "in": "query"
           }
         ],
@@ -298,22 +312,30 @@
           "application/json"
         ],
         "summary": "Gets system events for an address",
-        "operationId": "getAccountByHeight",
+        "operationId": "getSystemEventsForAddress",
         "parameters": [
           {
             "type": "string",
-            "x-go-name": "StashAccount",
-            "description": "StashAccount",
-            "name": "stash_account",
+            "x-go-name": "Address",
+            "description": "Address",
+            "name": "address",
             "in": "path",
             "required": true
           },
           {
             "type": "integer",
             "format": "int64",
-            "x-go-name": "Height",
-            "description": "Height of block",
-            "name": "height",
+            "x-go-name": "After",
+            "description": "After",
+            "name": "after",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "example": "active_balance_change_1",
+            "x-go-name": "Kind",
+            "description": "Kind",
+            "name": "form",
             "in": "query"
           }
         ],
@@ -342,8 +364,9 @@
           {
             "type": "integer",
             "format": "int64",
+            "x-go-name": "Height",
             "description": "Height",
-            "name": "Height",
+            "name": "height",
             "in": "query"
           }
         ],
@@ -371,23 +394,26 @@
         "parameters": [
           {
             "type": "string",
+            "x-go-name": "StashAccount",
             "description": "StashAccount",
-            "name": "StashAccount",
+            "name": "stash_account",
             "in": "query",
             "required": true
           },
           {
             "type": "integer",
             "format": "int64",
+            "x-go-name": "SessionsLimit",
             "description": "SessionsLimit",
-            "name": "SessionsLimit",
+            "name": "sessions_limit",
             "in": "query"
           },
           {
             "type": "integer",
             "format": "int64",
+            "x-go-name": "ErasLimit",
             "description": "ErasLimit",
-            "name": "ErasLimit",
+            "name": "eras_limit",
             "in": "query"
           }
         ],
@@ -412,6 +438,16 @@
         ],
         "summary": "Gets all validators for height",
         "operationId": "getValidatorsByHeight",
+        "parameters": [
+          {
+            "type": "integer",
+            "format": "int64",
+            "x-go-name": "Height",
+            "description": "Height",
+            "name": "height",
+            "in": "query"
+          }
+        ],
         "responses": {
           "200": {
             "$ref": "#/responses/ValidatorsView"
@@ -437,8 +473,9 @@
           {
             "type": "integer",
             "format": "int64",
+            "x-go-name": "Height",
             "description": "Height",
-            "name": "Height",
+            "name": "height",
             "in": "query",
             "required": true
           }
@@ -467,22 +504,25 @@
         "parameters": [
           {
             "type": "string",
+            "x-go-name": "Interval",
             "description": "Interval",
-            "name": "Interval",
+            "name": "interval",
             "in": "query",
             "required": true
           },
           {
             "type": "string",
+            "x-go-name": "Period",
             "description": "Period",
-            "name": "Period",
+            "name": "period",
             "in": "query",
             "required": true
           },
           {
             "type": "string",
+            "x-go-name": "StashAccount",
             "description": "StashAccount",
-            "name": "StashAccount",
+            "name": "stash_account",
             "in": "query",
             "required": true
           }
@@ -500,21 +540,26 @@
   },
   "definitions": {
     "Account": {
+      "description": "Account is balance information for an account",
       "type": "object",
       "properties": {
         "fee_frozen": {
+          "description": "FeeFrozen balance of account",
           "type": "string",
           "x-go-name": "FeeFrozen"
         },
         "free": {
+          "description": "Free balance of account",
           "type": "string",
           "x-go-name": "Free"
         },
         "misc_frozen": {
+          "description": "MiscFrozen balance of account",
           "type": "string",
           "x-go-name": "MiscFrozen"
         },
         "reserved": {
+          "description": "Reserved balance of account",
           "type": "string",
           "x-go-name": "Reserved"
         }
@@ -751,49 +796,6 @@
       "type": "object",
       "x-go-package": "github.com/figment-networks/polkadothub-indexer/types"
     },
-    "ListItem": {
-      "type": "object",
-      "properties": {
-        "args": {
-          "type": "string",
-          "x-go-name": "Args"
-        },
-        "is_success": {
-          "type": "boolean",
-          "x-go-name": "IsSuccess"
-        },
-        "method": {
-          "type": "string",
-          "x-go-name": "Method"
-        },
-        "nonce": {
-          "type": "integer",
-          "format": "int64",
-          "x-go-name": "Nonce"
-        },
-        "partial_fee": {
-          "type": "string",
-          "x-go-name": "PartialFee"
-        },
-        "public_key": {
-          "type": "string",
-          "x-go-name": "PublicKey"
-        },
-        "section": {
-          "type": "string",
-          "x-go-name": "Section"
-        },
-        "signature": {
-          "type": "string",
-          "x-go-name": "Signature"
-        },
-        "tip": {
-          "type": "string",
-          "x-go-name": "Tip"
-        }
-      },
-      "x-go-package": "github.com/figment-networks/polkadothub-indexer/usecase/transaction"
-    },
     "Quantity": {
       "description": "Quantity is a wrapper for big.Int",
       "type": "object",
@@ -922,9 +924,90 @@
       "type": "string",
       "x-go-package": "github.com/figment-networks/polkadothub-indexer/types"
     },
+    "SystemEventItem": {
+      "type": "object",
+      "properties": {
+        "actor": {
+          "description": "Actor is an account stash",
+          "type": "string",
+          "x-go-name": "Actor"
+        },
+        "created_at": {
+          "$ref": "#/definitions/Time"
+        },
+        "data": {
+          "$ref": "#/definitions/Jsonb"
+        },
+        "height": {
+          "description": "Height is block height from when event was triggered",
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Height"
+        },
+        "id": {
+          "$ref": "#/definitions/ID"
+        },
+        "kind": {
+          "description": "Kind is system event kind",
+          "type": "string",
+          "x-go-name": "Kind",
+          "example": "active_balance_change_1"
+        },
+        "time": {
+          "$ref": "#/definitions/Time"
+        },
+        "updated_at": {
+          "$ref": "#/definitions/Time"
+        }
+      },
+      "x-go-package": "github.com/figment-networks/polkadothub-indexer/usecase/system_event"
+    },
     "Time": {
       "type": "object",
       "x-go-package": "github.com/figment-networks/polkadothub-indexer/types"
+    },
+    "TransactionListItem": {
+      "type": "object",
+      "properties": {
+        "args": {
+          "type": "string",
+          "x-go-name": "Args"
+        },
+        "is_success": {
+          "type": "boolean",
+          "x-go-name": "IsSuccess"
+        },
+        "method": {
+          "type": "string",
+          "x-go-name": "Method"
+        },
+        "nonce": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Nonce"
+        },
+        "partial_fee": {
+          "type": "string",
+          "x-go-name": "PartialFee"
+        },
+        "public_key": {
+          "type": "string",
+          "x-go-name": "PublicKey"
+        },
+        "section": {
+          "type": "string",
+          "x-go-name": "Section"
+        },
+        "signature": {
+          "type": "string",
+          "x-go-name": "Signature"
+        },
+        "tip": {
+          "type": "string",
+          "x-go-name": "Tip"
+        }
+      },
+      "x-go-package": "github.com/figment-networks/polkadothub-indexer/usecase/transaction"
     },
     "Unbonded": {
       "type": "object",
@@ -1234,7 +1317,9 @@
         "$ref": "#/definitions/Account"
       },
       "headers": {
-        "account": {},
+        "account": {
+          "description": "Account is balance information for an account"
+        },
         "address": {
           "type": "string",
           "description": "Address of account"
@@ -1304,6 +1389,31 @@
             "$ref": "#/definitions/Withdrawn"
           },
           "description": "Withdrawn is a list of all staking.Withdrawn events for account"
+        }
+      }
+    },
+    "AccountHeightDetailsView": {
+      "description": "",
+      "headers": {
+        "fee_frozen": {
+          "type": "string",
+          "description": "FeeFrozen balance of account"
+        },
+        "free": {
+          "type": "string",
+          "description": "Free balance of account"
+        },
+        "misc_frozen": {
+          "type": "string",
+          "description": "MiscFrozen balance of account"
+        },
+        "nonce": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "reserved": {
+          "type": "string",
+          "description": "Reserved balance of account"
         }
       }
     },
@@ -1537,31 +1647,6 @@
         }
       }
     },
-    "HeightDetailsView": {
-      "description": "",
-      "headers": {
-        "fee_frozen": {
-          "type": "string",
-          "description": "FeeFrozen balance of account"
-        },
-        "free": {
-          "type": "string",
-          "description": "Free balance of account"
-        },
-        "misc_frozen": {
-          "type": "string",
-          "description": "MiscFrozen balance of account"
-        },
-        "nonce": {
-          "type": "integer",
-          "format": "int64"
-        },
-        "reserved": {
-          "type": "string",
-          "description": "Reserved balance of account"
-        }
-      }
-    },
     "RewardsForErasView": {
       "description": "",
       "schema": {
@@ -1572,12 +1657,12 @@
       }
     },
     "SystemEventsView": {
-      "description": "",
+      "description": "SystemEventsView is a list of system events",
       "headers": {
         "items": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/ListItem"
+            "$ref": "#/definitions/SystemEventItem"
           }
         }
       }
@@ -1588,7 +1673,7 @@
         "items": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/ListItem"
+            "$ref": "#/definitions/TransactionListItem"
           }
         }
       }

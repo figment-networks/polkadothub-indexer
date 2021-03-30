@@ -36,7 +36,7 @@ type GetStatusRequest struct {
 	// IncludeChainStatus
 	//
 	// in: query
-	IncludeChainStatus bool `form:"include_chain" binding:"-"`
+	IncludeChainStatus bool `json:"include_chain" form:"include_chain" binding:"-"`
 }
 
 func (h *getStatusHttpHandler) Handle(c *gin.Context) {
