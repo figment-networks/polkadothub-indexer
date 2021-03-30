@@ -16,6 +16,7 @@ type ListItem struct {
 	Tip        string `json:"tip"`
 }
 
+// swagger:response TransactionsView
 type ListView struct {
 	Items []ListItem `json:"items"`
 }

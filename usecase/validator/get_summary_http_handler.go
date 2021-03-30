@@ -1,12 +1,13 @@
 package validator
 
 import (
+	"errors"
+
 	"github.com/figment-networks/polkadothub-indexer/store"
 	"github.com/figment-networks/polkadothub-indexer/types"
 	"github.com/figment-networks/polkadothub-indexer/usecase/http"
 	"github.com/figment-networks/polkadothub-indexer/utils/logger"
 	"github.com/gin-gonic/gin"
-	"errors"
 )
 
 var (
@@ -29,10 +30,23 @@ func NewGetSummaryHttpHandler(syncablesDb store.Syncables, validatorSummaryDb st
 	}
 }
 
+// swagger:parameters getValidatorSummary
 type GetSummaryRequest struct {
-	Interval     types.SummaryInterval `form:"interval" binding:"required"`
-	Period       string                `form:"period" binding:"required"`
-	StashAccount string                `form:"stash_account" binding:"-"`
+	// Interval
+	//
+	// required: true
+	// in: query
+	Interval types.SummaryInterval `form:"interval" binding:"required"`
+	// Period
+	//
+	// required: true
+	// in: query
+	Period string `form:"period" binding:"required"`
+	// StashAccount
+	//
+	// required: true
+	// in: query
+	StashAccount string `form:"stash_account" binding:"-"`
 }
 
 func (h *getSummaryHttpHandler) Handle(c *gin.Context) {

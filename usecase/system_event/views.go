@@ -8,13 +8,21 @@ import (
 type ListItem struct {
 	*model.Model
 
-	Height int64       `json:"height"`
-	Time   types.Time  `json:"time"`
-	Actor  string      `json:"actor"`
-	Kind   string      `json:"kind"`
-	Data   types.Jsonb `json:"data"`
+	// Height is block height from when event was triggered
+	Height int64 `json:"height"`
+	// Time is block time from when event was triggered
+	Time types.Time `json:"time"`
+	// Actor is account
+	Actor string `json:"actor"`
+	// Kind is system event kind
+	//
+	// Example active_balance_change_1
+	Kind string `json:"kind"`
+	// Data contains event specific data for kind
+	Data types.Jsonb `json:"data"`
 }
 
+// swagger:response SystemEventsView
 type ListView struct {
 	Items []ListItem `json:"items"`
 }

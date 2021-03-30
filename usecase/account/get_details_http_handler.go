@@ -36,7 +36,12 @@ func NewGetDetailsHttpHandler(c *client.Client, accountEraSeqDb store.AccountEra
 	}
 }
 
+// swagger:parameters getAccountDetails
 type GetDetailsRequest struct {
+	// StashAccount
+	//
+	// required: true
+	// in: path
 	StashAccount string `uri:"stash_account" binding:"required"`
 }
 

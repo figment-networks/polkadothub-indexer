@@ -33,10 +33,21 @@ func NewGetForAddressHttpHandler(c *client.Client, systemEventDb store.SystemEve
 	}
 }
 
+// swagger:parameters getSystemEventsForAddress
 type GetForAddressRequest struct {
-	Address string                 `uri:"address" binding:"required"`
-	After   *int64                 `form:"after" binding:"-"`
-	Kind    *model.SystemEventKind `form:"kind" binding:"-"`
+	// Address
+	//
+	// required: true
+	// in: path
+	Address string `uri:"address" binding:"required"`
+	// After
+	//
+	// in: query
+	After *int64 `form:"after" binding:"-"`
+	// Kind
+	//
+	// in: query
+	Kind *model.SystemEventKind `form:"kind" binding:"-"`
 }
 
 func (h *getForAddressHttpHandler) Handle(c *gin.Context) {

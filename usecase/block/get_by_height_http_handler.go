@@ -31,7 +31,11 @@ func NewGetByHeightHttpHandler(c *client.Client, syncablesDb store.Syncables) *g
 	}
 }
 
+// swagger:parameters getBlockByHeight
 type Request struct {
+	// Height
+	//
+	// in: query
 	Height *int64 `form:"height" binding:"-"`
 }
 

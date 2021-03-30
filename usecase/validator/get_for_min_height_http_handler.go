@@ -29,7 +29,12 @@ func NewGetForMinHeightHttpHandler(syncablesDb store.Syncables, validatorAggDb s
 	}
 }
 
+// swagger:parameters getValidatorForMinHeight
 type GetForMinHeightRequest struct {
+	// Height
+	//
+	// required: true
+	// in: query
 	Height *int64 `uri:"height" binding:"required"`
 }
 

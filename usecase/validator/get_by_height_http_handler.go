@@ -55,7 +55,11 @@ func NewGetByHeightHttpHandler(cfg *config.Config, cli *client.Client, accountDb
 	}
 }
 
+// swagger:parameters getBlockByHeight
 type GetByHeightRequest struct {
+	// Height
+	//
+	// in: query
 	Height *int64 `form:"height" binding:"-"`
 }
 
