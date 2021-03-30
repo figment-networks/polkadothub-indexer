@@ -58,7 +58,7 @@ type BackfillUseCaseConfig struct {
 }
 
 func (uc *backfillUseCase) Execute(ctx context.Context, useCaseConfig BackfillUseCaseConfig) error {
-	if err := uc.canExecute(); err != nil {
+	if err := uc.canExecute(useCaseConfig.Force); err != nil {
 		return err
 	}
 
@@ -75,8 +75,12 @@ func (uc *backfillUseCase) Execute(ctx context.Context, useCaseConfig BackfillUs
 }
 
 // canExecute checks if reindex is already running
-// if is it running we skip indexing
-func (uc *backfillUseCase) canExecute() error {
+// if is it running and force is not set as true then we skip indexing
+func (uc *backfillUseCase) canExecute(force bool) error {
+	if force {
+		return nil
+	}
+
 	if _, err := uc.reportDb.FindNotCompletedByKind(model.ReportKindSequentialReindex, model.ReportKindParallelReindex); err != nil {
 		if err == store.ErrNotFound {
 			return nil

@@ -19,7 +19,7 @@ type syncables interface {
 	SaveSyncable(*model.Syncable) error
 	SetProcessedAtForRange(reportID types.ID, startHeight int64, endHeight int64) error
 	FindAllByLastInSessionOrEra(indexVersion int64, isLastInSession, isLastInEra bool) ([]model.Syncable, error)
-	UpdateSkippedByHeights(indexVersion, startHeight, endHeight int64, sortedWhiteListKeys []int64) error
+	UpdateSkippedHeights(indexVersion, startHeight, endHeight int64) error
 }
 
 type FindMostRecenter interface {

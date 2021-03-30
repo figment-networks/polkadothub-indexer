@@ -183,10 +183,11 @@ func (s SyncablesStore) FindAllByLastInSessionOrEra(indexVersion int64, isLastIn
 	return result, checkErr(tx.Find(&result).Error)
 }
 
-func (s SyncablesStore) UpdateSkippedByHeights(indexVersion, startHeight, endHeight int64, sortedWhiteListKeys []int64) error {
+// UpdateSkippedHeights updates skipped heights
+func (s SyncablesStore) UpdateSkippedHeights(indexVersion, startHeight, endHeight int64) error {
 	err := s.db.
-		Exec("UPDATE syncables SET started_at = NOW(), processed_at = NOW(), updated_at = NOW(), duration = 0, index_version = ? WHERE height >= ? AND height <= ? AND height NOT IN(?)",
-			indexVersion, startHeight, endHeight, sortedWhiteListKeys).
+		Exec("UPDATE syncables SET started_at = NOW(), processed_at = NOW(), updated_at = NOW(), duration = 0, index_version = ? WHERE height >= ? AND height <= ? AND processed_at IS NULL",
+			indexVersion, startHeight, endHeight).
 		Error
 
 	return checkErr(err)
