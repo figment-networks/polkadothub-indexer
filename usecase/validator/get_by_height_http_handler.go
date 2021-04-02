@@ -55,8 +55,12 @@ func NewGetByHeightHttpHandler(cfg *config.Config, cli *client.Client, accountDb
 	}
 }
 
+// swagger:parameters getValidatorsByHeight
 type GetByHeightRequest struct {
-	Height *int64 `form:"height" binding:"-"`
+	// Height
+	//
+	// in: query
+	Height *int64 `json:"height" form:"height" binding:"-"`
 }
 
 func (h *getByHeightHttpHandler) Handle(c *gin.Context) {

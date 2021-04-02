@@ -7,6 +7,7 @@ import (
 	"fmt"
 )
 
+// Jsonb is a wrapper for json.RawMessage glob
 type Jsonb struct {
 	json.RawMessage
 }

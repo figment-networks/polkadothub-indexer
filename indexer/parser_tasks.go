@@ -126,7 +126,7 @@ func (t *validatorsParserTask) Run(ctx context.Context, p pipeline.Payload) erro
 
 	var err error
 	var c RewardsCalculator
-	if payload.RawStaking.GetTotalRewardPoints() != 0 && payload.RawStaking.GetTotalRewardPayout() != "" {
+	if payload.RawStaking.GetTotalRewardPoints() != 0 && payload.RawStaking.GetTotalRewardPayout() != "0" {
 		c, err = newRewardsCalulator(payload.RawStaking.GetTotalRewardPoints(), payload.RawStaking.GetTotalRewardPayout())
 		if err != nil {
 			return err
@@ -152,7 +152,7 @@ func (t *validatorsParserTask) Run(ctx context.Context, p pipeline.Payload) erro
 
 		if c != nil {
 			parsedRewards := t.getUnclaimedRewardData(c, rawValidatorStakingInfo)
-			parsedRewards.Era = payload.Syncable.Era
+			parsedRewards.Era = payload.HeightMeta.ActiveEra
 			parsedData.parsedRewards = parsedRewards
 		}
 		parsedValidatorsData[stashAccount] = parsedData

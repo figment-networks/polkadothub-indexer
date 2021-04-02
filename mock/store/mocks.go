@@ -726,6 +726,21 @@ func (mr *MockRewardsMockRecorder) GetAll(arg0, arg1, arg2 interface{}) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAll", reflect.TypeOf((*MockRewards)(nil).GetAll), arg0, arg1, arg2)
 }
 
+// GetByStashAndEra mocks base method
+func (m *MockRewards) GetByStashAndEra(arg0, arg1 string, arg2 int64) (model.RewardEraSeq, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetByStashAndEra", arg0, arg1, arg2)
+	ret0, _ := ret[0].(model.RewardEraSeq)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetByStashAndEra indicates an expected call of GetByStashAndEra
+func (mr *MockRewardsMockRecorder) GetByStashAndEra(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByStashAndEra", reflect.TypeOf((*MockRewards)(nil).GetByStashAndEra), arg0, arg1, arg2)
+}
+
 // GetCount mocks base method
 func (m *MockRewards) GetCount(arg0 string, arg1 int64) (int64, error) {
 	m.ctrl.T.Helper()

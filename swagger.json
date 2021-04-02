@@ -1,0 +1,1779 @@
+{
+  "swagger": "2.0",
+  "paths": {
+    "/account/:stash_account": {
+      "get": {
+        "description": "Gets account balance details for given height",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "operationId": "getAccountByHeight",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "StashAccount",
+            "description": "StashAccount",
+            "name": "stash_account",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "x-go-name": "Height",
+            "description": "Height of block",
+            "name": "height",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/AccountHeightDetailsView"
+          },
+          "400": {
+            "$ref": "#/responses/BadRequestResponse"
+          }
+        }
+      }
+    },
+    "/account_details/:stash_account": {
+      "get": {
+        "description": "This will show latest account balances, latest identity associated with the account (display name, email, social medias, etc), and all balance related events.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Gets latest account details",
+        "operationId": "getAccountDetails",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "StashAccount",
+            "description": "StashAccount",
+            "name": "stash_account",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/AccountDetailsView"
+          },
+          "400": {
+            "$ref": "#/responses/BadRequestResponse"
+          }
+        }
+      }
+    },
+    "/account_rewards/:stash_account": {
+      "get": {
+        "description": "This will show rewards for account for given time period from \"start\" to \"end\", If \"end\" is not specified,\nwill return rewards until most recently indexed block",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Gets rewards for account for time period",
+        "operationId": "getAccountRewards",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "Address",
+            "description": "Address",
+            "name": "stash_account",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "format": "date-time",
+            "example": "2006-01-02 15:04:05",
+            "x-go-name": "Start",
+            "description": "Start",
+            "name": "start",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "format": "date-time",
+            "example": "2006-01-02 15:04:05",
+            "x-go-name": "End",
+            "description": "End",
+            "name": "end",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/AccountRewardsView"
+          },
+          "400": {
+            "$ref": "#/responses/BadRequestResponse"
+          }
+        }
+      }
+    },
+    "/block": {
+      "get": {
+        "description": "If no height is provided, will return last indexed block",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Gets block details and extrinsics for given height",
+        "operationId": "getBlockByHeight",
+        "parameters": [
+          {
+            "type": "integer",
+            "format": "int64",
+            "x-go-name": "Height",
+            "description": "Height",
+            "name": "height",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/BlockDetailsView"
+          },
+          "400": {
+            "$ref": "#/responses/BadRequestResponse"
+          }
+        }
+      }
+    },
+    "/block_times/:limit": {
+      "get": {
+        "description": "Gets stats related to how fast blocks are being produced in the chain",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "operationId": "getBlockTimes",
+        "parameters": [
+          {
+            "type": "integer",
+            "format": "int64",
+            "x-go-name": "Limit",
+            "description": "Limit",
+            "name": "limit",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/BlockTimesView"
+          },
+          "400": {
+            "$ref": "#/responses/BadRequestResponse"
+          }
+        }
+      }
+    },
+    "/blocks_summary": {
+      "get": {
+        "description": "Gets summary for blocks",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Gets blocks summary",
+        "operationId": "getBlocksSummary",
+        "parameters": [
+          {
+            "type": "string",
+            "example": "hour",
+            "x-go-name": "Interval",
+            "description": "Interval",
+            "name": "interval",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "string",
+            "x-go-name": "Period",
+            "description": "Period",
+            "name": "period",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/BlockSummary"
+          },
+          "400": {
+            "$ref": "#/responses/BadRequestResponse"
+          }
+        }
+      }
+    },
+    "/rewards/:stash_account": {
+      "get": {
+        "description": "This will show all rewards (claimed and unclaimed) for account for given eras from \"start\" to \"end\" eras. If \"end\" is not specified,\nwill return rewards until most recently indexed block.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Gets rewards for account for eras",
+        "operationId": "getRewards",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "StashAccount",
+            "description": "StashAccount",
+            "name": "stash_account",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "x-go-name": "Start",
+            "description": "Start",
+            "name": "start",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "x-go-name": "End",
+            "description": "End",
+            "name": "end",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/RewardsForErasView"
+          },
+          "400": {
+            "$ref": "#/responses/BadRequestResponse"
+          }
+        }
+      }
+    },
+    "/status": {
+      "get": {
+        "description": "This will show latest status of the chain/node and indexer",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Gets latest status",
+        "operationId": "getStatus",
+        "parameters": [
+          {
+            "type": "boolean",
+            "x-go-name": "IncludeChainStatus",
+            "description": "IncludeChainStatus",
+            "name": "include_chain",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/ChainDetailsView"
+          },
+          "400": {
+            "$ref": "#/responses/BadRequestResponse"
+          }
+        }
+      }
+    },
+    "/system_events/:address": {
+      "get": {
+        "description": "Returns lists of system events of given \"kind\" if specified in query (eg.\"active_balance_change_1\", \"commission_change_1\", left_set\", \"joined_set\", \"missed_n_consecutive\", etc. )\nafter given block height if provided. Otherwise returns all system events for account.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Gets system events for an address",
+        "operationId": "getSystemEventsForAddress",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "Address",
+            "description": "Address",
+            "name": "address",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "x-go-name": "After",
+            "description": "After",
+            "name": "after",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "example": "active_balance_change_1",
+            "x-go-name": "Kind",
+            "description": "Kind",
+            "name": "form",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/SystemEventsView"
+          },
+          "400": {
+            "$ref": "#/responses/BadRequestResponse"
+          }
+        }
+      }
+    },
+    "/transactions": {
+      "get": {
+        "description": "This will show all signed transactions for height. If height not specified, returns transactions\nfor most recently synced height.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Gets all signed transactions for height",
+        "operationId": "getTransactions",
+        "parameters": [
+          {
+            "type": "integer",
+            "format": "int64",
+            "x-go-name": "Height",
+            "description": "Height",
+            "name": "height",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/TransactionsView"
+          },
+          "400": {
+            "$ref": "#/responses/BadRequestResponse"
+          }
+        }
+      }
+    },
+    "/validator/:stash_account": {
+      "get": {
+        "description": "Returns most recent aggreate information for validator account, as well as lists of validator era sequences for last eras_limit eras,\nvalidator sessio sequences for last sessions_limit sessions, and most recent delegations.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Gets aggregate details for validator",
+        "operationId": "getValidatorByStash",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "StashAccount",
+            "description": "StashAccount",
+            "name": "stash_account",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "x-go-name": "SessionsLimit",
+            "description": "SessionsLimit",
+            "name": "sessions_limit",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "x-go-name": "ErasLimit",
+            "description": "ErasLimit",
+            "name": "eras_limit",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/ValidatorAggregateView"
+          },
+          "400": {
+            "$ref": "#/responses/BadRequestResponse"
+          }
+        }
+      }
+    },
+    "/validators": {
+      "get": {
+        "description": "Returns list of session and era validators for given height. If no height is provided, returns validators from most recently indexed height.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Gets all validators for height",
+        "operationId": "getValidatorsByHeight",
+        "parameters": [
+          {
+            "type": "integer",
+            "format": "int64",
+            "x-go-name": "Height",
+            "description": "Height",
+            "name": "height",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/ValidatorsView"
+          },
+          "400": {
+            "$ref": "#/responses/BadRequestResponse"
+          }
+        }
+      }
+    },
+    "/validators/for_min_height/:height": {
+      "get": {
+        "description": "Returns list of most recent aggreate information for all validator accounts that have been validators after provided min height",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Gets all validator aggregate information after height",
+        "operationId": "getValidatorForMinHeight",
+        "parameters": [
+          {
+            "type": "integer",
+            "format": "int64",
+            "x-go-name": "Height",
+            "description": "Height",
+            "name": "height",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/ValidatorAggregatesView"
+          },
+          "400": {
+            "$ref": "#/responses/BadRequestResponse"
+          }
+        }
+      }
+    },
+    "/validators_summary": {
+      "get": {
+        "description": "Returns validator summaries for all accounts (or single account if stash_account query is provided)",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Gets all validators for height",
+        "operationId": "getValidatorSummary",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "Interval",
+            "description": "Interval",
+            "name": "interval",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "string",
+            "x-go-name": "Period",
+            "description": "Period",
+            "name": "period",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "string",
+            "x-go-name": "StashAccount",
+            "description": "StashAccount",
+            "name": "stash_account",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/ValidatorsSummariesView"
+          },
+          "400": {
+            "$ref": "#/responses/BadRequestResponse"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Account": {
+      "description": "Account is balance information for an account",
+      "type": "object",
+      "properties": {
+        "fee_frozen": {
+          "description": "FeeFrozen balance of account",
+          "type": "string",
+          "x-go-name": "FeeFrozen"
+        },
+        "free": {
+          "description": "Free balance of account",
+          "type": "string",
+          "x-go-name": "Free"
+        },
+        "misc_frozen": {
+          "description": "MiscFrozen balance of account",
+          "type": "string",
+          "x-go-name": "MiscFrozen"
+        },
+        "reserved": {
+          "description": "Reserved balance of account",
+          "type": "string",
+          "x-go-name": "Reserved"
+        }
+      },
+      "x-go-package": "github.com/figment-networks/polkadothub-indexer/usecase/account"
+    },
+    "BalanceDeposit": {
+      "type": "object",
+      "properties": {
+        "amount": {
+          "description": "Amount is balance that was deposited into account",
+          "type": "string",
+          "x-go-name": "Amount"
+        },
+        "height": {
+          "description": "Height is block height transaction occured",
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Height"
+        },
+        "transaction_hash": {
+          "description": "Hash is transaction hash",
+          "type": "string",
+          "x-go-name": "Hash"
+        }
+      },
+      "x-go-package": "github.com/figment-networks/polkadothub-indexer/usecase/account"
+    },
+    "BalanceTransfer": {
+      "type": "object",
+      "properties": {
+        "amount": {
+          "description": "Amount is balance that was transferred",
+          "type": "string",
+          "x-go-name": "Amount"
+        },
+        "height": {
+          "description": "Height is block height transaction occured",
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Height"
+        },
+        "kind": {
+          "description": "Kind is transfer kind (either \"in\" for transfer into account or \"out\" for transfer out of account)",
+          "type": "string",
+          "x-go-name": "Kind",
+          "example": "in"
+        },
+        "participant": {
+          "description": "Participant is account",
+          "type": "string",
+          "x-go-name": "Participant"
+        },
+        "transaction_hash": {
+          "description": "Hash is transaction hash",
+          "type": "string",
+          "x-go-name": "Hash"
+        }
+      },
+      "x-go-package": "github.com/figment-networks/polkadothub-indexer/usecase/account"
+    },
+    "Bonded": {
+      "type": "object",
+      "properties": {
+        "amount": {
+          "description": "Amount is balance that was bonded",
+          "type": "string",
+          "x-go-name": "Amount"
+        },
+        "height": {
+          "description": "Height is block height transaction occured",
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Height"
+        },
+        "receiver": {
+          "description": "Receiver is account that bonded",
+          "type": "string",
+          "x-go-name": "Receiver"
+        },
+        "transaction_hash": {
+          "description": "Hash is transaction hash",
+          "type": "string",
+          "x-go-name": "Hash"
+        }
+      },
+      "x-go-package": "github.com/figment-networks/polkadothub-indexer/usecase/account"
+    },
+    "Delegation": {
+      "type": "object",
+      "properties": {
+        "amount": {
+          "$ref": "#/definitions/Quantity"
+        },
+        "era": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Era"
+        },
+        "validator_stash": {
+          "type": "string",
+          "x-go-name": "ValidatorStash"
+        }
+      },
+      "x-go-package": "github.com/figment-networks/polkadothub-indexer/usecase/common"
+    },
+    "EraSeqListItem": {
+      "type": "object",
+      "properties": {
+        "commission": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Commission"
+        },
+        "controller_account": {
+          "type": "string",
+          "x-go-name": "ControllerAccount"
+        },
+        "end_height": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "EndHeight"
+        },
+        "era": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Era"
+        },
+        "index": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Index"
+        },
+        "own_stake": {
+          "$ref": "#/definitions/Quantity"
+        },
+        "reward_points": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "RewardPoints"
+        },
+        "session_accounts": {
+          "$ref": "#/definitions/StringArray"
+        },
+        "stakers_count": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "StakersCount"
+        },
+        "stakers_stake": {
+          "$ref": "#/definitions/Quantity"
+        },
+        "start_height": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "StartHeight"
+        },
+        "stash_account": {
+          "type": "string",
+          "x-go-name": "StashAccount"
+        },
+        "time": {
+          "$ref": "#/definitions/Time"
+        },
+        "total_stake": {
+          "$ref": "#/definitions/Quantity"
+        }
+      },
+      "x-go-package": "github.com/figment-networks/polkadothub-indexer/usecase/validator"
+    },
+    "ExtrinsicDetailsView": {
+      "type": "object",
+      "properties": {
+        "args": {
+          "type": "string",
+          "x-go-name": "Args"
+        },
+        "extrinsic_index": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "ExtrinsicIndex"
+        },
+        "hash": {
+          "type": "string",
+          "x-go-name": "Hash"
+        },
+        "is_signed": {
+          "type": "boolean",
+          "x-go-name": "IsSigned"
+        },
+        "is_success": {
+          "type": "boolean",
+          "x-go-name": "IsSuccess"
+        },
+        "method": {
+          "type": "string",
+          "x-go-name": "Method"
+        },
+        "nonce": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Nonce"
+        },
+        "partial_fee": {
+          "type": "string",
+          "x-go-name": "PartialFee"
+        },
+        "public_key": {
+          "type": "string",
+          "x-go-name": "PublicKey"
+        },
+        "section": {
+          "type": "string",
+          "x-go-name": "Section"
+        },
+        "signature": {
+          "type": "string",
+          "x-go-name": "Signature"
+        },
+        "tip": {
+          "type": "string",
+          "x-go-name": "Tip"
+        }
+      },
+      "x-go-package": "github.com/figment-networks/polkadothub-indexer/usecase/block"
+    },
+    "ID": {
+      "type": "integer",
+      "format": "int64",
+      "x-go-package": "github.com/figment-networks/polkadothub-indexer/types"
+    },
+    "Jsonb": {
+      "description": "Jsonb is a wrapper for json.RawMessage glob",
+      "type": "object",
+      "x-go-package": "github.com/figment-networks/polkadothub-indexer/types"
+    },
+    "Quantity": {
+      "description": "Quantity is a wrapper for big.Int",
+      "type": "object",
+      "x-go-package": "github.com/figment-networks/polkadothub-indexer/types"
+    },
+    "Reward": {
+      "type": "object",
+      "properties": {
+        "amount": {
+          "description": "Amount is reward balance claimed by account",
+          "type": "string",
+          "x-go-name": "Amount"
+        },
+        "height": {
+          "description": "Height of block where reward event occured",
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Height"
+        },
+        "time": {
+          "description": "Time of block where reward event occured",
+          "type": "string",
+          "format": "date-time",
+          "x-go-name": "Time"
+        }
+      },
+      "x-go-package": "github.com/figment-networks/polkadothub-indexer/usecase/account"
+    },
+    "RewardEraSeq": {
+      "type": "object",
+      "properties": {
+        "amount": {
+          "type": "string",
+          "x-go-name": "Amount"
+        },
+        "claimed": {
+          "type": "boolean",
+          "x-go-name": "Claimed"
+        },
+        "end_height": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "EndHeight"
+        },
+        "era": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Era"
+        },
+        "kind": {
+          "$ref": "#/definitions/RewardKind"
+        },
+        "start_height": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "StartHeight"
+        },
+        "stash_account": {
+          "type": "string",
+          "x-go-name": "StashAccount"
+        },
+        "time": {
+          "$ref": "#/definitions/Time"
+        },
+        "tx_hash": {
+          "type": "string",
+          "x-go-name": "TxHash"
+        },
+        "validator_stash_account": {
+          "type": "string",
+          "x-go-name": "ValidatorStashAccount"
+        }
+      },
+      "x-go-package": "github.com/figment-networks/polkadothub-indexer/model"
+    },
+    "RewardKind": {
+      "type": "string",
+      "x-go-package": "github.com/figment-networks/polkadothub-indexer/model"
+    },
+    "SessionSeqListItem": {
+      "type": "object",
+      "properties": {
+        "display_name": {
+          "type": "string",
+          "x-go-name": "DisplayName"
+        },
+        "end_height": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "EndHeight"
+        },
+        "online": {
+          "type": "boolean",
+          "x-go-name": "Online"
+        },
+        "session": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Session"
+        },
+        "start_height": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "StartHeight"
+        },
+        "stash_account": {
+          "type": "string",
+          "x-go-name": "StashAccount"
+        },
+        "time": {
+          "$ref": "#/definitions/Time"
+        }
+      },
+      "x-go-package": "github.com/figment-networks/polkadothub-indexer/usecase/validator"
+    },
+    "StringArray": {
+      "type": "array",
+      "title": "StringArray represents a one-dimensional array of the PostgreSQL character types.",
+      "items": {
+        "type": "string"
+      },
+      "x-go-package": "github.com/lib/pq"
+    },
+    "SummaryInterval": {
+      "description": "SummaryInterval type represents summary interval",
+      "type": "string",
+      "x-go-package": "github.com/figment-networks/polkadothub-indexer/types"
+    },
+    "SystemEventItem": {
+      "type": "object",
+      "properties": {
+        "actor": {
+          "description": "Actor is an account stash",
+          "type": "string",
+          "x-go-name": "Actor"
+        },
+        "created_at": {
+          "$ref": "#/definitions/Time"
+        },
+        "data": {
+          "$ref": "#/definitions/Jsonb"
+        },
+        "height": {
+          "description": "Height is block height from when event was triggered",
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Height"
+        },
+        "id": {
+          "$ref": "#/definitions/ID"
+        },
+        "kind": {
+          "description": "Kind is system event kind",
+          "type": "string",
+          "x-go-name": "Kind",
+          "example": "active_balance_change_1"
+        },
+        "time": {
+          "$ref": "#/definitions/Time"
+        },
+        "updated_at": {
+          "$ref": "#/definitions/Time"
+        }
+      },
+      "x-go-package": "github.com/figment-networks/polkadothub-indexer/usecase/system_event"
+    },
+    "Time": {
+      "type": "object",
+      "x-go-package": "github.com/figment-networks/polkadothub-indexer/types"
+    },
+    "TransactionListItem": {
+      "type": "object",
+      "properties": {
+        "args": {
+          "type": "string",
+          "x-go-name": "Args"
+        },
+        "is_success": {
+          "type": "boolean",
+          "x-go-name": "IsSuccess"
+        },
+        "method": {
+          "type": "string",
+          "x-go-name": "Method"
+        },
+        "nonce": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Nonce"
+        },
+        "partial_fee": {
+          "type": "string",
+          "x-go-name": "PartialFee"
+        },
+        "public_key": {
+          "type": "string",
+          "x-go-name": "PublicKey"
+        },
+        "section": {
+          "type": "string",
+          "x-go-name": "Section"
+        },
+        "signature": {
+          "type": "string",
+          "x-go-name": "Signature"
+        },
+        "tip": {
+          "type": "string",
+          "x-go-name": "Tip"
+        }
+      },
+      "x-go-package": "github.com/figment-networks/polkadothub-indexer/usecase/transaction"
+    },
+    "Unbonded": {
+      "type": "object",
+      "properties": {
+        "amount": {
+          "description": "Amount is balance that was unbonded",
+          "type": "string",
+          "x-go-name": "Amount"
+        },
+        "height": {
+          "description": "Height is block height transaction occured",
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Height"
+        },
+        "transaction_hash": {
+          "description": "Hash is transaction hash",
+          "type": "string",
+          "x-go-name": "Hash"
+        }
+      },
+      "x-go-package": "github.com/figment-networks/polkadothub-indexer/usecase/account"
+    },
+    "ValidatorAgg": {
+      "type": "object",
+      "properties": {
+        "accumulated_uptime": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "AccumulatedUptime"
+        },
+        "accumulated_uptime_count": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "AccumulatedUptimeCount"
+        },
+        "created_at": {
+          "$ref": "#/definitions/Time"
+        },
+        "display_name": {
+          "type": "string",
+          "x-go-name": "DisplayName"
+        },
+        "id": {
+          "$ref": "#/definitions/ID"
+        },
+        "recent_as_validator_height": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "RecentAsValidatorHeight"
+        },
+        "recent_at": {
+          "$ref": "#/definitions/Time"
+        },
+        "recent_at_height": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "RecentAtHeight"
+        },
+        "started_at": {
+          "$ref": "#/definitions/Time"
+        },
+        "started_at_height": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "StartedAtHeight"
+        },
+        "stash_account": {
+          "type": "string",
+          "x-go-name": "StashAccount"
+        },
+        "updated_at": {
+          "$ref": "#/definitions/Time"
+        }
+      },
+      "x-go-package": "github.com/figment-networks/polkadothub-indexer/model"
+    },
+    "ValidatorEraSeq": {
+      "type": "object",
+      "properties": {
+        "commission": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Commission"
+        },
+        "controller_account": {
+          "type": "string",
+          "x-go-name": "ControllerAccount"
+        },
+        "end_height": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "EndHeight"
+        },
+        "era": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Era"
+        },
+        "id": {
+          "$ref": "#/definitions/ID"
+        },
+        "index": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Index"
+        },
+        "own_stake": {
+          "$ref": "#/definitions/Quantity"
+        },
+        "reward_points": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "RewardPoints"
+        },
+        "session_accounts": {
+          "$ref": "#/definitions/StringArray"
+        },
+        "stakers_count": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "StakersCount"
+        },
+        "stakers_stake": {
+          "$ref": "#/definitions/Quantity"
+        },
+        "start_height": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "StartHeight"
+        },
+        "stash_account": {
+          "type": "string",
+          "x-go-name": "StashAccount"
+        },
+        "time": {
+          "$ref": "#/definitions/Time"
+        },
+        "total_stake": {
+          "$ref": "#/definitions/Quantity"
+        }
+      },
+      "x-go-package": "github.com/figment-networks/polkadothub-indexer/model"
+    },
+    "ValidatorSessionSeq": {
+      "type": "object",
+      "properties": {
+        "end_height": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "EndHeight"
+        },
+        "id": {
+          "$ref": "#/definitions/ID"
+        },
+        "online": {
+          "type": "boolean",
+          "x-go-name": "Online"
+        },
+        "session": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Session"
+        },
+        "start_height": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "StartHeight"
+        },
+        "stash_account": {
+          "type": "string",
+          "x-go-name": "StashAccount"
+        },
+        "time": {
+          "$ref": "#/definitions/Time"
+        }
+      },
+      "x-go-package": "github.com/figment-networks/polkadothub-indexer/model"
+    },
+    "ValidatorSummaryRow": {
+      "type": "object",
+      "properties": {
+        "commission_avg": {
+          "type": "number",
+          "format": "double",
+          "x-go-name": "CommissionAvg"
+        },
+        "commission_max": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "CommissionMax"
+        },
+        "commission_min": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "CommissionMin"
+        },
+        "own_stake_avg": {
+          "$ref": "#/definitions/Quantity"
+        },
+        "own_stake_max": {
+          "$ref": "#/definitions/Quantity"
+        },
+        "own_stake_min": {
+          "$ref": "#/definitions/Quantity"
+        },
+        "reward_points_avg": {
+          "type": "number",
+          "format": "double",
+          "x-go-name": "RewardPointsAvg"
+        },
+        "reward_points_max": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "RewardPointsMax"
+        },
+        "reward_points_min": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "RewardPointsMin"
+        },
+        "stakers_count_avg": {
+          "type": "number",
+          "format": "double",
+          "x-go-name": "StakersCountAvg"
+        },
+        "stakers_count_max": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "StakersCountMax"
+        },
+        "stakers_count_min": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "StakersCountMin"
+        },
+        "stakers_stake_avg": {
+          "$ref": "#/definitions/Quantity"
+        },
+        "stakers_stake_max": {
+          "$ref": "#/definitions/Quantity"
+        },
+        "stakers_stake_min": {
+          "$ref": "#/definitions/Quantity"
+        },
+        "time_bucket": {
+          "type": "string",
+          "x-go-name": "TimeBucket"
+        },
+        "time_interval": {
+          "type": "string",
+          "x-go-name": "TimeInterval"
+        },
+        "total_stake_avg": {
+          "$ref": "#/definitions/Quantity"
+        },
+        "total_stake_max": {
+          "$ref": "#/definitions/Quantity"
+        },
+        "total_stake_min": {
+          "$ref": "#/definitions/Quantity"
+        },
+        "uptime_avg": {
+          "type": "number",
+          "format": "double",
+          "x-go-name": "UptimeAvg"
+        }
+      },
+      "x-go-package": "github.com/figment-networks/polkadothub-indexer/store"
+    },
+    "Withdrawn": {
+      "type": "object",
+      "properties": {
+        "amount": {
+          "description": "Amount is balance that was withdrawn",
+          "type": "string",
+          "x-go-name": "Amount"
+        },
+        "height": {
+          "description": "Height is block height transaction occured",
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Height"
+        },
+        "transaction_hash": {
+          "description": "Hash is transaction hash",
+          "type": "string",
+          "x-go-name": "Hash"
+        }
+      },
+      "x-go-package": "github.com/figment-networks/polkadothub-indexer/usecase/account"
+    },
+    "syncableInfo": {
+      "type": "object",
+      "properties": {
+        "time": {
+          "$ref": "#/definitions/Time"
+        }
+      },
+      "x-go-package": "github.com/figment-networks/polkadothub-indexer/usecase/validator"
+    }
+  },
+  "responses": {
+    "AccountDetailsView": {
+      "description": "",
+      "schema": {
+        "$ref": "#/definitions/Account"
+      },
+      "headers": {
+        "account": {
+          "description": "Account is balance information for an account"
+        },
+        "address": {
+          "type": "string",
+          "description": "Address of account"
+        },
+        "bonded": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Bonded"
+          },
+          "description": "Bonded is a list of all staking.Bonded events for account"
+        },
+        "delegations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Delegation"
+          },
+          "description": "Delegations is a list of latest delegations for account"
+        },
+        "deposit": {
+          "type": "string"
+        },
+        "deposits": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/BalanceDeposit"
+          },
+          "description": "Deposits is a list of all balances.Deposit events for account"
+        },
+        "display_name": {
+          "type": "string"
+        },
+        "email_name": {
+          "type": "string"
+        },
+        "image": {
+          "type": "string"
+        },
+        "legal_name": {
+          "type": "string"
+        },
+        "riot_name": {
+          "type": "string"
+        },
+        "transfers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/BalanceTransfer"
+          },
+          "description": "Transfers is a list of all balances.Transfer events for account"
+        },
+        "twitter_name": {
+          "type": "string"
+        },
+        "unbonded": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Unbonded"
+          },
+          "description": "Unbonded is a list of all staking.Unbonded events for account"
+        },
+        "web_name": {
+          "type": "string"
+        },
+        "withdrawn": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Withdrawn"
+          },
+          "description": "Withdrawn is a list of all staking.Withdrawn events for account"
+        }
+      }
+    },
+    "AccountHeightDetailsView": {
+      "description": "",
+      "headers": {
+        "fee_frozen": {
+          "type": "string",
+          "description": "FeeFrozen balance of account"
+        },
+        "free": {
+          "type": "string",
+          "description": "Free balance of account"
+        },
+        "misc_frozen": {
+          "type": "string",
+          "description": "MiscFrozen balance of account"
+        },
+        "nonce": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "reserved": {
+          "type": "string",
+          "description": "Reserved balance of account"
+        }
+      }
+    },
+    "AccountRewardsView": {
+      "description": "",
+      "headers": {
+        "account": {
+          "type": "string",
+          "description": "Account is stash account"
+        },
+        "end_time": {
+          "type": "string",
+          "format": "date-time",
+          "description": "End is end time of query period"
+        },
+        "rewards": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Reward"
+          },
+          "description": "Rewards is list of rewards"
+        },
+        "start_time": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Start is start time of query period"
+        },
+        "total_amount": {
+          "type": "string",
+          "description": "TotalAmount is summed total of rewards earned"
+        }
+      }
+    },
+    "BadRequestResponse": {
+      "description": "",
+      "schema": {
+        "type": "object"
+      },
+      "headers": {
+        "error": {},
+        "status": {
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    },
+    "BlockDetailsView": {
+      "description": "",
+      "schema": {
+        "$ref": "#/definitions/Time"
+      },
+      "headers": {
+        "extrinsics": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ExtrinsicDetailsView"
+          }
+        },
+        "extrinsics_root": {
+          "type": "string"
+        },
+        "hash": {
+          "type": "string"
+        },
+        "height": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "parent_hash": {
+          "type": "string"
+        },
+        "state_root": {
+          "type": "string"
+        },
+        "time": {}
+      }
+    },
+    "BlockSummary": {
+      "description": "",
+      "schema": {
+        "$ref": "#/definitions/Time"
+      },
+      "headers": {
+        "block_time_avg": {
+          "type": "number",
+          "format": "double"
+        },
+        "count": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "created_at": {},
+        "id": {},
+        "index_version": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "time_bucket": {},
+        "time_interval": {},
+        "updated_at": {}
+      }
+    },
+    "BlockTimesView": {
+      "description": "",
+      "headers": {
+        "avg": {
+          "type": "number",
+          "format": "double"
+        },
+        "count": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "diff": {
+          "type": "number",
+          "format": "double"
+        },
+        "end_height": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "end_time": {
+          "type": "string"
+        },
+        "start_height": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "start_time": {
+          "type": "string"
+        }
+      }
+    },
+    "ChainDetailsView": {
+      "description": "",
+      "schema": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "string"
+        },
+        "$ref": "#/definitions/Time"
+      },
+      "headers": {
+        "app_name": {
+          "type": "string"
+        },
+        "app_version": {
+          "type": "string"
+        },
+        "chain_name": {
+          "type": "string"
+        },
+        "chain_spec_version": {
+          "type": "string"
+        },
+        "chain_type": {
+          "type": "string"
+        },
+        "client_info": {
+          "type": "string"
+        },
+        "genesis_hash": {
+          "type": "string"
+        },
+        "go_version": {
+          "type": "string"
+        },
+        "indexing_lag": {
+          "type": "integer",
+          "format": "int64",
+          "description": "Lag is how many blocks the indexer is behind the current head of the chain"
+        },
+        "indexing_started": {
+          "type": "boolean",
+          "description": "IndexingStarted is false if indexer has never run before, otherwise returns true"
+        },
+        "last_index_version": {
+          "type": "integer",
+          "format": "int64",
+          "description": "LastIndexVersion is config version of last indexed block"
+        },
+        "last_indexed_at": {
+          "description": "LastIndexedAt is last time a block was indexed"
+        },
+        "last_indexed_era": {
+          "type": "integer",
+          "format": "int64",
+          "description": "LastIndexedEra is era of last indexed block"
+        },
+        "last_indexed_era_height": {
+          "type": "integer",
+          "format": "int64",
+          "description": "LastIndexedEraHeight is last indexed height where era was last in era"
+        },
+        "last_indexed_height": {
+          "type": "integer",
+          "format": "int64",
+          "description": "LastIndexedHeight is height of last indexed block"
+        },
+        "last_indexed_session": {
+          "type": "integer",
+          "format": "int64",
+          "description": "LastIndexedSession is session of last indexed block"
+        },
+        "last_indexed_session_height": {
+          "type": "integer",
+          "format": "int64",
+          "description": "LastIndexedSessionHeight is last indexed height where session was last in session"
+        },
+        "last_indexed_time": {
+          "description": "LastIndexedTime is last indexed block time"
+        },
+        "node_health": {
+          "type": "string"
+        },
+        "node_local_peer_uid": {
+          "type": "string"
+        },
+        "node_name": {
+          "type": "string"
+        },
+        "node_properties": {},
+        "node_roles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "node_version": {
+          "type": "string"
+        }
+      }
+    },
+    "RewardsForErasView": {
+      "description": "",
+      "schema": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/RewardEraSeq"
+        }
+      }
+    },
+    "SystemEventsView": {
+      "description": "SystemEventsView is a list of system events",
+      "headers": {
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SystemEventItem"
+          }
+        }
+      }
+    },
+    "TransactionsView": {
+      "description": "",
+      "headers": {
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TransactionListItem"
+          }
+        }
+      }
+    },
+    "ValidatorAggregateView": {
+      "description": "",
+      "schema": {
+        "$ref": "#/definitions/Time"
+      },
+      "headers": {
+        "created_at": {},
+        "delegations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Delegation"
+          }
+        },
+        "display_name": {
+          "type": "string"
+        },
+        "id": {},
+        "last_era_sequences": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ValidatorEraSeq"
+          }
+        },
+        "last_session_sequences": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ValidatorSessionSeq"
+          }
+        },
+        "recent_as_validator_height": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "recent_at": {},
+        "recent_at_height": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "started_at": {},
+        "started_at_height": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "stash_account": {
+          "type": "string"
+        },
+        "updated_at": {},
+        "uptime": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "ValidatorAggregatesView": {
+      "description": "",
+      "headers": {
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ValidatorAgg"
+          }
+        }
+      }
+    },
+    "ValidatorsSummariesView": {
+      "description": "",
+      "schema": {
+        "$ref": "#/definitions/syncableInfo"
+      },
+      "headers": {
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ValidatorSummaryRow"
+          }
+        },
+        "last_indexed_era": {},
+        "last_indexed_session": {}
+      }
+    },
+    "ValidatorsView": {
+      "description": "",
+      "headers": {
+        "era_items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/EraSeqListItem"
+          }
+        },
+        "session_items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SessionSeqListItem"
+          }
+        }
+      }
+    }
+  }
+}

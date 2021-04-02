@@ -27,8 +27,13 @@ func NewGetBlockTimesHttpHandler(blockSeqDb store.BlockSeq) *getBlockTimesHttpHa
 	}
 }
 
+// swagger:parameters getBlockTimes
 type GetBlockTimesRequest struct {
-	Limit int64 `uri:"limit" binding:"required"`
+	// Limit
+	//
+	// required: true
+	// in: path
+	Limit int64 `json:"limit" uri:"limit" binding:"required"`
 }
 
 func (h *getBlockTimesHttpHandler) Handle(c *gin.Context) {

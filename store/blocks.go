@@ -29,6 +29,7 @@ type BlockSummary interface {
 	SaveSummary(val *model.BlockSummary) error
 }
 
+// swagger:response BlockTimesView
 // GetAvgRecentTimesResult Contains results for GetAvgRecentTimes query
 type GetAvgRecentTimesResult struct {
 	StartHeight int64   `json:"start_height"`

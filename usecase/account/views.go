@@ -22,12 +22,17 @@ const (
 	balanceKey string = "Balance"
 )
 
+// swagger:response AccountHeightDetailsView
 type HeightDetailsView struct {
-	Nonce      int64  `json:"nonce"`
-	Free       string `json:"free"`
-	Reserved   string `json:"reserved"`
+	Nonce int64 `json:"nonce"`
+	// Free balance of account
+	Free string `json:"free"`
+	// Reserved balance of account
+	Reserved string `json:"reserved"`
+	// MiscFrozen balance of account
 	MiscFrozen string `json:"misc_frozen"`
-	FeeFrozen  string `json:"fee_frozen"`
+	// FeeFrozen balance of account
+	FeeFrozen string `json:"fee_frozen"`
 }
 
 func ToHeightDetailsView(rawAccount *accountpb.Account) *HeightDetailsView {
@@ -40,16 +45,26 @@ func ToHeightDetailsView(rawAccount *accountpb.Account) *HeightDetailsView {
 	}
 }
 
+// swagger:response AccountDetailsView
 type DetailsView struct {
-	Address string   `json:"address"`
+	// Address of account
+	Address string `json:"address"`
+	// Account is balance information for an account
 	Account *Account `json:"account"`
+	// Identity is identity details for an account
 	*Identity
 
-	Transfers   []*BalanceTransfer   `json:"transfers"`
-	Deposits    []*BalanceDeposit    `json:"deposits"`
-	Bonded      []*Bonded            `json:"bonded"`
-	Unbonded    []*Unbonded          `json:"unbonded"`
-	Withdrawn   []*Withdrawn         `json:"withdrawn"`
+	// Transfers is a list of all balances.Transfer events for account
+	Transfers []*BalanceTransfer `json:"transfers"`
+	// Deposits is a list of all balances.Deposit events for account
+	Deposits []*BalanceDeposit `json:"deposits"`
+	// Bonded is a list of all staking.Bonded events for account
+	Bonded []*Bonded `json:"bonded"`
+	// Unbonded is a list of all staking.Unbonded events for account
+	Unbonded []*Unbonded `json:"unbonded"`
+	// Withdrawn is a list of all staking.Withdrawn events for account
+	Withdrawn []*Withdrawn `json:"withdrawn"`
+	// Delegations is a list of latest delegations for account
 	Delegations []*common.Delegation `json:"delegations"`
 }
 
@@ -94,18 +109,27 @@ func ToDetailsView(address string, rawAccountIdentity *accountpb.AccountIdentity
 	return view, nil
 }
 
+// swagger:response AccountRewardsView
 type RewardsView struct {
-	Account     string    `json:"account"`
-	Start       time.Time `json:"start_time"`
-	End         time.Time `json:"end_time"`
-	TotalAmount string    `json:"total_amount"`
-	Rewards     []Reward  `json:"rewards"`
+	// Account is stash account
+	Account string `json:"account"`
+	// Start is start time of query period
+	Start time.Time `json:"start_time"`
+	// End is end time of query period
+	End time.Time `json:"end_time"`
+	// TotalAmount is summed total of rewards earned
+	TotalAmount string `json:"total_amount"`
+	// Rewards is list of rewards
+	Rewards []Reward `json:"rewards"`
 }
 
 type Reward struct {
-	Height int64     `json:"height"`
-	Time   time.Time `json:"time"`
-	Amount string    `json:"amount"`
+	// Height of block where reward event occured
+	Height int64 `json:"height"`
+	// Time of block where reward event occured
+	Time time.Time `json:"time"`
+	// Amount is reward balance claimed by account
+	Amount string `json:"amount"`
 }
 
 func toRewardsView(events []model.EventSeq, account string, start, end time.Time) (RewardsView, error) {
@@ -175,11 +199,16 @@ func ToIdentity(rawAccountIdentity *accountpb.AccountIdentity) *Identity {
 	}
 }
 
+// Account is balance information for an account
 type Account struct {
-	Free       string `json:"free"`
-	Reserved   string `json:"reserved"`
+	// Free balance of account
+	Free string `json:"free"`
+	// Reserved balance of account
+	Reserved string `json:"reserved"`
+	// MiscFrozen balance of account
 	MiscFrozen string `json:"misc_frozen"`
-	FeeFrozen  string `json:"fee_frozen"`
+	// FeeFrozen balance of account
+	FeeFrozen string `json:"fee_frozen"`
 }
 
 func ToAccount(rawAccount *accountpb.Account) *Account {
@@ -197,10 +226,16 @@ type EventData struct {
 }
 
 type BalanceTransfer struct {
-	Hash        string `json:"transaction_hash"`
-	Height      int64  `json:"height"`
-	Amount      string `json:"amount"`
-	Kind        string `json:"kind"`
+	// Hash is transaction hash
+	Hash string `json:"transaction_hash"`
+	// Height is block height transaction occured
+	Height int64 `json:"height"`
+	// Amount is balance that was transferred
+	Amount string `json:"amount"`
+	// Kind is transfer kind (either "in" for transfer into account or "out" for transfer out of account)
+	// example: in
+	Kind string `json:"kind"`
+	// Participant is account
 	Participant string `json:"participant"`
 }
 
@@ -237,9 +272,12 @@ func ToBalanceTransfers(forAddress string, balanceTransferEvents []model.EventSe
 }
 
 type BalanceDeposit struct {
+	// Amount is balance that was deposited into account
 	Amount string `json:"amount"`
-	Hash   string `json:"transaction_hash"`
-	Height int64  `json:"height"`
+	// Hash is transaction hash
+	Hash string `json:"transaction_hash"`
+	// Height is block height transaction occured
+	Height int64 `json:"height"`
 }
 
 func ToBalanceDeposits(balanceDepositsEvents []model.EventSeqWithTxHash) ([]*BalanceDeposit, error) {
@@ -265,10 +303,14 @@ func ToBalanceDeposits(balanceDepositsEvents []model.EventSeqWithTxHash) ([]*Bal
 }
 
 type Bonded struct {
-	Amount   string `json:"amount"`
+	// Amount is balance that was bonded
+	Amount string `json:"amount"`
+	// Receiver is account that bonded
 	Receiver string `json:"receiver"`
-	Hash     string `json:"transaction_hash"`
-	Height   int64  `json:"height"`
+	// Hash is transaction hash
+	Hash string `json:"transaction_hash"`
+	// Height is block height transaction occured
+	Height int64 `json:"height"`
 }
 
 func ToBondedList(bondedEvents []model.EventSeqWithTxHash) ([]*Bonded, error) {
@@ -282,9 +324,10 @@ func ToBondedList(bondedEvents []model.EventSeqWithTxHash) ([]*Bonded, error) {
 		amount := eventData[1]
 
 		newBonded := &Bonded{
-			Amount: amount.Value,
-			Hash:   eventSeq.TxHash,
-			Height: eventSeq.Height,
+			Amount:   amount.Value,
+			Hash:     eventSeq.TxHash,
+			Height:   eventSeq.Height,
+			Receiver: eventData[0].Value,
 		}
 
 		bondedList[i] = newBonded
@@ -294,9 +337,12 @@ func ToBondedList(bondedEvents []model.EventSeqWithTxHash) ([]*Bonded, error) {
 }
 
 type Unbonded struct {
+	// Amount is balance that was unbonded
 	Amount string `json:"amount"`
-	Hash   string `json:"transaction_hash"`
-	Height int64  `json:"height"`
+	// Hash is transaction hash
+	Hash string `json:"transaction_hash"`
+	// Height is block height transaction occured
+	Height int64 `json:"height"`
 }
 
 func ToUnbondedList(bondedEvents []model.EventSeqWithTxHash) ([]*Unbonded, error) {
@@ -322,9 +368,12 @@ func ToUnbondedList(bondedEvents []model.EventSeqWithTxHash) ([]*Unbonded, error
 }
 
 type Withdrawn struct {
+	// Amount is balance that was withdrawn
 	Amount string `json:"amount"`
-	Hash   string `json:"transaction_hash"`
-	Height int64  `json:"height"`
+	// Hash is transaction hash
+	Hash string `json:"transaction_hash"`
+	// Height is block height transaction occured
+	Height int64 `json:"height"`
 }
 
 func ToWithdrawnList(withdrawnEvents []model.EventSeqWithTxHash) ([]*Withdrawn, error) {

@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	mock_client "github.com/figment-networks/polkadothub-indexer/mock/client"
-	"github.com/figment-networks/polkadothub-indexer/model"
 	"github.com/figment-networks/polkadothub-proxy/grpc/account/accountpb"
 	"github.com/figment-networks/polkadothub-proxy/grpc/block/blockpb"
 	"github.com/figment-networks/polkadothub-proxy/grpc/staking/stakingpb"
@@ -166,7 +165,7 @@ func TestValidatorParserTask_Run(t *testing.T) {
 		})
 	}
 
-	var syncableEra int64 = 100
+	var activeEra int64 = 100
 	parsedUnclaimedRewardTests := []struct {
 		description            string
 		rawValidator           *stakingpb.Validator
@@ -191,7 +190,7 @@ func TestValidatorParserTask_Run(t *testing.T) {
 			totalRewardPoints:      100,
 			totalRewardPayout:      "4000",
 			expectCommission:       true,
-			expectEra:              syncableEra,
+			expectEra:              activeEra,
 			expectNumStakerRewards: 2,
 		},
 		{description: "does not update ParsedRewards if there's no reward payout",
@@ -206,7 +205,7 @@ func TestValidatorParserTask_Run(t *testing.T) {
 				},
 			},
 			totalRewardPoints: 100,
-			totalRewardPayout: "",
+			totalRewardPayout: "0",
 		},
 		{description: "Creates staker rewards if commission is 100%",
 			rawValidator: &stakingpb.Validator{
@@ -221,7 +220,7 @@ func TestValidatorParserTask_Run(t *testing.T) {
 			},
 			totalRewardPoints:      100,
 			totalRewardPayout:      "4000",
-			expectEra:              syncableEra,
+			expectEra:              activeEra,
 			expectCommission:       true,
 			expectNumStakerRewards: 2,
 		},
@@ -238,7 +237,7 @@ func TestValidatorParserTask_Run(t *testing.T) {
 			},
 			totalRewardPoints:      100,
 			totalRewardPayout:      "4000",
-			expectEra:              syncableEra,
+			expectEra:              activeEra,
 			expectNumStakerRewards: 2,
 		},
 		{description: "Create staker reward if reward is 0",
@@ -255,7 +254,7 @@ func TestValidatorParserTask_Run(t *testing.T) {
 			totalRewardPoints:      100,
 			totalRewardPayout:      "4000",
 			expectCommission:       true,
-			expectEra:              syncableEra,
+			expectEra:              activeEra,
 			expectNumStakerRewards: 2,
 		},
 		{description: "expect validtor reward if validator is staked",
@@ -268,7 +267,7 @@ func TestValidatorParserTask_Run(t *testing.T) {
 			},
 			totalRewardPoints: 100,
 			totalRewardPayout: "4000",
-			expectEra:         syncableEra,
+			expectEra:         activeEra,
 			expectCommission:  true,
 			expectReward:      true,
 		},
@@ -284,7 +283,7 @@ func TestValidatorParserTask_Run(t *testing.T) {
 			},
 			totalRewardPoints: 100,
 			totalRewardPayout: "4000",
-			expectEra:         syncableEra,
+			expectEra:         activeEra,
 			expectCommission:  true,
 		},
 	}
@@ -300,7 +299,7 @@ func TestValidatorParserTask_Run(t *testing.T) {
 			task := NewValidatorsParserTask(nil, mockClient, nil, nil, nil)
 
 			pl := &payload{
-				Syncable: &model.Syncable{Era: syncableEra},
+				HeightMeta: HeightMeta{ActiveEra: activeEra},
 				RawStaking: &stakingpb.Staking{
 					TotalRewardPayout: tt.totalRewardPayout,
 					TotalRewardPoints: tt.totalRewardPoints,

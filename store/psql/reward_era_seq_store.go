@@ -107,3 +107,15 @@ func (s RewardEraSeqStore) GetCount(validatorStash string, era int64) (int64, er
 
 	return count, err
 }
+
+// GetByStashAndEra returns for given stash for validatorStash and era
+func (s *RewardEraSeqStore) GetByStashAndEra(validatorStash, stash string, era int64) (model.RewardEraSeq, error) {
+	var result model.RewardEraSeq
+	err := s.db.
+		Table(model.RewardEraSeq{}.TableName()).
+		Where("validator_stash_account = ? AND stash_account = ? AND era = ?", validatorStash, stash, era).
+		Find(&result).
+		Error
+
+	return result, checkErr(err)
+}

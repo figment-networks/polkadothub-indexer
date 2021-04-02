@@ -31,12 +31,28 @@ func NewGetRewardsHttpHandler(eventSeqDb store.EventSeq, syncablesDb store.Synca
 	}
 }
 
+// swagger:parameters getAccountRewards
 type uriParams struct {
-	Address string `uri:"stash_account" binding:"required"`
+	// Address
+	//
+	// required: true
+	// in: path
+	Address string `json:"stash_account" uri:"stash_account" binding:"required"`
 }
+
+// swagger:parameters getAccountRewards
 type queryParams struct {
-	Start time.Time `form:"start" binding:"required" time_format:"2006-01-02 15:04:05"`
-	End   time.Time `form:"end" binding:"-" time_format:"2006-01-02 15:04:05"`
+	// Start
+	//
+	// required: true
+	// in: path
+	// example: 2006-01-02 15:04:05
+	Start time.Time `json:"start" form:"start" binding:"required" time_format:"2006-01-02 15:04:05"`
+	// End
+	//
+	// in: path
+	// example: 2006-01-02 15:04:05
+	End time.Time `json:"end" form:"end" binding:"-" time_format:"2006-01-02 15:04:05"`
 }
 
 func (h *getRewardsHttpHandler) Handle(c *gin.Context) {

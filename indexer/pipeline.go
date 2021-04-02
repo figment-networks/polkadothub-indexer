@@ -286,6 +286,77 @@ func (p *indexingPipeline) Backfill(ctx context.Context, backfillCfg BackfillCon
 	return err
 }
 
+type ReindexConfig struct {
+	Parallel      bool
+	Force         bool
+	TargetIds     []int64
+	isLastInEra   bool
+	LastInSession bool
+	LastInEra     bool
+	TrxKinds      []model.TransactionKind
+}
+
+func (p *indexingPipeline) Reindex(ctx context.Context, cfg ReindexConfig) error {
+	if err := p.canRunBackfill(cfg.Parallel); err != nil {
+		return err
+	}
+
+	indexVersion := p.configParser.GetCurrentVersionId()
+	source, err := NewReindexSource(p.cfg, p.syncableDb, p.client, indexVersion, cfg.LastInSession, cfg.LastInEra, p.transactionDb, cfg.TrxKinds)
+	if err != nil {
+		return err
+	}
+
+	sink := NewSink(p.databaseDb, p.syncableDb, indexVersion)
+
+	kind := model.ReportKindSequentialReindex
+	if cfg.Parallel {
+		kind = model.ReportKindParallelReindex
+	}
+
+	if cfg.Force {
+		if err := p.reportDb.DeleteByKinds([]model.ReportKind{model.ReportKindParallelReindex, model.ReportKindSequentialReindex}); err != nil {
+			return err
+		}
+	}
+
+	reportCreator := &reportCreator{
+		kind:         kind,
+		indexVersion: indexVersion,
+		startHeight:  source.startHeight,
+		endHeight:    source.endHeight,
+		reportDb:     p.reportDb,
+	}
+
+	versionIds := p.status.missingVersionIds
+	pipelineOptionsCreator := &pipelineOptionsCreator{
+		configParser:      p.configParser,
+		desiredVersionIds: versionIds,
+	}
+	pipelineOptions, err := pipelineOptionsCreator.parse()
+	if err != nil {
+		return err
+	}
+
+	if err := reportCreator.createIfNotExists(model.ReportKindSequentialReindex, model.ReportKindParallelReindex); err != nil {
+		return err
+	}
+
+	ctxWithReport := context.WithValue(ctx, CtxReport, reportCreator.report)
+
+	logger.Info(fmt.Sprintf("starting pipeline reindex [start=%d] [end=%d] [kind=%s]", source.startHeight, source.endHeight, kind))
+
+	if err := p.pipeline.Start(ctxWithReport, source, sink, pipelineOptions); err != nil {
+		return err
+	}
+
+	logger.Info(fmt.Sprintf("pipeline completed [Err: %+v]", err))
+
+	err = reportCreator.complete(source.Len(), sink.successCount, err)
+
+	return err
+}
+
 func (p *indexingPipeline) canRunBackfill(isParallel bool) error {
 	if p.status.isPristine {
 		return ErrIsPristine

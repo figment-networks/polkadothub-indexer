@@ -5,6 +5,7 @@ import (
 	"github.com/figment-networks/polkadothub-proxy/grpc/block/blockpb"
 )
 
+// swagger:response BlockDetailsView
 type DetailsView struct {
 	Height         int64                  `json:"height"`
 	Time           types.Time             `json:"time"`
