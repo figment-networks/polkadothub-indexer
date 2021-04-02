@@ -169,8 +169,10 @@ func (s SyncablesStore) SetProcessedAtForRange(reportID types.ID, startHeight in
 func (s SyncablesStore) FindAllByLastInSessionOrEra(indexVersion int64, isLastInSession, isLastInEra bool) ([]model.Syncable, error) {
 	result := []model.Syncable{}
 
-	tx := s.db.
-		Not("index_version = ?", indexVersion)
+	tx := s.db
+	if indexVersion > 0 {
+		tx = tx.Not("index_version = ?", indexVersion)
+	}
 
 	if isLastInEra {
 		tx = tx.Where("last_in_era=?", isLastInEra)

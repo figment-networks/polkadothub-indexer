@@ -9,6 +9,7 @@ import (
 
 	"github.com/figment-networks/polkadothub-indexer/client"
 	"github.com/figment-networks/polkadothub-indexer/config"
+	"github.com/figment-networks/polkadothub-indexer/model"
 	"github.com/figment-networks/polkadothub-indexer/store/psql"
 	"github.com/figment-networks/polkadothub-indexer/utils/logger"
 	"github.com/figment-networks/polkadothub-indexer/utils/reporting"
@@ -20,10 +21,13 @@ type Flags struct {
 	migrateVersion uint
 	showVersion    bool
 
-	batchSize int64
-	parallel  bool
-	force     bool
-	targetIds targetIds
+	batchSize     int64
+	parallel      bool
+	force         bool
+	targetIds     targetIds
+	trxKinds      trxKinds
+	lastInEra     bool
+	lastInSession bool
 }
 
 type targetIds []int64
@@ -46,6 +50,30 @@ func (i *targetIds) Set(value string) error {
 	return nil
 }
 
+type trxKinds []model.TransactionKind
+
+func (i *trxKinds) String() string {
+	return fmt.Sprint(*i)
+}
+
+func (i *trxKinds) Set(value string) error {
+	if len(*i) > 0 {
+		return errors.New("trxKinds flag already set")
+	}
+	for _, raw := range strings.Split(value, ",") {
+		parts := strings.Split(raw, ".")
+		if len(parts) < 2 {
+			return fmt.Errorf("unexpected format for txkind")
+		}
+
+		*i = append(*i, model.TransactionKind{
+			Section: parts[0],
+			Method:  parts[1],
+		})
+	}
+	return nil
+}
+
 func (c *Flags) Setup() {
 	flag.BoolVar(&c.showVersion, "v", false, "Show application version")
 	flag.StringVar(&c.configPath, "config", "", "Path to config")
@@ -56,6 +84,10 @@ func (c *Flags) Setup() {
 	flag.BoolVar(&c.parallel, "parallel", false, "should backfill be run in parallel with indexing")
 	flag.BoolVar(&c.force, "force", false, "remove existing reindexing reports")
 	flag.Var(&c.targetIds, "target_ids", "comma separated list of integers")
+	flag.Var(&c.trxKinds, "trx_kinds", "comma separated list of transaction kinds to run in reindex cmd in the format section.method")
+	flag.BoolVar(&c.lastInEra, "last_in_era", false, "should reindex last in era for reindex cmd")
+	flag.BoolVar(&c.lastInSession, "last_in_session", false, "should reindex last in session for reindex cmd")
+
 }
 
 // Run executes the command line interface
