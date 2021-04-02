@@ -3,6 +3,7 @@ package indexer
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -13,7 +14,6 @@ import (
 	"github.com/figment-networks/polkadothub-indexer/metric"
 	"github.com/figment-networks/polkadothub-indexer/model"
 	"github.com/figment-networks/polkadothub-indexer/store"
-	"github.com/figment-networks/polkadothub-indexer/types"
 	"github.com/figment-networks/polkadothub-indexer/utils/logger"
 	"github.com/figment-networks/polkadothub-proxy/grpc/event/eventpb"
 )
@@ -45,6 +45,8 @@ const (
 var (
 	_ pipeline.Task = (*blockSeqCreatorTask)(nil)
 	_ pipeline.Task = (*validatorSessionSeqCreatorTask)(nil)
+
+	errCannotCalculateRewards = errors.New("cannot calculate rewards")
 )
 
 const (
@@ -375,7 +377,7 @@ func (t *rewardEraSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) e
 
 	payload := p.(*payload)
 
-	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StageParser, t.GetName(), payload.CurrentHeight))
+	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StageSequencer, t.GetName(), payload.CurrentHeight))
 
 	currentEraSeq, err := t.getEraSeq(payload.Syncable.Era, payload.Syncable)
 	if err != nil {
@@ -461,8 +463,27 @@ func (t *rewardEraSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) e
 			}
 		}
 
-		rewards, rewardclaims, err := t.getRewardsFromEvents(tx.GetExtrinsicIndex(), claims, payload.RawEvents)
+		if len(claims) == 0 {
+			continue
+		}
+
+		legitimateClaims, rewardArgs, err := t.getLegitimateClaimsAndRewardArgs(claims, payload.RawEvents, tx.GetExtrinsicIndex())
 		if err != nil {
+			if errors.Is(err, errCannotCalculateRewards) {
+				// impossible to extract rewards for this claim, so report error and keep going (should be calulcated successfully via backfill)
+				logger.Error(err, logger.Field("height", payload.CurrentHeight), logger.Field("task", t.GetName()), logger.Field("stage", pipeline.StageSequencer))
+				continue
+			}
+			return err
+		}
+
+		rewards, rewardclaims, err := t.extractRewards(legitimateClaims, rewardArgs)
+		if err != nil {
+			if errors.Is(err, errCannotCalculateRewards) {
+				// don't stop pipeline on error, report error to investigate later and keep going
+				logger.Error(err, logger.Field("height", payload.CurrentHeight), logger.Field("task", t.GetName()), logger.Field("stage", pipeline.StageSequencer))
+				continue
+			}
 			return err
 		}
 
@@ -501,13 +522,109 @@ func (t *rewardEraSeqCreatorTask) getEraSeq(era int64, currentSyncable *model.Sy
 	}, nil
 }
 
-// getRewardsFromEvents rreturns claims if rewards exist already in db, and returns new reward seqs if reward seqs don't exist in db
-func (t *rewardEraSeqCreatorTask) getRewardsFromEvents(txIdx int64, claims []RewardsClaim, events []*eventpb.Event) ([]model.RewardEraSeq, []RewardsClaim, error) {
+// getLegitimateClaimsAndRewardArgs filters claims that are either:
+// a) not from an era validator
+// b) have no reward events associated with claim (this happens when rewards have already been claimed for this validator and era)
+func (t *rewardEraSeqCreatorTask) getLegitimateClaimsAndRewardArgs(claims []RewardsClaim, events []*eventpb.Event, txIdx int64) ([]RewardsClaim, []rewardEventArgs, error) {
+	var legitimate []RewardsClaim
+	var args []rewardEventArgs
+
+	// check if validator is eligible for rewards for claim era, and that it hasn't previously claimed rewards
+	claimErasForValidatorMap := make(map[string][]int64)
+	for _, c := range claims {
+		_, err := t.validatorDb.FindByEraAndStashAccount(c.Era, c.ValidatorStash)
+		if err == store.ErrNotFound {
+			continue
+		} else if err != nil {
+			return legitimate, args, err
+		}
+
+		reward, err := t.rewardsDb.GetByStashAndEra(c.ValidatorStash, c.ValidatorStash, c.Era)
+		if err != nil && err != store.ErrNotFound {
+			return legitimate, args, err
+		}
+		if reward.Claimed {
+			continue
+		}
+
+		if _, ok := claimErasForValidatorMap[c.ValidatorStash]; !ok {
+			claimErasForValidatorMap[c.ValidatorStash] = []int64{}
+		}
+		claimErasForValidatorMap[c.ValidatorStash] = append(claimErasForValidatorMap[c.ValidatorStash], c.Era)
+	}
+
+	validatorHasEvent := make(map[string]int)
+	for _, ev := range events {
+		if ev.GetExtrinsicIndex() != txIdx || ev.GetMethod() != eventMethodReward || ev.GetSection() != sectionStaking {
+			continue
+		}
+
+		arg, err := t.getRewardEventArgsFromData(ev)
+		if err != nil {
+			return legitimate, args, err
+		}
+
+		if _, ok := claimErasForValidatorMap[arg.stash]; ok {
+			validatorHasEvent[arg.stash]++
+		}
+		args = append(args, arg)
+	}
+
+	claimMap := make(map[RewardsClaim]struct{})
+	for _, c := range claims {
+		eventcount, ok := validatorHasEvent[c.ValidatorStash]
+		if !ok {
+			continue
+		}
+		if _, ok := claimMap[c]; ok {
+			// already claimed, so skip
+			continue
+		}
+		claimEras, _ := claimErasForValidatorMap[c.ValidatorStash]
+
+		// expect each claim for a validator to have a corresponding event
+		if len(claimEras) != eventcount {
+			// check for duplicate claims
+			eraset := t.removeDuplicates(claimEras)
+
+			if len(eraset) != eventcount {
+				return legitimate, args, fmt.Errorf("cannot detemine legitimate claim for %s %d: %w", c.ValidatorStash, c.Era, errCannotCalculateRewards)
+			}
+		}
+		for _, era := range claimEras {
+			if era == c.Era {
+				legitimate = append(legitimate, c)
+				claimMap[c] = struct{}{}
+				break
+			}
+		}
+	}
+
+	return legitimate, args, nil
+}
+
+func (t *rewardEraSeqCreatorTask) removeDuplicates(eras []int64) []int64 {
+	eramap := make(map[int64]struct{})
+
+	for _, era := range eras {
+		eramap[era] = struct{}{}
+	}
+
+	newEras := make([]int64, 0, len(eramap))
+	for i, _ := range eramap {
+		newEras = append(newEras, i)
+	}
+
+	return newEras
+}
+
+// extractRewards rreturns claims if rewards exist already in db, and returns new reward seqs if reward seqs don't exist in db
+func (t *rewardEraSeqCreatorTask) extractRewards(claims []RewardsClaim, rewardArgs []rewardEventArgs) ([]model.RewardEraSeq, []RewardsClaim, error) {
 	var rewards []model.RewardEraSeq
 	var rewardClaims []RewardsClaim
 
-	if len(events) == 0 && len(claims) != 0 {
-		return rewards, rewardClaims, fmt.Errorf("[getRewardsFromEvents] expected events to not be empty")
+	if len(rewardArgs) == 0 && len(claims) != 0 {
+		return rewards, rewardClaims, fmt.Errorf("expected rewardArgs to not be empty: %w", errCannotCalculateRewards)
 	}
 
 	var idx int
@@ -524,7 +641,7 @@ func (t *rewardEraSeqCreatorTask) getRewardsFromEvents(txIdx int64, claims []Rew
 			return rewards, rewardClaims, err
 		}
 
-		extractedRewards, ranged, err := t.extractRewardsForClaimFromEvents(claim, eraSeq, txIdx, nextVald, events[idx:])
+		extractedRewards, ranged, err := t.extractRewardsForClaimFromRewardEventArgs(claim, eraSeq, nextVald, rewardArgs[idx:])
 		if err != nil {
 			return rewards, rewardClaims, err
 		}
@@ -553,39 +670,30 @@ func (t *rewardEraSeqCreatorTask) getRewardsFromEvents(txIdx int64, claims []Rew
 	return rewards, rewardClaims, nil
 }
 
-func (t *rewardEraSeqCreatorTask) extractRewardsForClaimFromEvents(claim RewardsClaim, eraSeq model.EraSequence, txIdx int64, nextVald string, events []*eventpb.Event) ([]model.RewardEraSeq, int, error) {
+func (t *rewardEraSeqCreatorTask) extractRewardsForClaimFromRewardEventArgs(claim RewardsClaim, eraSeq model.EraSequence, nextVald string, rewardArgs []rewardEventArgs) ([]model.RewardEraSeq, int, error) {
 	var rewards []model.RewardEraSeq
 	var foundCurrVald bool
 
-	for i, event := range events {
-		if event.GetExtrinsicIndex() != txIdx || event.GetMethod() != eventMethodReward || event.GetSection() != sectionStaking {
-			continue
-		}
-
-		stash, amount, err := t.getStashAndAmountFromData(event)
-		if err != nil {
-			return rewards, i, err
-		}
-
-		if foundCurrVald && stash == nextVald {
+	for i, arg := range rewardArgs {
+		if foundCurrVald && arg.stash == nextVald {
 			return rewards, i, nil
 		}
 
-		if stash == claim.ValidatorStash {
+		if arg.stash == claim.ValidatorStash {
 			foundCurrVald = true
 		}
 
 		reward := model.RewardEraSeq{
 			Kind:                  model.RewardReward,
 			EraSequence:           &eraSeq,
-			StashAccount:          stash,
-			Amount:                amount.String(),
+			StashAccount:          arg.stash,
+			Amount:                arg.amount,
 			ValidatorStashAccount: claim.ValidatorStash,
 			Claimed:               true,
 			TxHash:                claim.TxHash,
 		}
 
-		if stash == claim.ValidatorStash {
+		if arg.stash == claim.ValidatorStash {
 			reward.Kind = model.RewardCommissionAndReward
 		}
 
@@ -599,16 +707,21 @@ func (t *rewardEraSeqCreatorTask) extractRewardsForClaimFromEvents(claim Rewards
 	return rewards, 0, nil
 }
 
-func (t *rewardEraSeqCreatorTask) getStashAndAmountFromData(event *eventpb.Event) (stash string, amount types.Quantity, err error) {
+type rewardEventArgs struct {
+	stash  string
+	amount string
+}
+
+func (t *rewardEraSeqCreatorTask) getRewardEventArgsFromData(event *eventpb.Event) (args rewardEventArgs, err error) {
 	for _, d := range event.GetData() {
 		switch d.GetName() {
 		case accountKey:
-			stash = d.Value
+			args.stash = d.Value
 		case balanceKey:
-			amount, err = types.NewQuantityFromString(d.Value)
+			args.amount = d.Value
 		}
 	}
-	if stash == "" {
+	if args.stash == "" {
 		err = errUnexpectedEventDataFormat
 	}
 	return

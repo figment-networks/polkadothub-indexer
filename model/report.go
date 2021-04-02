@@ -1,8 +1,9 @@
 package model
 
 import (
-	"github.com/figment-networks/polkadothub-indexer/types"
 	"time"
+
+	"github.com/figment-networks/polkadothub-indexer/types"
 )
 
 const (

@@ -206,7 +206,7 @@ func TestValidatorParserTask_Run(t *testing.T) {
 				},
 			},
 			totalRewardPoints: 100,
-			totalRewardPayout: "",
+			totalRewardPayout: "0",
 		},
 		{description: "Creates staker rewards if commission is 100%",
 			rawValidator: &stakingpb.Validator{

@@ -34,6 +34,7 @@ type Rewards interface {
 	MarkAllClaimed(validatorStash string, era int64, txHash string) error
 	GetAll(address string, start, end int64) ([]model.RewardEraSeq, error)
 	GetCount(validatorStash string, era int64) (int64, error)
+	GetByStashAndEra(validatorStash, stash string, era int64) (model.RewardEraSeq, error)
 }
 
 type Syncables interface {
