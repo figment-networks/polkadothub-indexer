@@ -328,10 +328,9 @@ func (p *indexingPipeline) Reindex(ctx context.Context, cfg ReindexConfig) error
 		reportDb:     p.reportDb,
 	}
 
-	versionIds := p.status.missingVersionIds
 	pipelineOptionsCreator := &pipelineOptionsCreator{
-		configParser:      p.configParser,
-		desiredVersionIds: versionIds,
+		configParser:     p.configParser,
+		desiredTargetIds: cfg.TargetIds,
 	}
 	pipelineOptions, err := pipelineOptionsCreator.parse()
 	if err != nil {
