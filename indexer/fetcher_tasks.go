@@ -20,14 +20,16 @@ const (
 )
 
 type HeightMeta struct {
-	Height        int64
-	Time          types.Time
-	SpecVersion   string
-	ChainUID      string
-	Session       int64
-	Era           int64
-	LastInSession bool
-	LastInEra     bool
+	Height          int64
+	Time            types.Time
+	SpecVersion     string
+	ChainUID        string
+	Session         int64
+	Era             int64
+	ActiveEra       int64
+	LastInSession   bool
+	LastInEra       bool
+	LastInActiveEra bool
 }
 
 func NewFetcherTask(client FetcherClient) pipeline.Task {
@@ -74,14 +76,16 @@ func (t *FetcherTask) Run(ctx context.Context, p pipeline.Payload) error {
 
 	meta := resp.GetChain()
 	payload.HeightMeta = HeightMeta{
-		Height:        payload.CurrentHeight,
-		Time:          *types.NewTimeFromTimestamp(*meta.GetTime()),
-		ChainUID:      meta.GetChain(),
-		SpecVersion:   meta.GetSpecVersion(),
-		Session:       meta.GetSession(),
-		Era:           meta.GetEra(),
-		LastInSession: meta.GetLastInSession(),
-		LastInEra:     meta.GetLastInEra(),
+		Height:          payload.CurrentHeight,
+		Time:            *types.NewTimeFromTimestamp(*meta.GetTime()),
+		ChainUID:        meta.GetChain(),
+		SpecVersion:     meta.GetSpecVersion(),
+		Session:         meta.GetSession(),
+		Era:             meta.GetEra(),
+		ActiveEra:       meta.GetActiveEra(),
+		LastInSession:   meta.GetLastInSession(),
+		LastInEra:       meta.GetLastInEra(),
+		LastInActiveEra: meta.GetLastInActiveEra(),
 	}
 
 	return nil

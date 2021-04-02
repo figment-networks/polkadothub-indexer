@@ -379,7 +379,7 @@ func (t *rewardEraSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) e
 
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StageSequencer, t.GetName(), payload.CurrentHeight))
 
-	currentEraSeq, err := t.getEraSeq(payload.Syncable.Era, payload.Syncable)
+	eraSeq, err := t.getEraSeq(payload.HeightMeta.ActiveEra)
 	if err != nil {
 		return err
 	}
@@ -390,7 +390,7 @@ func (t *rewardEraSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) e
 
 		if data.Commission != "" {
 			payload.RewardEraSequences = append(payload.RewardEraSequences, model.RewardEraSeq{
-				EraSequence:           &currentEraSeq,
+				EraSequence:           &eraSeq,
 				StashAccount:          stash,
 				ValidatorStashAccount: stash,
 				Amount:                data.Commission,
@@ -401,7 +401,7 @@ func (t *rewardEraSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) e
 
 		if data.Reward != "" {
 			payload.RewardEraSequences = append(payload.RewardEraSequences, model.RewardEraSeq{
-				EraSequence:           &currentEraSeq,
+				EraSequence:           &eraSeq,
 				StashAccount:          stash,
 				ValidatorStashAccount: stash,
 				Amount:                data.Reward,
@@ -412,7 +412,7 @@ func (t *rewardEraSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) e
 
 		if data.RewardAndCommission != "" {
 			payload.RewardEraSequences = append(payload.RewardEraSequences, model.RewardEraSeq{
-				EraSequence:           &currentEraSeq,
+				EraSequence:           &eraSeq,
 				StashAccount:          stash,
 				ValidatorStashAccount: stash,
 				Amount:                data.RewardAndCommission,
@@ -423,7 +423,7 @@ func (t *rewardEraSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) e
 
 		for _, n := range data.StakerRewards {
 			payload.RewardEraSequences = append(payload.RewardEraSequences, model.RewardEraSeq{
-				EraSequence:           &currentEraSeq,
+				EraSequence:           &eraSeq,
 				StashAccount:          n.Stash,
 				ValidatorStashAccount: stash,
 				Amount:                n.Amount,
@@ -494,7 +494,7 @@ func (t *rewardEraSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) e
 	return nil
 }
 
-func (t *rewardEraSeqCreatorTask) getEraSeq(era int64, currentSyncable *model.Syncable) (model.EraSequence, error) {
+func (t *rewardEraSeqCreatorTask) getEraSeq(era int64) (model.EraSequence, error) {
 	var firstHeightInEra int64
 	lastSyncableInPrevEra, err := t.syncablesDb.FindLastInEra(era - 1)
 	if err != nil {
@@ -506,12 +506,9 @@ func (t *rewardEraSeqCreatorTask) getEraSeq(era int64, currentSyncable *model.Sy
 		firstHeightInEra = lastSyncableInPrevEra.Height + 1
 	}
 
-	lastSyncableInEra := currentSyncable
-	if currentSyncable == nil || currentSyncable.Era != era {
-		lastSyncableInEra, err = t.syncablesDb.FindLastInEra(era)
-		if err != nil {
-			return model.EraSequence{}, err
-		}
+	lastSyncableInEra, err := t.syncablesDb.FindLastInEra(era)
+	if err != nil {
+		return model.EraSequence{}, err
 	}
 
 	return model.EraSequence{
@@ -636,7 +633,7 @@ func (t *rewardEraSeqCreatorTask) extractRewards(claims []RewardsClaim, rewardAr
 			nextVald = ""
 		}
 
-		eraSeq, err := t.getEraSeq(claim.Era, nil)
+		eraSeq, err := t.getEraSeq(claim.Era)
 		if err != nil {
 			return rewards, rewardClaims, err
 		}
