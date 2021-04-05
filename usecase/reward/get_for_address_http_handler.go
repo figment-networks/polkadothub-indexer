@@ -28,36 +28,45 @@ func NewGetForStashAccountHttpHandler(rewardDb store.Rewards) *getForStashAccoun
 }
 
 // swagger:parameters getRewards
-type GetForStashAccountRequest struct {
+type uriParams struct {
 	// StashAccount
 	//
 	// required: true
 	// in: path
 	StashAccount string `json:"stash_account" uri:"stash_account" binding:"required"`
+}
+
+// swagger:parameters getRewards
+type queryParams struct {
 	// Start
 	//
-	// in: path
+	// in: query
 	Start int64 `json:"start"  form:"start" binding:"-"`
 	// End
 	//
-	// in: path
+	// in: query
 	End int64 `json:"end"  form:"end" binding:"-"`
+	// ValidatorStash
+	//
+	// in: query
+	ValidatorStash string `json:"validator" form:"validator" binding:"-"`
 }
 
 func (h *getForStashAccountHttpHandler) Handle(c *gin.Context) {
-	var req GetForStashAccountRequest
-	if err := c.ShouldBindUri(&req); err != nil {
+	var uri uriParams
+	if err := c.ShouldBindUri(&uri); err != nil {
 		logger.Error(err)
 		http.BadRequest(c, errors.New("invalid stash account"))
 		return
 	}
-	if err := c.ShouldBindQuery(&req); err != nil {
+	var query queryParams
+	if err := c.ShouldBindQuery(&query); err != nil {
 		logger.Error(err)
-		http.BadRequest(c, errors.New("invalid start or/and end"))
+		http.BadRequest(c, errors.New("invalid start and/or end and/or validator"))
 		return
 	}
 
-	resp, err := h.getUseCase().Execute(req.StashAccount, req.Start, req.End)
+	resp, err := h.getUseCase().Execute(uri.StashAccount, query.Start, query.End, query.ValidatorStash)
 	if err != nil {
 		logger.Error(err)
 		http.ServerError(c, err)

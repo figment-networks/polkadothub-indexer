@@ -97,7 +97,7 @@
             "x-go-name": "Start",
             "description": "Start",
             "name": "start",
-            "in": "path",
+            "in": "query",
             "required": true
           },
           {
@@ -107,8 +107,7 @@
             "x-go-name": "End",
             "description": "End",
             "name": "end",
-            "in": "path",
-            "required": true
+            "in": "query"
           }
         ],
         "responses": {
@@ -249,8 +248,7 @@
             "x-go-name": "Start",
             "description": "Start",
             "name": "start",
-            "in": "path",
-            "required": true
+            "in": "query"
           },
           {
             "type": "integer",
@@ -258,8 +256,14 @@
             "x-go-name": "End",
             "description": "End",
             "name": "end",
-            "in": "path",
-            "required": true
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "x-go-name": "ValidatorStash",
+            "description": "ValidatorStash",
+            "name": "validator",
+            "in": "query"
           }
         ],
         "responses": {
@@ -397,7 +401,7 @@
             "x-go-name": "StashAccount",
             "description": "StashAccount",
             "name": "stash_account",
-            "in": "query",
+            "in": "path",
             "required": true
           },
           {
@@ -467,7 +471,7 @@
         "produces": [
           "application/json"
         ],
-        "summary": "Gets all validator aggregate information after height",
+        "summary": "Gets all validator aggregates for validators which are active after min height",
         "operationId": "getValidatorForMinHeight",
         "parameters": [
           {

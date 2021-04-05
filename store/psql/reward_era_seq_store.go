@@ -74,7 +74,7 @@ func (s RewardEraSeqStore) MarkAllClaimed(validatorStash string, era int64, txHa
 }
 
 // GetAll Gets all rewards for given stash
-func (s RewardEraSeqStore) GetAll(stash string, start, end int64) ([]model.RewardEraSeq, error) {
+func (s RewardEraSeqStore) GetAll(stash, validatorStash string, start, end int64) ([]model.RewardEraSeq, error) {
 	tx := s.db.
 		Table(model.RewardEraSeq{}.TableName()).
 		Select("*").
@@ -86,6 +86,10 @@ func (s RewardEraSeqStore) GetAll(stash string, start, end int64) ([]model.Rewar
 	}
 	if start != 0 {
 		tx = tx.Where("era >= ?", start)
+	}
+
+	if validatorStash != "" {
+		tx = tx.Where("validator_stash_account = ?", validatorStash)
 	}
 
 	var res []model.RewardEraSeq

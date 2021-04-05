@@ -45,12 +45,12 @@ type queryParams struct {
 	// Start
 	//
 	// required: true
-	// in: path
+	// in: query
 	// example: 2006-01-02 15:04:05
 	Start time.Time `json:"start" form:"start" binding:"required" time_format:"2006-01-02 15:04:05"`
 	// End
 	//
-	// in: path
+	// in: query
 	// example: 2006-01-02 15:04:05
 	End time.Time `json:"end" form:"end" binding:"-" time_format:"2006-01-02 15:04:05"`
 }

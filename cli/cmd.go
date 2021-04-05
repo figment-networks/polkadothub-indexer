@@ -38,7 +38,7 @@ func runCmd(cfg *config.Config, flags Flags) error {
 	case "indexer_backfill":
 		cmdHandlers.BackfillIndexer.Handle(ctx, flags.parallel, flags.force, flags.targetIds)
 	case "indexer_reindex":
-		cmdHandlers.ReindexIndexer.Handle(ctx, flags.parallel, flags.force, flags.targetIds, flags.lastInEra, flags.lastInSession, flags.trxKinds)
+		cmdHandlers.ReindexIndexer.Handle(ctx, flags.parallel, flags.force, flags.targetIds, flags.lastInEra, flags.lastInSession, flags.trxKinds, flags.startReindexHeight, flags.endReindexHeight)
 	case "indexer_summarize":
 		cmdHandlers.SummarizeIndexer.Handle(ctx)
 	case "indexer_purge":

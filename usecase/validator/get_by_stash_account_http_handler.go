@@ -34,7 +34,7 @@ type GetByEntityUidRequest struct {
 	// StashAccount
 	//
 	// required: true
-	// in: query
+	// in: path
 	StashAccount string `json:"stash_account" uri:"stash_account" binding:"required"`
 	// SessionsLimit
 	//
