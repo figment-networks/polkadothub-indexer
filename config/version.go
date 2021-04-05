@@ -4,7 +4,7 @@ import "fmt"
 
 const (
 	AppName    = "polkadothub-indexer"
-	AppVersion = "0.8.6"
+	AppVersion = "0.8.7"
 	GitCommit  = "-"
 	GoVersion  = "1.14"
 )
