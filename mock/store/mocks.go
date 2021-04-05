@@ -808,18 +808,18 @@ func (mr *MockSyncablesMockRecorder) CreateOrUpdate(arg0 interface{}) *gomock.Ca
 }
 
 // FindAllByLastInSessionOrEra mocks base method
-func (m *MockSyncables) FindAllByLastInSessionOrEra(arg0 int64, arg1, arg2 bool) ([]model.Syncable, error) {
+func (m *MockSyncables) FindAllByLastInSessionOrEra(arg0 int64, arg1, arg2 bool, arg3, arg4 int64) ([]model.Syncable, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindAllByLastInSessionOrEra", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "FindAllByLastInSessionOrEra", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].([]model.Syncable)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // FindAllByLastInSessionOrEra indicates an expected call of FindAllByLastInSessionOrEra
-func (mr *MockSyncablesMockRecorder) FindAllByLastInSessionOrEra(arg0, arg1, arg2 interface{}) *gomock.Call {
+func (mr *MockSyncablesMockRecorder) FindAllByLastInSessionOrEra(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindAllByLastInSessionOrEra", reflect.TypeOf((*MockSyncables)(nil).FindAllByLastInSessionOrEra), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindAllByLastInSessionOrEra", reflect.TypeOf((*MockSyncables)(nil).FindAllByLastInSessionOrEra), arg0, arg1, arg2, arg3, arg4)
 }
 
 // FindByHeight mocks base method
@@ -1090,18 +1090,18 @@ func (mr *MockTransactionSeqMockRecorder) BulkUpsert(arg0 interface{}) *gomock.C
 }
 
 // GetTransactionsByTransactionKind mocks base method
-func (m *MockTransactionSeq) GetTransactionsByTransactionKind(arg0 model.TransactionKind) ([]model.TransactionSeq, error) {
+func (m *MockTransactionSeq) GetTransactionsByTransactionKind(arg0 model.TransactionKind, arg1, arg2 int64) ([]model.TransactionSeq, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTransactionsByTransactionKind", arg0)
+	ret := m.ctrl.Call(m, "GetTransactionsByTransactionKind", arg0, arg1, arg2)
 	ret0, _ := ret[0].([]model.TransactionSeq)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetTransactionsByTransactionKind indicates an expected call of GetTransactionsByTransactionKind
-func (mr *MockTransactionSeqMockRecorder) GetTransactionsByTransactionKind(arg0 interface{}) *gomock.Call {
+func (mr *MockTransactionSeqMockRecorder) GetTransactionsByTransactionKind(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTransactionsByTransactionKind", reflect.TypeOf((*MockTransactionSeq)(nil).GetTransactionsByTransactionKind), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTransactionsByTransactionKind", reflect.TypeOf((*MockTransactionSeq)(nil).GetTransactionsByTransactionKind), arg0, arg1, arg2)
 }
 
 // MockValidatorAgg is a mock of ValidatorAgg interface
