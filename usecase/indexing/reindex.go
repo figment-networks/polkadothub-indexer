@@ -58,6 +58,8 @@ type ReindexUseCaseConfig struct {
 	LastInSession bool
 	LastInEra     bool
 	TrxKinds      []model.TransactionKind
+	StartHeight   int64
+	EndHeight     int64
 }
 
 func (uc *reindexUseCase) Execute(ctx context.Context, useCaseConfig ReindexUseCaseConfig) error {
@@ -77,6 +79,8 @@ func (uc *reindexUseCase) Execute(ctx context.Context, useCaseConfig ReindexUseC
 		LastInSession: useCaseConfig.LastInSession,
 		LastInEra:     useCaseConfig.LastInEra,
 		TrxKinds:      useCaseConfig.TrxKinds,
+		StartHeight:   useCaseConfig.StartHeight,
+		EndHeight:     useCaseConfig.EndHeight,
 	})
 }
 

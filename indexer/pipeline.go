@@ -298,6 +298,8 @@ type ReindexConfig struct {
 	LastInSession bool
 	LastInEra     bool
 	TrxKinds      []model.TransactionKind
+	StartHeight   int64
+	EndHeight     int64
 }
 
 func (p *indexingPipeline) Reindex(ctx context.Context, cfg ReindexConfig) error {
@@ -306,7 +308,7 @@ func (p *indexingPipeline) Reindex(ctx context.Context, cfg ReindexConfig) error
 	}
 
 	indexVersion := p.configParser.GetCurrentVersionId()
-	source, err := NewReindexSource(p.cfg, p.syncableDb, p.client, indexVersion, cfg.LastInSession, cfg.LastInEra, p.transactionDb, cfg.TrxKinds)
+	source, err := NewReindexSource(p.cfg, p.syncableDb, p.transactionDb, p.client, indexVersion, cfg.LastInSession, cfg.LastInEra, cfg.TrxKinds, cfg.StartHeight, cfg.EndHeight)
 	if err != nil {
 		return err
 	}
