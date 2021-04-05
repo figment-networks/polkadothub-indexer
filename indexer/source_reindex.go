@@ -19,7 +19,8 @@ var (
 	_ pipeline.Source = (*reindexSource)(nil)
 )
 
-func NewReindexSource(cfg *config.Config, syncablesDb store.Syncables, client *client.Client, indexVersion int64, isLastInSession, isLastInEra bool, transactionDb store.Transactions, trxFilter []model.TransactionKind) (*reindexSource, error) {
+func NewReindexSource(cfg *config.Config, syncablesDb store.Syncables, transactionDb store.Transactions, client *client.Client, indexVersion int64, isLastInSession, isLastInEra bool, trxFilter []model.TransactionKind,
+	startHeight, endHeight int64) (*reindexSource, error) {
 	src := &reindexSource{
 		cfg:           cfg,
 		syncablesDb:   syncablesDb,
@@ -29,7 +30,7 @@ func NewReindexSource(cfg *config.Config, syncablesDb store.Syncables, client *c
 		currentIndexVersion: indexVersion,
 	}
 
-	if err := src.init(isLastInSession, isLastInEra, trxFilter); err != nil {
+	if err := src.init(isLastInSession, isLastInEra, trxFilter, startHeight, endHeight); err != nil {
 		return nil, err
 	}
 
@@ -77,17 +78,17 @@ func (s *reindexSource) Len() int64 {
 	return s.endHeight - s.startHeight + 1
 }
 
-func (s *reindexSource) init(isLastInSession, isLastInEra bool, kinds []model.TransactionKind) error {
+func (s *reindexSource) init(isLastInSession, isLastInEra bool, kinds []model.TransactionKind, startHeight, endHeight int64) error {
 	heightsWhitelist := make(map[int64]struct{})
 	if isLastInSession || isLastInEra {
-		if err := s.setHeightsWhitelistForEraOrSession(heightsWhitelist, isLastInSession, isLastInEra); err != nil {
+		if err := s.setHeightsWhitelistForEraOrSession(heightsWhitelist, isLastInSession, isLastInEra, startHeight, endHeight); err != nil {
 			return err
 		}
 	}
 
 	useWhiteListForTrxFilter := len(kinds) != 0
 	if useWhiteListForTrxFilter {
-		if err := s.setHeightsWhitelistForTrxFilter(heightsWhitelist, kinds); err != nil {
+		if err := s.setHeightsWhitelistForTrxFilter(heightsWhitelist, kinds, startHeight, endHeight); err != nil {
 			return err
 		}
 	}
@@ -105,10 +106,12 @@ func (s *reindexSource) init(isLastInSession, isLastInEra bool, kinds []model.Tr
 	sort.Slice(keysWhitelist, func(i, j int) bool { return keysWhitelist[i] < keysWhitelist[j] })
 	s.sortedWhiteListKeys = keysWhitelist
 
-	if err := s.setStartHeight(); err != nil {
+	fmt.Println("keysWhitelist", keysWhitelist[0])
+
+	if err := s.setStartHeight(startHeight); err != nil {
 		return err
 	}
-	if err := s.setEndHeight(); err != nil {
+	if err := s.setEndHeight(endHeight); err != nil {
 		return err
 	}
 
@@ -117,25 +120,26 @@ func (s *reindexSource) init(isLastInSession, isLastInEra bool, kinds []model.Tr
 	return nil
 }
 
-func (s *reindexSource) setStartHeight() error {
-	syncable, err := s.syncablesDb.FindFirstByDifferentIndexVersion(s.currentIndexVersion)
-	if err != nil {
-		if err == store.ErrNotFound {
-			return errors.New(fmt.Sprintf("nothing to reindex [currentIndexVersion=%d]", s.currentIndexVersion))
-		}
-		return err
+func (s *reindexSource) setStartHeight(startHeight int64) error {
+	startH := startHeight
+	if startH < 1 {
+		startH = 1
 	}
-
-	s.currentHeight = syncable.Height
-	s.startHeight = syncable.Height
+	s.currentHeight = startH
+	s.startHeight = startH
 	return nil
 }
 
-func (s *reindexSource) setEndHeight() error {
-	syncable, err := s.syncablesDb.FindMostRecentByDifferentIndexVersion(s.currentIndexVersion)
+func (s *reindexSource) setEndHeight(endHeight int64) error {
+	if endHeight > 0 {
+		s.endHeight = endHeight
+		return nil
+	}
+
+	syncable, err := s.syncablesDb.FindMostRecent()
 	if err != nil {
 		if err == store.ErrNotFound {
-			return errors.New(fmt.Sprintf("nothing to reindex [currentIndexVersion=%d]", s.currentIndexVersion))
+			return errors.New("nothing to reindex")
 		}
 		return err
 	}
@@ -144,8 +148,8 @@ func (s *reindexSource) setEndHeight() error {
 	return nil
 }
 
-func (s *reindexSource) setHeightsWhitelistForEraOrSession(whitelist map[int64]struct{}, isLastInSession, isLastInEra bool) error {
-	syncables, err := s.syncablesDb.FindAllByLastInSessionOrEra(-1, isLastInSession, isLastInEra)
+func (s *reindexSource) setHeightsWhitelistForEraOrSession(whitelist map[int64]struct{}, isLastInSession, isLastInEra bool, startHeight, endHeight int64) error {
+	syncables, err := s.syncablesDb.FindAllByLastInSessionOrEra(-1, isLastInSession, isLastInEra, startHeight, endHeight)
 	if err != nil {
 		return err
 	}
@@ -159,11 +163,11 @@ func (s *reindexSource) setHeightsWhitelistForEraOrSession(whitelist map[int64]s
 	return nil
 }
 
-func (s *reindexSource) setHeightsWhitelistForTrxFilter(whitelist map[int64]struct{}, kinds []model.TransactionKind) error {
+func (s *reindexSource) setHeightsWhitelistForTrxFilter(whitelist map[int64]struct{}, kinds []model.TransactionKind, startHeight, endHeight int64) error {
 	beforelen := len(whitelist)
 
 	for _, kind := range kinds {
-		transactions, err := s.transactionDb.GetTransactionsByTransactionKind(kind)
+		transactions, err := s.transactionDb.GetTransactionsByTransactionKind(kind, startHeight, endHeight)
 		if err != nil {
 			return err
 		}

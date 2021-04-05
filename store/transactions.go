@@ -6,5 +6,5 @@ import (
 
 type TransactionSeq interface {
 	BulkUpsert(records []model.TransactionSeq) error
-	GetTransactionsByTransactionKind(kind model.TransactionKind) ([]model.TransactionSeq, error)
+	GetTransactionsByTransactionKind(kind model.TransactionKind, start, end int64) ([]model.TransactionSeq, error)
 }

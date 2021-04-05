@@ -33,12 +33,21 @@ func (s TransactionSeqStore) BulkUpsert(records []model.TransactionSeq) error {
 }
 
 // GetTransactionsByTransactionKind gets transactions by kind
-func (s TransactionSeqStore) GetTransactionsByTransactionKind(kind model.TransactionKind) ([]model.TransactionSeq, error) {
+func (s TransactionSeqStore) GetTransactionsByTransactionKind(kind model.TransactionKind, start, end int64) ([]model.TransactionSeq, error) {
 	var results []model.TransactionSeq
 
-	err := s.db.
-		Where("method = ? AND section = ?", kind.Method, kind.Section).
-		Find(&results).
+	tx := s.db.
+		Where("method = ? AND section = ?", kind.Method, kind.Section)
+
+	if start > 0 {
+		tx = tx.Where("height >= ?", start)
+	}
+
+	if end > 0 {
+		tx = tx.Where("height <= ?", end)
+	}
+
+	err := tx.Find(&results).
 		Error
 
 	return results, checkErr(err)

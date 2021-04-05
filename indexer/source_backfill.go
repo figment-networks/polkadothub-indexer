@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/figment-networks/polkadothub-indexer/model"
 
 	"github.com/figment-networks/indexing-engine/pipeline"
@@ -144,7 +145,7 @@ func (s *backfillSource) setEndHeight() error {
 }
 
 func (s *backfillSource) setHeightsWhitelistForEra(isLastInSession, isLastInEra bool) error {
-	syncables, err := s.syncablesDb.FindAllByLastInSessionOrEra(s.currentIndexVersion, isLastInSession, isLastInEra)
+	syncables, err := s.syncablesDb.FindAllByLastInSessionOrEra(s.currentIndexVersion, isLastInSession, isLastInEra, 0, 0)
 	if err != nil {
 		return err
 	}
@@ -162,7 +163,7 @@ func (s *backfillSource) setHeightsWhitelistForEra(isLastInSession, isLastInEra 
 
 func (s *backfillSource) setHeightsWhitelistForTrxFilter(kinds []model.TransactionKind) error {
 	for _, kind := range kinds {
-		transactions, err := s.transactionDb.GetTransactionsByTransactionKind(kind)
+		transactions, err := s.transactionDb.GetTransactionsByTransactionKind(kind, 0, 0)
 		if err != nil {
 			return err
 		}

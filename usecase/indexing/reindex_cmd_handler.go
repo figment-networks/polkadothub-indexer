@@ -48,7 +48,7 @@ func NewReindexCmdHandler(cfg *config.Config, cli *client.Client, accountDb stor
 	}
 }
 
-func (h *ReindexCmdHandler) Handle(ctx context.Context, parallel bool, force bool, targetIds []int64, lastInEra bool, lastInSession bool, trxKinds []model.TransactionKind) {
+func (h *ReindexCmdHandler) Handle(ctx context.Context, parallel bool, force bool, targetIds []int64, lastInEra bool, lastInSession bool, trxKinds []model.TransactionKind, startHeight, endHeight int64) {
 	logger.Info("running reindex use case [handler=cmd]")
 
 	useCaseConfig := ReindexUseCaseConfig{
@@ -58,6 +58,8 @@ func (h *ReindexCmdHandler) Handle(ctx context.Context, parallel bool, force boo
 		LastInSession: lastInSession,
 		LastInEra:     lastInEra,
 		TrxKinds:      trxKinds,
+		StartHeight:   startHeight,
+		EndHeight:     endHeight,
 	}
 	err := h.getUseCase().Execute(ctx, useCaseConfig)
 	if err != nil {

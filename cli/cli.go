@@ -21,13 +21,15 @@ type Flags struct {
 	migrateVersion uint
 	showVersion    bool
 
-	batchSize     int64
-	parallel      bool
-	force         bool
-	targetIds     targetIds
-	trxKinds      trxKinds
-	lastInEra     bool
-	lastInSession bool
+	batchSize          int64
+	parallel           bool
+	force              bool
+	targetIds          targetIds
+	trxKinds           trxKinds
+	startReindexHeight int64
+	endReindexHeight   int64
+	lastInEra          bool
+	lastInSession      bool
 }
 
 type targetIds []int64
@@ -87,7 +89,8 @@ func (c *Flags) Setup() {
 	flag.Var(&c.trxKinds, "trx_kinds", "comma separated list of transaction kinds to run in reindex cmd in the format section.method")
 	flag.BoolVar(&c.lastInEra, "last_in_era", false, "should reindex last in era for reindex cmd")
 	flag.BoolVar(&c.lastInSession, "last_in_session", false, "should reindex last in session for reindex cmd")
-
+	flag.Int64Var(&c.startReindexHeight, "start_height", 0, "start height for reindex cmd")
+	flag.Int64Var(&c.endReindexHeight, "end_height", 0, "end height for reindex cmd")
 }
 
 // Run executes the command line interface
