@@ -453,6 +453,7 @@ func (t *rewardEraSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) e
 		if err != nil {
 			if errors.Is(err, errCannotCalculateRewards) {
 				// impossible to extract rewards for this claim, so report error and keep going (should be calulcated successfully via backfill)
+				err = fmt.Errorf("%w: height: %d", err, payload.CurrentHeight)
 				logger.Error(err, logger.Field("height", payload.CurrentHeight), logger.Field("task", t.GetName()), logger.Field("stage", pipeline.StageSequencer))
 				continue
 			}
@@ -463,6 +464,7 @@ func (t *rewardEraSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) e
 		if err != nil {
 			if errors.Is(err, errCannotCalculateRewards) {
 				// don't stop pipeline on error, report error to investigate later and keep going
+				err = fmt.Errorf("%w: height: %d", err, payload.CurrentHeight)
 				logger.Error(err, logger.Field("height", payload.CurrentHeight), logger.Field("task", t.GetName()), logger.Field("stage", pipeline.StageSequencer))
 				continue
 			}
@@ -640,7 +642,7 @@ func (t *rewardEraSeqCreatorTask) extractRewards(claims []RewardsClaim, rewardAr
 		// instead check that count in db matches parsedRewards. Count may be +1 more since unclaimed validator rewards
 		// can be split into commission and reward
 		if int(count) != len(extractedRewards) && int(count) != len(extractedRewards)+1 {
-			return rewards, rewardClaims, fmt.Errorf("Expected unclaimed rewards to match number of rewards from claim %v; got: %v want: %v (~-1)", claim, len(extractedRewards), count)
+			return rewards, rewardClaims, fmt.Errorf("Expected unclaimed rewards to match number of rewards from claim %v; got: %v want: %v (~-1): %w", claim, len(extractedRewards), count, errCannotCalculateRewards)
 		} else {
 			rewardClaims = append(rewardClaims, claim)
 		}
