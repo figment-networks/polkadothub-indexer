@@ -361,7 +361,7 @@ func (t *rewardEraSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) e
 
 	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StageSequencer, t.GetName(), payload.CurrentHeight))
 
-	eraSeq, err := t.getEraSeq(payload.HeightMeta.ActiveEra)
+	eraSeq, err := t.getEraSeq(payload.HeightMeta.ActiveEra, payload.Syncable)
 	if err != nil {
 		return err
 	}
@@ -478,7 +478,7 @@ func (t *rewardEraSeqCreatorTask) Run(ctx context.Context, p pipeline.Payload) e
 	return nil
 }
 
-func (t *rewardEraSeqCreatorTask) getEraSeq(era int64) (model.EraSequence, error) {
+func (t *rewardEraSeqCreatorTask) getEraSeq(era int64, currentSyncable *model.Syncable) (model.EraSequence, error) {
 	var firstHeightInEra int64
 	lastSyncableInPrevEra, err := t.syncablesDb.FindLastInEra(era - 1)
 	if err != nil {
@@ -490,9 +490,12 @@ func (t *rewardEraSeqCreatorTask) getEraSeq(era int64) (model.EraSequence, error
 		firstHeightInEra = lastSyncableInPrevEra.Height + 1
 	}
 
-	lastSyncableInEra, err := t.syncablesDb.FindLastInEra(era)
-	if err != nil {
-		return model.EraSequence{}, err
+	lastSyncableInEra := currentSyncable
+	if currentSyncable == nil || currentSyncable.Era != era {
+		lastSyncableInEra, err = t.syncablesDb.FindLastInEra(era)
+		if err != nil {
+			return model.EraSequence{}, err
+		}
 	}
 
 	return model.EraSequence{
@@ -617,7 +620,7 @@ func (t *rewardEraSeqCreatorTask) extractRewards(claims []RewardsClaim, rewardAr
 			nextVald = ""
 		}
 
-		eraSeq, err := t.getEraSeq(claim.Era)
+		eraSeq, err := t.getEraSeq(claim.Era, nil)
 		if err != nil {
 			return rewards, rewardClaims, err
 		}
