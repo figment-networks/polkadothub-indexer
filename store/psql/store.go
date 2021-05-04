@@ -11,7 +11,12 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 )
 
-const batchSize = 500
+const (
+	batchSize               = 500
+	maxIdleConnectionsDB    = 10
+	maxOpenConnectionsDB    = 50
+	maxLifetimeConnectionDB = time.Minute * 30
+)
 
 var (
 	_ store.Accounts     = (*accounts)(nil)
@@ -89,6 +94,10 @@ func New(connStr string) (*Store, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	conn.DB().SetMaxIdleConns(maxIdleConnectionsDB)
+	conn.DB().SetMaxOpenConns(maxOpenConnectionsDB)
+	conn.DB().SetConnMaxLifetime(maxLifetimeConnectionDB)
 
 	registerPlugins(conn)
 
