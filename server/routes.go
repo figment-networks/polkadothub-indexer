@@ -140,7 +140,8 @@ func (s *Server) setupRoutes() {
 	//     Responses:
 	//       200: AccountHeightDetailsView
 	//       400: BadRequestResponse
-	s.engine.GET("/account/:stash_account", s.handlers.GetAccountByHeight.Handle)
+	// s.engine.GET("/account/:stash_account", s.handlers.GetAccountByHeight.Handle)
+	s.engine.GET("/account/:stash_account", ReverseProxy())
 
 	// swagger:route GET /system_events/:address getSystemEventsForAddress
 	//
@@ -244,6 +245,7 @@ func (s *Server) setupRoutes() {
 }
 
 func ReverseProxy() gin.HandlerFunc {
+
 	return func(c *gin.Context) {
 		proxy := &httputil.ReverseProxy{Director: func(req *http.Request) {
 			r := c.Request
