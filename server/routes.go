@@ -1,8 +1,8 @@
 package server
 
 import (
-	"net/http"
 	"net/http/httputil"
+	"net/url"
 
 	"github.com/gin-gonic/gin"
 )
@@ -245,14 +245,11 @@ func (s *Server) setupRoutes() {
 }
 
 func ReverseProxy() gin.HandlerFunc {
-
 	return func(c *gin.Context) {
-		proxy := &httputil.ReverseProxy{Director: func(req *http.Request) {
-			r := c.Request
-			req = r
-			req.URL.Scheme = "http"
-			req.URL.Host = routeToLive
-		}}
+		proxy := httputil.NewSingleHostReverseProxy(&url.URL{
+			Host:   routeToLive,
+			Scheme: "http",
+		})
 		proxy.ServeHTTP(c.Writer, c.Request)
 	}
 }
