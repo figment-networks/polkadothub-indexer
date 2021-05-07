@@ -59,7 +59,7 @@ This package connects via gRPC to a polkadothub-proxy which in turn connects to 
 | GET    | `/validator/:stash_account`          | get validator by address                                    | stash_account (required) - validator's stash account    sessions_limit (required) - number of last sessions to include    eras_limit (required) - number of last eras to include                                                                                                      |
 | GET    | `/validators_summary`                | validator summary                                           | interval (required) - time interval [hourly or daily] period (required) - summary period [ie. 24 hours]  stash_account (optional) - validator's stash account |
 | GET    | `/system_events`                | get system events for validator                                  | after (optional) - height kind (optional) - system event kind [eg. "joined_set"]  |
-
+| GET    | `/apr/:stash_account`                | get daily calculated APRs (annualized percentage rates) for time range                                  | start (required) - date in format `2006-01-02`   end (required) - date in format `2006-01-02` |
 ### Running app
 
 Once you have created a database and specified all configuration options, you

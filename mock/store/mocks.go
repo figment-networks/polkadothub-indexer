@@ -95,6 +95,21 @@ func (mr *MockAccountEraSeqMockRecorder) FindLastByValidatorStashAccount(arg0 in
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindLastByValidatorStashAccount", reflect.TypeOf((*MockAccountEraSeq)(nil).FindLastByValidatorStashAccount), arg0)
 }
 
+// GetAllByTime mocks base method
+func (m *MockAccountEraSeq) GetAllByTime(arg0 string, arg1, arg2 types.Time) ([]model.AccountEraSeq, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAllByTime", arg0, arg1, arg2)
+	ret0, _ := ret[0].([]model.AccountEraSeq)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAllByTime indicates an expected call of GetAllByTime
+func (mr *MockAccountEraSeqMockRecorder) GetAllByTime(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllByTime", reflect.TypeOf((*MockAccountEraSeq)(nil).GetAllByTime), arg0, arg1, arg2)
+}
+
 // MockBlockSeq is a mock of BlockSeq interface
 type MockBlockSeq struct {
 	ctrl     *gomock.Controller
@@ -724,6 +739,21 @@ func (m *MockRewards) GetAll(arg0, arg1 string, arg2, arg3 int64) ([]model.Rewar
 func (mr *MockRewardsMockRecorder) GetAll(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAll", reflect.TypeOf((*MockRewards)(nil).GetAll), arg0, arg1, arg2, arg3)
+}
+
+// GetAllByTime mocks base method
+func (m *MockRewards) GetAllByTime(arg0 string, arg1, arg2 types.Time) ([]model.RewardEraSeq, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAllByTime", arg0, arg1, arg2)
+	ret0, _ := ret[0].([]model.RewardEraSeq)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAllByTime indicates an expected call of GetAllByTime
+func (mr *MockRewardsMockRecorder) GetAllByTime(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllByTime", reflect.TypeOf((*MockRewards)(nil).GetAllByTime), arg0, arg1, arg2)
 }
 
 // GetByStashAndEra mocks base method

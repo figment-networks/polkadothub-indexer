@@ -6,6 +6,7 @@ import (
 	"github.com/figment-networks/indexing-engine/store/bulk"
 	"github.com/figment-networks/polkadothub-indexer/model"
 	"github.com/figment-networks/polkadothub-indexer/store/psql/queries"
+	"github.com/figment-networks/polkadothub-indexer/types"
 
 	"github.com/jinzhu/gorm"
 )
@@ -91,6 +92,20 @@ func (s RewardEraSeqStore) GetAll(stash, validatorStash string, start, end int64
 	if validatorStash != "" {
 		tx = tx.Where("validator_stash_account = ?", validatorStash)
 	}
+
+	var res []model.RewardEraSeq
+	return res, tx.Find(&res).Error
+}
+
+// GetAllByTime Gets all rewards for given stash
+func (s RewardEraSeqStore) GetAllByTime(stash string, start, end types.Time) ([]model.RewardEraSeq, error) {
+	tx := s.db.
+		Table(model.RewardEraSeq{}.TableName()).
+		Select("*").
+		Where("stash_account = ?", stash).
+		Where("time >= ?", start).
+		Where("time <= ?", end).
+		Order("time")
 
 	var res []model.RewardEraSeq
 	return res, tx.Find(&res).Error

@@ -238,6 +238,23 @@ func (s *Server) setupRoutes() {
 	//       200: RewardsForErasView
 	//       400: BadRequestResponse
 	s.engine.GET("/rewards/:stash_account", s.handlers.GetRewardsForStashAccount.Handle)
+	// swagger:route GET /apr/:stash_account getAPR
+	//
+	// Gets apr for account
+	//
+	// This will show daily reward aprs for an account for given time period from "start" to "end". If "end" is not specified,
+	// will return aprs until most recently indexed block.
+	//
+	//     Consumes:
+	//     - application/json
+	//
+	//     Produces:
+	//     - application/json
+	//
+	//     Responses:
+	//       200: RewardsForErasView
+	//       400: BadRequestResponse
+	s.engine.GET("/apr/:stash_account", s.handlers.GetAPRByAddress.Handle)
 }
 
 func (s *Server) ReverseProxy() gin.HandlerFunc {

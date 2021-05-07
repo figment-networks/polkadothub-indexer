@@ -2,6 +2,7 @@ package store
 
 import (
 	"github.com/figment-networks/polkadothub-indexer/model"
+	"github.com/figment-networks/polkadothub-indexer/types"
 )
 
 type Accounts interface {
@@ -33,6 +34,7 @@ type Rewards interface {
 	BulkUpsert(records []model.RewardEraSeq) error
 	MarkAllClaimed(validatorStash string, era int64, txHash string) error
 	GetAll(stash, validatorStash string, start, end int64) ([]model.RewardEraSeq, error)
+	GetAllByTime(stash string, start, end types.Time) ([]model.RewardEraSeq, error)
 	GetCount(validatorStash string, era int64) (int64, error)
 	GetByStashAndEra(validatorStash, stash string, era int64) (model.RewardEraSeq, error)
 }

@@ -506,40 +506,60 @@ func (t *rewardEraSeqCreatorTask) getEraSeq(era int64, currentSyncable *model.Sy
 	}, nil
 }
 
-// getLegitimateClaimsAndRewardArgs filters claims that are either:
-// a) not from an era validator
-// b) have no reward events associated with claim (this happens when rewards have already been claimed for this validator and era)
+// getLegitimateClaimsAndRewardArgs filters claims out claims that are skipped by polkadot
+// and checks that all claims have accompanying reward events.
+// Makes the following assumptions:
+// a) if validator has already claimed rewards for era, then expect batchInterrupted error 'Rewards for this era have already been claimed for this validator' (see 0x1c9708278cad4caf0fa8b95510ceba627f232a540de3dfea58b09aae78b1e44b)
+// b) if claim contains invalid era, then expect batchInterrupted error 'Invalid era to reward' (see 0xa4f468cda9e5dd7b290da35a786e53b2b704bc66196c4336aeba91a6a8cc0b6d)
+// c) if claim contains invalid validator (not an era validator, or not enough reward points for era), then polkadot will skip claim without erroring
 func (t *rewardEraSeqCreatorTask) getLegitimateClaimsAndRewardArgs(claims []RewardsClaim, events []*eventpb.Event, txIdx int64) ([]RewardsClaim, []rewardEventArgs, error) {
 	var legitimate []RewardsClaim
 	var args []rewardEventArgs
 
-	// check if validator is eligible for rewards for claim era, and that it hasn't previously claimed rewards
-	claimErasForValidatorMap := make(map[string][]int64)
+	// filter out claims that are ignored/skipped by polkadot
+	filteredClaims := []RewardsClaim{}
 	for _, c := range claims {
-		_, err := t.validatorDb.FindByEraAndStashAccount(c.Era, c.ValidatorStash)
+		validator, err := t.validatorDb.FindByEraAndStashAccount(c.Era, c.ValidatorStash)
 		if err == store.ErrNotFound {
+			// if claim contains invalid validator, then polkadot will skip claim (see 0x1c9708278cad4caf0fa8b95510ceba627f232a540de3dfea58b09aae78b1e44b, idx 5 is not a validator for claim era)
 			continue
 		} else if err != nil {
 			return legitimate, args, err
 		}
 
-		reward, err := t.rewardsDb.GetByStashAndEra(c.ValidatorStash, c.ValidatorStash, c.Era)
-		if err != nil && err != store.ErrNotFound {
-			return legitimate, args, err
+		// if validator doesn't have reward points for era, then claim will be skipped (see 12vCBNjJrXMpJPBh1Mr366CFp2nLCp1AFJAp6LryZFchFPKn, idx 0)
+		if validator.RewardPoints == 0 {
+			continue
 		}
-		if reward.Claimed {
+		filteredClaims = append(filteredClaims, c)
+	}
+
+	var currentValIdx int
+	var currentClaim RewardsClaim
+	if len(filteredClaims) > 0 {
+		currentClaim = filteredClaims[currentValIdx]
+	}
+
+	var batchInterrupted bool
+	for _, ev := range events {
+		if ev.GetExtrinsicIndex() != txIdx {
 			continue
 		}
 
-		if _, ok := claimErasForValidatorMap[c.ValidatorStash]; !ok {
-			claimErasForValidatorMap[c.ValidatorStash] = []int64{}
+		if ev.GetMethod() == "BatchInterrupted" {
+			batchInterrupted = true
+			// check idx of error
+			claimIdx, err := t.getErrorIndexFromBatchInterruptedData(ev)
+			if err != nil {
+				return legitimate, args, err
+			}
+			if claimIdx > len(claims) || claims[claimIdx].ValidatorStash != currentClaim.ValidatorStash {
+				return legitimate, args, fmt.Errorf("BatchInterrupted event data contains unexpected claim index: %w", errCannotCalculateRewards)
+			}
+			break
 		}
-		claimErasForValidatorMap[c.ValidatorStash] = append(claimErasForValidatorMap[c.ValidatorStash], c.Era)
-	}
 
-	validatorHasEvent := make(map[string]int)
-	for _, ev := range events {
-		if ev.GetExtrinsicIndex() != txIdx || ev.GetMethod() != eventMethodReward || ev.GetSection() != sectionStaking {
+		if ev.GetMethod() != eventMethodReward || ev.GetSection() != sectionStaking {
 			continue
 		}
 
@@ -547,59 +567,31 @@ func (t *rewardEraSeqCreatorTask) getLegitimateClaimsAndRewardArgs(claims []Rewa
 		if err != nil {
 			return legitimate, args, err
 		}
-
-		if _, ok := claimErasForValidatorMap[arg.stash]; ok {
-			validatorHasEvent[arg.stash]++
-		}
 		args = append(args, arg)
+
+		if arg.stash != currentClaim.ValidatorStash {
+			continue
+		}
+
+		legitimate = append(legitimate, currentClaim)
+
+		currentValIdx++
+		if currentValIdx >= len(filteredClaims) {
+			currentClaim = RewardsClaim{}
+			continue
+		}
+		currentClaim = filteredClaims[currentValIdx]
 	}
 
-	claimMap := make(map[RewardsClaim]struct{})
-	for _, c := range claims {
-		eventcount, ok := validatorHasEvent[c.ValidatorStash]
-		if !ok {
-			continue
-		}
-		if _, ok := claimMap[c]; ok {
-			// already claimed, so skip
-			continue
-		}
-		claimEras, _ := claimErasForValidatorMap[c.ValidatorStash]
+	if currentClaim.ValidatorStash != "" && !batchInterrupted {
+		return legitimate, args, fmt.Errorf("Expected to find reward events for claim %v %v: %w", currentClaim.ValidatorStash, currentClaim.Era, errCannotCalculateRewards)
+	}
 
-		// expect each claim for a validator to have a corresponding event
-		if len(claimEras) != eventcount {
-			// check for duplicate claims
-			eraset := t.removeDuplicates(claimEras)
-
-			if len(eraset) != eventcount {
-				return legitimate, args, fmt.Errorf("cannot detemine legitimate claim for %s %d: %w", c.ValidatorStash, c.Era, errCannotCalculateRewards)
-			}
-		}
-		for _, era := range claimEras {
-			if era == c.Era {
-				legitimate = append(legitimate, c)
-				claimMap[c] = struct{}{}
-				break
-			}
-		}
+	if len(filteredClaims) == 0 && len(args) > 0 {
+		return legitimate, args, fmt.Errorf("Got reward event but no claim: %w", errCannotCalculateRewards)
 	}
 
 	return legitimate, args, nil
-}
-
-func (t *rewardEraSeqCreatorTask) removeDuplicates(eras []int64) []int64 {
-	eramap := make(map[int64]struct{})
-
-	for _, era := range eras {
-		eramap[era] = struct{}{}
-	}
-
-	newEras := make([]int64, 0, len(eramap))
-	for i, _ := range eramap {
-		newEras = append(newEras, i)
-	}
-
-	return newEras
 }
 
 // extractRewards rreturns claims if rewards exist already in db, and returns new reward seqs if reward seqs don't exist in db
@@ -645,6 +637,7 @@ func (t *rewardEraSeqCreatorTask) extractRewards(claims []RewardsClaim, rewardAr
 		// instead check that count in db matches parsedRewards. Count may be +1 more since unclaimed validator rewards
 		// can be split into commission and reward
 		if int(count) != len(extractedRewards) && int(count) != len(extractedRewards)+1 {
+			// todo only mark extractedRewards rewards as claimed, leave calculated rewards from db as unclaimed
 			return rewards, rewardClaims, fmt.Errorf("Expected unclaimed rewards to match number of rewards from claim %v; got: %v want: %v (~-1): %w", claim, len(extractedRewards), count, errCannotCalculateRewards)
 		} else {
 			rewardClaims = append(rewardClaims, claim)
@@ -708,6 +701,28 @@ func (t *rewardEraSeqCreatorTask) getRewardEventArgsFromData(event *eventpb.Even
 	if args.stash == "" {
 		err = errUnexpectedEventDataFormat
 	}
+	return
+}
+
+func (t *rewardEraSeqCreatorTask) getErrorIndexFromBatchInterruptedData(event *eventpb.Event) (index int, err error) {
+	var foundIndex bool
+	var isDispatchErr bool
+	for _, d := range event.GetData() {
+		switch d.GetName() {
+		case "u32":
+			index, err = strconv.Atoi(d.Value)
+			if err != nil {
+				return -1, err
+			}
+			foundIndex = true
+		case "DispatchError":
+			isDispatchErr = true
+		}
+	}
+	if !isDispatchErr || !foundIndex {
+		return -1, fmt.Errorf("unexpected format for BatchInterrupted event data")
+	}
+
 	return
 }
 

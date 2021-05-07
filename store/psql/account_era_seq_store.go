@@ -4,6 +4,7 @@ import (
 	"github.com/figment-networks/indexing-engine/store/bulk"
 	"github.com/figment-networks/polkadothub-indexer/model"
 	"github.com/figment-networks/polkadothub-indexer/store/psql/queries"
+	"github.com/figment-networks/polkadothub-indexer/types"
 
 	"github.com/jinzhu/gorm"
 )
@@ -46,6 +47,20 @@ func (s AccountEraSeqStore) BulkUpsert(records []model.AccountEraSeq) error {
 		}
 	}
 	return nil
+}
+
+// GetAllByTime Gets all seqs for given stash
+func (s AccountEraSeqStore) GetAllByTime(stash string, start, end types.Time) ([]model.AccountEraSeq, error) {
+	tx := s.db.
+		Table(model.AccountEraSeq{}.TableName()).
+		Select("*").
+		Where("stash_account = ?", stash).
+		Where("time >= ?", start).
+		Where("time <= ?", end).
+		Order("time")
+
+	var res []model.AccountEraSeq
+	return res, tx.Find(&res).Error
 }
 
 // FindByHeight finds account era sequences by era
