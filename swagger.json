@@ -120,6 +120,27 @@
         }
       }
     },
+    "/apr/:stash_account": {
+      "get": {
+        "description": "This will show daily reward aprs for an account for given time period from \"start\" to \"end\". If \"end\" is not specified,\nwill return aprs until most recently indexed block.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Gets apr for account",
+        "operationId": "getAPR",
+        "responses": {
+          "200": {
+            "$ref": "#/responses/RewardsForErasView"
+          },
+          "400": {
+            "$ref": "#/responses/BadRequestResponse"
+          }
+        }
+      }
+    },
     "/block": {
       "get": {
         "description": "If no height is provided, will return last indexed block",

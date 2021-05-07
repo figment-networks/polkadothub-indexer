@@ -38,6 +38,13 @@ func NewQuantityFromString(val string) (Quantity, error) {
 	return Quantity{Int: *b}, nil
 }
 
+// Clone copies a Quantity.
+func (b *Quantity) Clone() Quantity {
+	tmp := Quantity{}
+	tmp.Set(&b.Int)
+	return tmp
+}
+
 func (b *Quantity) Valid() bool {
 	return b.Int.Sign() >= 0
 }
