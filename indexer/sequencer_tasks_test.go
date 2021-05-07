@@ -344,13 +344,12 @@ func TestRewardEraSeqCreatorTask_Run(t *testing.T) {
 
 			rewardsMock := mock.NewMockRewards(ctrl)
 			rewardsMock.EXPECT().GetCount(gomock.Any(), gomock.Any()).Return(int64(1), nil).AnyTimes()
-			rewardsMock.EXPECT().GetByStashAndEra(gomock.Any(), gomock.Any(), gomock.Any()).Return(model.RewardEraSeq{}, nil).AnyTimes()
 
 			syncablesMock := mock.NewMockSyncables(ctrl)
 			syncablesMock.EXPECT().FindLastInEra(gomock.Any()).Return(&model.Syncable{}, nil).AnyTimes()
 
 			validatorMock := mock.NewMockValidatorEraSeq(ctrl)
-			validatorMock.EXPECT().FindByEraAndStashAccount(gomock.Any(), gomock.Any()).Return(&model.ValidatorEraSeq{}, nil).AnyTimes()
+			validatorMock.EXPECT().FindByEraAndStashAccount(gomock.Any(), gomock.Any()).Return(&model.ValidatorEraSeq{RewardPoints: 10}, nil).AnyTimes()
 
 			task := NewRewardEraSeqCreatorTask(nil, rewardsMock, syncablesMock, validatorMock)
 
@@ -890,20 +889,20 @@ func Test_extractRewards(t *testing.T) {
 }
 
 func Test_getLegitimateClaimsAndRewardArgs(t *testing.T) {
-	type rewardsDbRetun struct {
-		reward model.RewardEraSeq
-		err    error
+	type valDbRetun struct {
+		validator model.ValidatorEraSeq
+		err       error
 	}
 
 	tests := []struct {
-		description             string
-		txIdx                   int64
-		rawClaimsForTx          []RewardsClaim
-		rewardsDbReturnForClaim map[RewardsClaim]rewardsDbRetun
-		events                  []*eventpb.Event
-		expectRewardArgs        []rewardEventArgs
-		expectClaims            []RewardsClaim
-		expectErr               bool
+		description         string
+		txIdx               int64
+		rawClaimsForTx      []RewardsClaim
+		valDbReturnForClaim map[RewardsClaim]valDbRetun
+		events              []*eventpb.Event
+		expectRewardArgs    []rewardEventArgs
+		expectClaims        []RewardsClaim
+		expectErr           bool
 	}{
 		{
 			description:    "expect no results if there's no claims",
@@ -911,18 +910,10 @@ func Test_getLegitimateClaimsAndRewardArgs(t *testing.T) {
 			events:         []*eventpb.Event{},
 		},
 		{
-			description:    "expect no claims or reward args if there's no reward events",
-			rawClaimsForTx: []RewardsClaim{{100, "v1", "abc"}},
-			rewardsDbReturnForClaim: map[RewardsClaim]rewardsDbRetun{
-				{100, "v1", "abc"}: {model.RewardEraSeq{Claimed: false}, nil},
-			},
-			events: []*eventpb.Event{{Section: sectionStaking, Method: "Foo"}},
-		},
-		{
 			description:    "expect validator and nominator rewardargs if there are reward events",
 			rawClaimsForTx: []RewardsClaim{{100, "v1", "abc"}},
-			rewardsDbReturnForClaim: map[RewardsClaim]rewardsDbRetun{
-				{100, "v1", "abc"}: {model.RewardEraSeq{Claimed: false}, nil},
+			valDbReturnForClaim: map[RewardsClaim]valDbRetun{
+				{100, "v1", "abc"}: {model.ValidatorEraSeq{RewardPoints: 100}, nil},
 			},
 			events:           []*eventpb.Event{testpbRewardEvent(0, "v1", "1500"), testpbRewardEvent(0, "nom1", "1000"), testpbRewardEvent(0, "nom2", "2000")},
 			expectRewardArgs: []rewardEventArgs{{"v1", "1500"}, {"nom1", "1000"}, {"nom2", "2000"}},
@@ -931,8 +922,8 @@ func Test_getLegitimateClaimsAndRewardArgs(t *testing.T) {
 		{
 			description:    "expect no rewardargs  from non-reward events",
 			rawClaimsForTx: []RewardsClaim{{100, "v1", "abc"}},
-			rewardsDbReturnForClaim: map[RewardsClaim]rewardsDbRetun{
-				{100, "v1", "abc"}: {model.RewardEraSeq{Claimed: false}, nil},
+			valDbReturnForClaim: map[RewardsClaim]valDbRetun{
+				{100, "v1", "abc"}: {model.ValidatorEraSeq{RewardPoints: 100}, nil},
 			},
 			events: []*eventpb.Event{
 				{Section: sectionStaking, Method: "Foo"},
@@ -949,8 +940,8 @@ func Test_getLegitimateClaimsAndRewardArgs(t *testing.T) {
 		{
 			description:    "expect rewardargs only from events from same transaction",
 			rawClaimsForTx: []RewardsClaim{{100, "v1", "abc"}},
-			rewardsDbReturnForClaim: map[RewardsClaim]rewardsDbRetun{
-				{100, "v1", "abc"}: {model.RewardEraSeq{Claimed: false}, nil},
+			valDbReturnForClaim: map[RewardsClaim]valDbRetun{
+				{100, "v1", "abc"}: {model.ValidatorEraSeq{RewardPoints: 100}, nil},
 			},
 			txIdx: 1,
 			events: []*eventpb.Event{
@@ -979,10 +970,10 @@ func Test_getLegitimateClaimsAndRewardArgs(t *testing.T) {
 				testpbRewardEvent(0, "v3", "3000"),
 				testpbRewardEvent(0, "nom1", "3500"),
 			},
-			rewardsDbReturnForClaim: map[RewardsClaim]rewardsDbRetun{
-				{100, "v1", "abc"}: {model.RewardEraSeq{Claimed: false}, nil},
-				{101, "v2", "abc"}: {model.RewardEraSeq{Claimed: false}, nil},
-				{102, "v3", "abc"}: {model.RewardEraSeq{Claimed: false}, nil},
+			valDbReturnForClaim: map[RewardsClaim]valDbRetun{
+				{100, "v1", "abc"}: {model.ValidatorEraSeq{RewardPoints: 100}, nil},
+				{101, "v2", "abc"}: {model.ValidatorEraSeq{RewardPoints: 100}, nil},
+				{102, "v3", "abc"}: {model.ValidatorEraSeq{RewardPoints: 100}, nil},
 			},
 			expectClaims: []RewardsClaim{{100, "v1", "abc"}, {101, "v2", "abc"}, {102, "v3", "abc"}},
 			expectRewardArgs: []rewardEventArgs{
@@ -997,11 +988,11 @@ func Test_getLegitimateClaimsAndRewardArgs(t *testing.T) {
 		{
 			description:    "expect reward args to be created for multiple claims when same validator is in list",
 			rawClaimsForTx: []RewardsClaim{{100, "v3", "abc"}, {101, "v1", "abc"}, {102, "v2", "abc"}, {102, "v1", "abc"}},
-			rewardsDbReturnForClaim: map[RewardsClaim]rewardsDbRetun{
-				{100, "v3", "abc"}: {model.RewardEraSeq{Claimed: false}, nil},
-				{101, "v1", "abc"}: {model.RewardEraSeq{Claimed: false}, nil},
-				{102, "v2", "abc"}: {model.RewardEraSeq{Claimed: false}, nil},
-				{102, "v1", "abc"}: {model.RewardEraSeq{Claimed: false}, nil},
+			valDbReturnForClaim: map[RewardsClaim]valDbRetun{
+				{100, "v3", "abc"}: {model.ValidatorEraSeq{RewardPoints: 100}, nil},
+				{101, "v1", "abc"}: {model.ValidatorEraSeq{RewardPoints: 100}, nil},
+				{102, "v2", "abc"}: {model.ValidatorEraSeq{RewardPoints: 100}, nil},
+				{102, "v1", "abc"}: {model.ValidatorEraSeq{RewardPoints: 100}, nil},
 			},
 			events: []*eventpb.Event{
 				{Section: "Foo", Method: "Foo"},
@@ -1022,12 +1013,13 @@ func Test_getLegitimateClaimsAndRewardArgs(t *testing.T) {
 			},
 		},
 		{
-			description:    "expect claim to be filtered if no reward events exists for validator",
+			description:    "expect claim to be filtered if no reward points exists for validator/era",
 			rawClaimsForTx: []RewardsClaim{{100, "v1", "abc"}, {101, "v2", "abc"}, {102, "v1", "abc"}, {103, "v1", "abc"}},
-			rewardsDbReturnForClaim: map[RewardsClaim]rewardsDbRetun{
-				{100, "v1", "abc"}: {model.RewardEraSeq{Claimed: false}, nil},
-				{101, "v2", "abc"}: {model.RewardEraSeq{Claimed: false}, nil},
-				{102, "v1", "abc"}: {model.RewardEraSeq{Claimed: false}, nil},
+			valDbReturnForClaim: map[RewardsClaim]valDbRetun{
+				{100, "v1", "abc"}: {model.ValidatorEraSeq{RewardPoints: 100}, nil},
+				{101, "v2", "abc"}: {model.ValidatorEraSeq{RewardPoints: 0}, nil},
+				{102, "v1", "abc"}: {model.ValidatorEraSeq{RewardPoints: 100}, nil},
+				{103, "v1", "abc"}: {model.ValidatorEraSeq{RewardPoints: 100}, nil},
 			},
 			events: []*eventpb.Event{
 				testpbRewardEvent(0, "v1", "1000"),
@@ -1042,58 +1034,67 @@ func Test_getLegitimateClaimsAndRewardArgs(t *testing.T) {
 			},
 		},
 		{
-			description:    "expect claim if multiple claims exist for same validator but validator has already claimed rewards previously for era",
-			rawClaimsForTx: []RewardsClaim{{99, "v1", "abc"}, {100, "v1", "abc"}, {101, "v1", "abc"}, {105, "v1", "abc"}},
-			rewardsDbReturnForClaim: map[RewardsClaim]rewardsDbRetun{
-				{99, "v1", "abc"}:  {model.RewardEraSeq{Claimed: false}, nil},
-				{100, "v1", "abc"}: {model.RewardEraSeq{Claimed: true}, nil},
-				{101, "v1", "abc"}: {model.RewardEraSeq{Claimed: false}, nil},
-				{105, "v1", "abc"}: {model.RewardEraSeq{Claimed: true}, nil},
+			description:    "expect claims up until batch interrupted to be returned",
+			rawClaimsForTx: []RewardsClaim{{100, "v1", "abc"}, {101, "v1", "abc"}, {102, "v1", "abc"}, {103, "v1", "abc"}},
+			valDbReturnForClaim: map[RewardsClaim]valDbRetun{
+				{100, "v1", "abc"}: {model.ValidatorEraSeq{RewardPoints: 100}, nil},
+				{101, "v1", "abc"}: {model.ValidatorEraSeq{RewardPoints: 100}, nil},
+				{102, "v1", "abc"}: {model.ValidatorEraSeq{RewardPoints: 100}, nil},
+				{103, "v1", "abc"}: {model.ValidatorEraSeq{RewardPoints: 100}, nil},
 			},
 			events: []*eventpb.Event{
 				testpbRewardEvent(0, "v1", "1000"),
-				testpbRewardEvent(0, "v1", "1000"),
+				testpbRewardEvent(0, "v1", "2000"),
+				{ExtrinsicIndex: 0, Method: "BatchInterrupted", Section: "utility", Data: []*eventpb.EventData{{Name: "u32", Value: "2"}, {Name: "DispatchError", Value: `{\"module\":{\"index\":7,\"error\":11}}`}}},
 			},
-			expectClaims: []RewardsClaim{{99, "v1", "abc"}, {101, "v1", "abc"}},
+			expectClaims: []RewardsClaim{{100, "v1", "abc"}, {101, "v1", "abc"}},
 			expectRewardArgs: []rewardEventArgs{
 				{"v1", "1000"},
-				{"v1", "1000"},
+				{"v1", "2000"},
 			},
 		},
 		{
-			description:    "expect duplicate claims to be removed",
-			rawClaimsForTx: []RewardsClaim{{99, "v1", "abc"}, {100, "v1", "abc"}, {100, "v1", "abc"}, {100, "v1", "abc"}, {99, "v1", "abc"}},
-			rewardsDbReturnForClaim: map[RewardsClaim]rewardsDbRetun{
-				{99, "v1", "abc"}:  {model.RewardEraSeq{Claimed: false}, nil},
-				{100, "v1", "abc"}: {model.RewardEraSeq{Claimed: false}, nil},
+			description:    "expect error if batchInterrupted index doesn't match events",
+			rawClaimsForTx: []RewardsClaim{{100, "v1", "abc"}, {101, "v2", "abc"}, {102, "v3", "abc"}, {103, "v4", "abc"}},
+			valDbReturnForClaim: map[RewardsClaim]valDbRetun{
+				{100, "v1", "abc"}: {model.ValidatorEraSeq{RewardPoints: 100}, nil},
+				{101, "v2", "abc"}: {model.ValidatorEraSeq{RewardPoints: 100}, nil},
+				{102, "v3", "abc"}: {model.ValidatorEraSeq{RewardPoints: 100}, nil},
+				{103, "v4", "abc"}: {model.ValidatorEraSeq{RewardPoints: 100}, nil},
 			},
 			events: []*eventpb.Event{
 				testpbRewardEvent(0, "v1", "1000"),
-				testpbRewardEvent(0, "v1", "1000"),
+				testpbRewardEvent(0, "v2", "2000"),
+				// if batch error happens at index 1, then we wouldn't expect to see reward events for v2
+				{ExtrinsicIndex: 0, Method: "BatchInterrupted", Section: "utility", Data: []*eventpb.EventData{{Name: "u32", Value: "1"}, {Name: "DispatchError", Value: `{\"module\":{\"index\":7,\"error\":11}}`}}},
 			},
-			expectClaims: []RewardsClaim{{99, "v1", "abc"}, {100, "v1", "abc"}},
-			expectRewardArgs: []rewardEventArgs{
-				{"v1", "1000"},
-				{"v1", "1000"},
-			},
+			expectErr: true,
 		},
 		{
-			description:    "expect error if number of reward events doesnt match legitimate claims",
-			rawClaimsForTx: []RewardsClaim{{99, "v1", "abc"}, {100, "v1", "abc"}, {101, "v1", "abc"}},
-			rewardsDbReturnForClaim: map[RewardsClaim]rewardsDbRetun{
-				{99, "v1", "abc"}:  {model.RewardEraSeq{Claimed: false}, nil},
-				{100, "v1", "abc"}: {model.RewardEraSeq{Claimed: false}, nil},
-				{101, "v1", "abc"}: {model.RewardEraSeq{Claimed: false}, nil},
+			description:    "expect error if there's a reward event but no valid claim",
+			rawClaimsForTx: []RewardsClaim{{100, "v1", "abc"}},
+			valDbReturnForClaim: map[RewardsClaim]valDbRetun{
+				{100, "v1", "abc"}: {model.ValidatorEraSeq{RewardPoints: 0}, nil},
 			},
 			events: []*eventpb.Event{
 				testpbRewardEvent(0, "v1", "1000"),
+			},
+			expectErr: true,
+		},
+		{
+			description:    "expect error if there's a a valid claim but no reward event",
+			rawClaimsForTx: []RewardsClaim{{100, "v1", "abc"}, {101, "v1", "abc"}},
+			valDbReturnForClaim: map[RewardsClaim]valDbRetun{
+				{100, "v1", "abc"}: {model.ValidatorEraSeq{RewardPoints: 100}, nil},
+				{101, "v1", "abc"}: {model.ValidatorEraSeq{RewardPoints: 100}, nil},
+			},
+			events: []*eventpb.Event{
 				testpbRewardEvent(0, "v1", "1000"),
 			},
 			expectErr: true,
 		},
 	}
 
-	// var zero int64
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.description, func(t *testing.T) {
@@ -1104,10 +1105,8 @@ func Test_getLegitimateClaimsAndRewardArgs(t *testing.T) {
 			rewardsMock := mock.NewMockRewards(ctrl)
 
 			for _, c := range tt.rawClaimsForTx {
-				validatorMock.EXPECT().FindByEraAndStashAccount(c.Era, c.ValidatorStash).Return(&model.ValidatorEraSeq{}, nil).Times(1)
-
-				val, _ := tt.rewardsDbReturnForClaim[c]
-				rewardsMock.EXPECT().GetByStashAndEra(c.ValidatorStash, c.ValidatorStash, c.Era).Return(val.reward, val.err)
+				args, _ := tt.valDbReturnForClaim[c]
+				validatorMock.EXPECT().FindByEraAndStashAccount(c.Era, c.ValidatorStash).Return(&args.validator, args.err).Times(1)
 			}
 
 			task := NewRewardEraSeqCreatorTask(nil, rewardsMock, nil, validatorMock)
