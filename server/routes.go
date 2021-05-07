@@ -1,5 +1,12 @@
 package server
 
+import (
+	"net/http/httputil"
+	"net/url"
+
+	"github.com/gin-gonic/gin"
+)
+
 // setupRoutes sets up routes for gin application
 func (s *Server) setupRoutes() {
 	s.engine.GET("/health", s.handlers.Health.Handle)
@@ -128,7 +135,10 @@ func (s *Server) setupRoutes() {
 	//     Responses:
 	//       200: AccountHeightDetailsView
 	//       400: BadRequestResponse
-	s.engine.GET("/account/:stash_account", s.handlers.GetAccountByHeight.Handle)
+	s.engine.GET("/account/:stash_account", s.ReverseProxy())
+
+	// s.engine.GET("/account/:stash_account", s.handlers.GetAccountByHeight.Handle)
+
 	// swagger:route GET /system_events/:address getSystemEventsForAddress
 	//
 	// Gets system events for an address
@@ -228,4 +238,14 @@ func (s *Server) setupRoutes() {
 	//       200: RewardsForErasView
 	//       400: BadRequestResponse
 	s.engine.GET("/rewards/:stash_account", s.handlers.GetRewardsForStashAccount.Handle)
+}
+
+func (s *Server) ReverseProxy() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		proxy := httputil.NewSingleHostReverseProxy(&url.URL{
+			Host:   s.cfg.RouteToLive,
+			Scheme: "http",
+		})
+		proxy.ServeHTTP(c.Writer, c.Request)
+	}
 }

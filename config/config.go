@@ -43,6 +43,7 @@ type Config struct {
 	PurgeSequencesInterval       string `json:"purge_sequences_interval" envconfig:"PURGE_SEQUENCES_INTERVAL" default:"26h"`
 	PurgeHourlySummariesInterval string `json:"purge_hourly_summaries_interval" envconfig:"PURGE_HOURLY_SUMMARIES_INTERVAL" default:"26h"`
 	IndexerConfigFile            string `json:"indexer_config_file" envconfig:"INDEXER_CONFIG_FILE" default:"indexer_config.json"`
+	RouteToLive                  string `json:"route_to_live" envconfig:"ROUTE_TO_LIVE"`
 }
 
 // Validate returns an error if config is invalid
