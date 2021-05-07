@@ -104,9 +104,7 @@ func (s *Server) setupRoutes() {
 	//     Responses:
 	//       200: AccountDetailsView
 	//       400: BadRequestResponse
-	//s.engine.GET("/account_details/:stash_account", s.handlers.GetAccountDetails.Handle)
 	s.engine.GET("/account_details/:stash_account", s.handlers.GetAccountDetails.Handle)
-
 	// swagger:route GET /account_rewards/:stash_account getAccountRewards
 	//
 	// Gets rewards for account for time period
@@ -137,8 +135,9 @@ func (s *Server) setupRoutes() {
 	//     Responses:
 	//       200: AccountHeightDetailsView
 	//       400: BadRequestResponse
-	// s.engine.GET("/account/:stash_account", s.handlers.GetAccountByHeight.Handle)
 	s.engine.GET("/account/:stash_account", s.ReverseProxy())
+
+	// s.engine.GET("/account/:stash_account", s.handlers.GetAccountByHeight.Handle)
 
 	// swagger:route GET /system_events/:address getSystemEventsForAddress
 	//
