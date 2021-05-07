@@ -7,8 +7,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const routeToLive = "68.183.198.39:8188"
-
 // setupRoutes sets up routes for gin application
 func (s *Server) setupRoutes() {
 	s.engine.GET("/health", s.handlers.Health.Handle)
@@ -107,8 +105,7 @@ func (s *Server) setupRoutes() {
 	//       200: AccountDetailsView
 	//       400: BadRequestResponse
 	//s.engine.GET("/account_details/:stash_account", s.handlers.GetAccountDetails.Handle)
-
-	s.engine.GET("/account_details/:stash_account", ReverseProxy())
+	s.engine.GET("/account_details/:stash_account", s.handlers.GetAccountDetails.Handle)
 
 	// swagger:route GET /account_rewards/:stash_account getAccountRewards
 	//
@@ -141,7 +138,7 @@ func (s *Server) setupRoutes() {
 	//       200: AccountHeightDetailsView
 	//       400: BadRequestResponse
 	// s.engine.GET("/account/:stash_account", s.handlers.GetAccountByHeight.Handle)
-	s.engine.GET("/account/:stash_account", ReverseProxy())
+	s.engine.GET("/account/:stash_account", s.ReverseProxy())
 
 	// swagger:route GET /system_events/:address getSystemEventsForAddress
 	//
@@ -244,10 +241,10 @@ func (s *Server) setupRoutes() {
 	s.engine.GET("/rewards/:stash_account", s.handlers.GetRewardsForStashAccount.Handle)
 }
 
-func ReverseProxy() gin.HandlerFunc {
+func (s *Server) ReverseProxy() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		proxy := httputil.NewSingleHostReverseProxy(&url.URL{
-			Host:   routeToLive,
+			Host:   s.cfg.RouteToLive,
 			Scheme: "http",
 		})
 		proxy.ServeHTTP(c.Writer, c.Request)
