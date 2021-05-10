@@ -10,7 +10,7 @@ import (
 
 // setupMiddleware sets up middleware for gin application
 func (s *Server) setupMiddleware() {
-	//s.engine.Use(MetricMiddleware())
+	s.engine.Use(MetricMiddleware())
 	s.engine.Use(gin.RecoveryWithWriter(s.writer))
 }
 
