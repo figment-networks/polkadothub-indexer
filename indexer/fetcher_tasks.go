@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	FetcherTaskName                     = "Fetcher"
+	FetcherTaskName                     = "FetchAll"
 	ValidatorFetcherTaskName            = "ValidatorFetcher"
 	ValidatorPerformanceFetcherTaskName = "ValidatorPerformanceFetcher"
 )

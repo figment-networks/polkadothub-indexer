@@ -36,33 +36,19 @@ func (m *MockConfigParser) EXPECT() *MockConfigParserMockRecorder {
 	return m.recorder
 }
 
-// GetAllAvailableTasks mocks base method
-func (m *MockConfigParser) GetAllAvailableTasks() []pipeline.TaskName {
+// GetAllTasks mocks base method
+func (m *MockConfigParser) GetAllTasks(arg0, arg1 []int64) ([]pipeline.TaskName, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllAvailableTasks")
-	ret0, _ := ret[0].([]pipeline.TaskName)
-	return ret0
-}
-
-// GetAllAvailableTasks indicates an expected call of GetAllAvailableTasks
-func (mr *MockConfigParserMockRecorder) GetAllAvailableTasks() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllAvailableTasks", reflect.TypeOf((*MockConfigParser)(nil).GetAllAvailableTasks))
-}
-
-// GetAllVersionedTasks mocks base method
-func (m *MockConfigParser) GetAllVersionedTasks() ([]pipeline.TaskName, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllVersionedTasks")
+	ret := m.ctrl.Call(m, "GetAllTasks", arg0, arg1)
 	ret0, _ := ret[0].([]pipeline.TaskName)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetAllVersionedTasks indicates an expected call of GetAllVersionedTasks
-func (mr *MockConfigParserMockRecorder) GetAllVersionedTasks() *gomock.Call {
+// GetAllTasks indicates an expected call of GetAllTasks
+func (mr *MockConfigParserMockRecorder) GetAllTasks(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllVersionedTasks", reflect.TypeOf((*MockConfigParser)(nil).GetAllVersionedTasks))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllTasks", reflect.TypeOf((*MockConfigParser)(nil).GetAllTasks), arg0, arg1)
 }
 
 // GetAllVersionedVersionIds mocks base method
@@ -91,36 +77,6 @@ func (m *MockConfigParser) GetCurrentVersionId() int64 {
 func (mr *MockConfigParserMockRecorder) GetCurrentVersionId() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCurrentVersionId", reflect.TypeOf((*MockConfigParser)(nil).GetCurrentVersionId))
-}
-
-// GetTasksByTargetIds mocks base method
-func (m *MockConfigParser) GetTasksByTargetIds(arg0 []int64) ([]pipeline.TaskName, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTasksByTargetIds", arg0)
-	ret0, _ := ret[0].([]pipeline.TaskName)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetTasksByTargetIds indicates an expected call of GetTasksByTargetIds
-func (mr *MockConfigParserMockRecorder) GetTasksByTargetIds(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTasksByTargetIds", reflect.TypeOf((*MockConfigParser)(nil).GetTasksByTargetIds), arg0)
-}
-
-// GetTasksByVersionIds mocks base method
-func (m *MockConfigParser) GetTasksByVersionIds(arg0 []int64) ([]pipeline.TaskName, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTasksByVersionIds", arg0)
-	ret0, _ := ret[0].([]pipeline.TaskName)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetTasksByVersionIds indicates an expected call of GetTasksByVersionIds
-func (mr *MockConfigParserMockRecorder) GetTasksByVersionIds(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTasksByVersionIds", reflect.TypeOf((*MockConfigParser)(nil).GetTasksByVersionIds), arg0)
 }
 
 // GetTransactionKinds mocks base method
