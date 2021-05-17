@@ -53,6 +53,7 @@ func NewPipeline(cfg *config.Config, cli *client.Client, accountDb store.Account
 			pipeline.StageFetcher,
 			pipeline.RetryingTask(NewFetcherTask(cli.Height), isTransient, maxRetries),
 			pipeline.RetryingTask(NewValidatorFetcherTask(cli.Validator), isTransient, maxRetries),
+			pipeline.RetryingTask(NewValidatorPerformanceFetcherTask(cli.ValidatorPerformance), isTransient, maxRetries),
 		),
 	)
 
