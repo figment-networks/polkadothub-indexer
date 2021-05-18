@@ -2,7 +2,6 @@ package indexer
 
 import (
 	"errors"
-	"fmt"
 	"testing"
 
 	"github.com/figment-networks/indexing-engine/pipeline"
@@ -11,13 +10,15 @@ import (
 )
 
 func TestPipelineOptionsCreator_parse(t *testing.T) {
+	expectTasks := []pipeline.TaskName{"Task1", "Task2"}
+
 	t.Run("when version ids are given, return tasks white list", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
 		configParserMock := mock.NewMockConfigParser(ctrl)
 
-		configParserMock.EXPECT().GetTasksByVersionIds(gomock.Any()).Return([]pipeline.TaskName{"task1", "task2"}, nil).Times(1)
+		configParserMock.EXPECT().GetAllTasks(gomock.Any(), gomock.Any()).Return(expectTasks, nil).Times(1)
 
 		creator := pipelineOptionsCreator{
 			configParser: configParserMock,
@@ -39,11 +40,15 @@ func TestPipelineOptionsCreator_parse(t *testing.T) {
 			t.Errorf("unexpected TaskWhitelist size, want: %d; got: %d", 2, len(options.TaskWhitelist))
 		}
 
-		for i, gotTaskName := range options.TaskWhitelist {
-			wantTaskName := fmt.Sprintf("task%d", i+1)
-
-			if string(gotTaskName) != wantTaskName {
-				t.Errorf("unexpected task at index %d, want: %s; got: %s", i, wantTaskName, gotTaskName)
+		for _, want := range expectTasks {
+			var found bool
+			for _, got := range options.TaskWhitelist {
+				if got == want {
+					found = true
+				}
+			}
+			if !found {
+				t.Errorf("expected to find task want: %v; got: %v", want, options.TaskWhitelist)
 			}
 		}
 	})
@@ -54,7 +59,7 @@ func TestPipelineOptionsCreator_parse(t *testing.T) {
 
 		configParserMock := mock.NewMockConfigParser(ctrl)
 
-		configParserMock.EXPECT().GetTasksByTargetIds(gomock.Any()).Return([]pipeline.TaskName{"task1", "task2"}, nil).Times(1)
+		configParserMock.EXPECT().GetAllTasks(gomock.Any(), gomock.Any()).Return(expectTasks, nil).Times(1)
 
 		creator := pipelineOptionsCreator{
 			configParser: configParserMock,
@@ -76,11 +81,15 @@ func TestPipelineOptionsCreator_parse(t *testing.T) {
 			t.Errorf("unexpected TaskWhitelist size, want: %d; got: %d", 2, len(options.TaskWhitelist))
 		}
 
-		for i, gotTaskName := range options.TaskWhitelist {
-			wantTaskName := fmt.Sprintf("task%d", i+1)
-
-			if string(gotTaskName) != wantTaskName {
-				t.Errorf("unexpected task at index %d, want: %s; got: %s", i, wantTaskName, gotTaskName)
+		for _, want := range expectTasks {
+			var found bool
+			for _, got := range options.TaskWhitelist {
+				if got == want {
+					found = true
+				}
+			}
+			if !found {
+				t.Errorf("expected to find task want: %v; got: %v", want, options.TaskWhitelist)
 			}
 		}
 	})
@@ -90,6 +99,7 @@ func TestPipelineOptionsCreator_parse(t *testing.T) {
 		defer ctrl.Finish()
 
 		configParserMock := mock.NewMockConfigParser(ctrl)
+		configParserMock.EXPECT().GetAllTasks(gomock.Any(), gomock.Any()).Return([]pipeline.TaskName{}, nil).Times(1)
 
 		creator := pipelineOptionsCreator{
 			configParser: configParserMock,
@@ -124,7 +134,7 @@ func TestPipelineOptionsCreator_parse(t *testing.T) {
 		configParserMock := mock.NewMockConfigParser(ctrl)
 
 		testError := errors.New("test error")
-		configParserMock.EXPECT().GetTasksByTargetIds(gomock.Any()).Return(nil, testError).Times(1)
+		configParserMock.EXPECT().GetAllTasks(gomock.Any(), gomock.Any()).Return(nil, testError).Times(1)
 
 		creator := pipelineOptionsCreator{
 			configParser: configParserMock,

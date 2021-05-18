@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/figment-networks/polkadothub-indexer/model"
 	"io/ioutil"
 
 	"github.com/figment-networks/indexing-engine/pipeline"
+	"github.com/figment-networks/polkadothub-indexer/model"
 )
 
 const (
@@ -29,16 +29,14 @@ type ConfigParser interface {
 	GetTransactionKinds() []model.TransactionKind
 	GetAllVersionedVersionIds() []int64
 	IsAnyVersionSequential(versionIds []int64) bool
-	GetAllAvailableTasks() []pipeline.TaskName
-	GetAllVersionedTasks() ([]pipeline.TaskName, error)
-	GetTasksByVersionIds([]int64) ([]pipeline.TaskName, error)
-	GetTasksByTargetIds([]int64) ([]pipeline.TaskName, error)
+	GetAllTasks(verionIds, targetIds []int64) ([]pipeline.TaskName, error)
 }
 
 type indexerConfig struct {
-	Versions         []version           `json:"versions"`
-	SharedTasks      []pipeline.TaskName `json:"shared_tasks"`
-	AvailableTargets []target            `json:"available_targets"`
+	Versions          []version           `json:"versions"`
+	SharedTasks       []pipeline.TaskName `json:"shared_tasks"`
+	IncompatibleTasks []incompatible      `json:"incompatible_tasks"`
+	AvailableTargets  []target            `json:"available_targets"`
 }
 
 type version struct {
@@ -55,6 +53,11 @@ type target struct {
 	Name  string              `json:"name"`
 	Desc  string              `json:"desc"`
 	Tasks []pipeline.TaskName `json:"tasks"`
+}
+
+type incompatible struct {
+	Name      pipeline.TaskName   `json:"name"`
+	Blacklist []pipeline.TaskName `json:"blacklist"`
 }
 
 func NewConfigParser(file string) (*configParser, error) {
@@ -126,7 +129,7 @@ func (o *configParser) GetAllAvailableTasks() []pipeline.TaskName {
 		allAvailableTaskNames = append(allAvailableTaskNames, t.Tasks...)
 	}
 
-	return getUniqueTaskNames(allAvailableTaskNames)
+	return o.getUniqueTaskNames(allAvailableTaskNames)
 }
 
 // GetAllVersionedVersionIds gets a slice with all version ids in the targets file
@@ -139,6 +142,28 @@ func (o *configParser) GetAllVersionedVersionIds() []int64 {
 	return ids
 }
 
+func (o *configParser) GetAllTasks(verionIds, targetIds []int64) ([]pipeline.TaskName, error) {
+	var allTasks []pipeline.TaskName
+
+	if len(verionIds) > 0 {
+		tasks, err := o.getTasksByVersionIds(verionIds)
+		if err != nil {
+			return nil, err
+		}
+		allTasks = append(allTasks, tasks...)
+	}
+
+	if len(targetIds) > 0 {
+		tasks, err := o.getTasksByTargetIds(targetIds)
+		if err != nil {
+			return nil, err
+		}
+		allTasks = append(allTasks, tasks...)
+	}
+
+	return o.getUniqueTaskNames(allTasks), nil
+}
+
 // GetAllVersionedTasks get lists of tasks for provided versions
 func (o *configParser) GetAllVersionedTasks() ([]pipeline.TaskName, error) {
 	var allAvailableTaskNames []pipeline.TaskName
@@ -147,18 +172,18 @@ func (o *configParser) GetAllVersionedTasks() ([]pipeline.TaskName, error) {
 
 	ids := o.GetAllVersionedVersionIds()
 
-	versionedTaskNames, err := o.GetTasksByVersionIds(ids)
+	versionedTaskNames, err := o.getTasksByVersionIds(ids)
 	if err != nil {
 		return nil, err
 	}
 
 	allAvailableTaskNames = append(allAvailableTaskNames, versionedTaskNames...)
 
-	return getUniqueTaskNames(allAvailableTaskNames), nil
+	return o.getUniqueTaskNames(allAvailableTaskNames), nil
 }
 
 // GetTasksByTargetIds get lists of tasks for specific version ids
-func (o *configParser) GetTasksByVersionIds(versionIds []int64) ([]pipeline.TaskName, error) {
+func (o *configParser) getTasksByVersionIds(versionIds []int64) ([]pipeline.TaskName, error) {
 	var allTaskNames []pipeline.TaskName
 
 	allTaskNames = o.appendSharedTasks(allTaskNames)
@@ -171,7 +196,7 @@ func (o *configParser) GetTasksByVersionIds(versionIds []int64) ([]pipeline.Task
 		allTaskNames = append(allTaskNames, tasks...)
 	}
 
-	return getUniqueTaskNames(allTaskNames), nil
+	return allTaskNames, nil
 }
 
 // IsAnyVersionSequential checks if any version in targets file is sequential
@@ -202,11 +227,11 @@ func (o *configParser) getTasksByVersionId(versionId int64) ([]pipeline.TaskName
 		return nil, errors.New(fmt.Sprintf("version %d not found", versionId))
 	}
 
-	return o.GetTasksByTargetIds(targetIds)
+	return o.getTasksByTargetIds(targetIds)
 }
 
-// GetTasksByTargetIds get lists of tasks for specific target ids
-func (o *configParser) GetTasksByTargetIds(targetIds []int64) ([]pipeline.TaskName, error) {
+// getTasksByTargetIds get lists of tasks for specific target ids
+func (o *configParser) getTasksByTargetIds(targetIds []int64) ([]pipeline.TaskName, error) {
 	var allTaskNames []pipeline.TaskName
 
 	allTaskNames = o.appendSharedTasks(allTaskNames)
@@ -219,14 +244,14 @@ func (o *configParser) GetTasksByTargetIds(targetIds []int64) ([]pipeline.TaskNa
 		allTaskNames = append(allTaskNames, tasks...)
 	}
 
-	return getUniqueTaskNames(allTaskNames), nil
+	return allTaskNames, nil
 }
 
 // getTasksByTargetId get list of tasks for desired target id
 func (o *configParser) getTasksByTargetId(targetId int64) ([]pipeline.TaskName, error) {
 	for _, t := range o.targets.AvailableTargets {
 		if t.ID == targetId {
-			return getUniqueTaskNames(t.Tasks), nil
+			return t.Tasks, nil
 		}
 	}
 	return nil, errors.New(fmt.Sprintf("target id %d does not exists", targetId))
@@ -239,14 +264,27 @@ func (o *configParser) appendSharedTasks(tasks []pipeline.TaskName) []pipeline.T
 }
 
 // getUniqueTaskNames return slice with unique task names
-func getUniqueTaskNames(slice []pipeline.TaskName) []pipeline.TaskName {
+func (o *configParser) getUniqueTaskNames(slice []pipeline.TaskName) []pipeline.TaskName {
 	keys := make(map[pipeline.TaskName]bool)
 	var list []pipeline.TaskName
+
 	for _, entry := range slice {
-		if _, value := keys[entry]; !value {
-			keys[entry] = true
-			list = append(list, entry)
+		keys[entry] = true
+	}
+
+	for _, entry := range o.targets.IncompatibleTasks {
+		if _, ok := keys[entry.Name]; ok {
+			for _, task := range entry.Blacklist {
+				if _, ok2 := keys[task]; ok2 {
+					delete(keys, task)
+				}
+			}
 		}
 	}
+
+	for key := range keys {
+		list = append(list, key)
+	}
+
 	return list
 }

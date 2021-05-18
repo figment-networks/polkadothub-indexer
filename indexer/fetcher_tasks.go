@@ -13,8 +13,9 @@ import (
 )
 
 const (
-	FetcherTaskName          = "Fetcher"
-	ValidatorFetcherTaskName = "ValidatorFetcher"
+	FetcherTaskName                     = "FetchAll"
+	ValidatorFetcherTaskName            = "ValidatorFetcher"
+	ValidatorPerformanceFetcherTaskName = "ValidatorPerformanceFetcher"
 )
 
 type HeightMeta struct {
@@ -117,5 +118,38 @@ func (t *ValidatorFetcherTask) Run(ctx context.Context, p pipeline.Payload) erro
 	)
 
 	payload.RawValidators = validators.GetValidators()
+	return nil
+}
+
+func NewValidatorPerformanceFetcherTask(client client.ValidatorPerformanceClient) pipeline.Task {
+	return &ValidatorPerformanceFetcherTask{
+		client: client,
+	}
+}
+
+type ValidatorPerformanceFetcherTask struct {
+	client client.ValidatorPerformanceClient
+}
+
+func (t *ValidatorPerformanceFetcherTask) GetName() string {
+	return ValidatorPerformanceFetcherTaskName
+}
+
+func (t *ValidatorPerformanceFetcherTask) Run(ctx context.Context, p pipeline.Payload) error {
+	payload := p.(*payload)
+	validators, err := t.client.GetByHeight(payload.CurrentHeight)
+	if err != nil {
+		return err
+	}
+
+	logger.Info(fmt.Sprintf("running indexer task [stage=%s] [task=%s] [height=%d]", pipeline.StageFetcher, t.GetName(), payload.CurrentHeight))
+	logger.DebugJSON(validators.GetValidators(),
+		logger.Field("process", "pipeline"),
+		logger.Field("stage", pipeline.StageFetcher),
+		logger.Field("request", "validator"),
+		logger.Field("height", payload.CurrentHeight),
+	)
+
+	payload.RawValidatorPerformance = validators.GetValidators()
 	return nil
 }

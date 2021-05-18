@@ -1,9 +1,9 @@
 package indexer
 
 import (
-	"fmt"
 	"testing"
 
+	"github.com/figment-networks/indexing-engine/pipeline"
 	"github.com/figment-networks/polkadothub-indexer/utils/test"
 )
 
@@ -53,6 +53,8 @@ func TestConfigParser_GetAllTasks(t *testing.T) {
 			}
     	`)
 
+		expectTasks := []pipeline.TaskName{"Task1", "Task2", "Task3", "Task4", "Task5"}
+
 		test.CreateFile(t, fileName, targetsJsonBlob)
 		defer test.CleanUp(t, fileName)
 
@@ -64,14 +66,19 @@ func TestConfigParser_GetAllTasks(t *testing.T) {
 
 		tasks := parser.GetAllAvailableTasks()
 
-		if len(tasks) != 5 {
-			t.Errorf("unexpected tasks length, want: %d; got: %d", 5, len(tasks))
+		if len(tasks) != len(expectTasks) {
+			t.Errorf("unexpected tasks length, want: %d; got: %d", len(expectTasks), len(tasks))
 		}
 
-		for i := 0; i < len(tasks); i++ {
-			taskName := fmt.Sprintf("Task%d", i+1)
-			if string(tasks[i]) != taskName {
-				t.Errorf("unexpected task at index %d, want: %s, got: %s", i, taskName, tasks[i])
+		for _, want := range expectTasks {
+			var found bool
+			for _, got := range tasks {
+				if got == want {
+					found = true
+				}
+			}
+			if !found {
+				t.Errorf("expected to find task want: %v; got: %v", want, tasks)
 			}
 		}
 	})
@@ -109,6 +116,7 @@ func TestConfigParser_GetAllTasks(t *testing.T) {
 			  ]
 			}
     	`)
+		expectTasks := []pipeline.TaskName{"SharedTask1", "SharedTask2", "Task1", "Task2", "Task3", "Task4", "Task5"}
 
 		test.CreateFile(t, fileName, targetsJsonBlob)
 		defer test.CleanUp(t, fileName)
@@ -121,22 +129,19 @@ func TestConfigParser_GetAllTasks(t *testing.T) {
 
 		tasks := parser.GetAllAvailableTasks()
 
-		if len(tasks) != 7 {
-			t.Errorf("unexpected tasks length, want: %d; got: %d", 7, len(tasks))
+		if len(tasks) != len(expectTasks) {
+			t.Errorf("unexpected tasks length, want: %d; got: %d", len(expectTasks), len(tasks))
 		}
 
-		if string(tasks[0]) != "SharedTask1" {
-			t.Errorf("unexpected task at index %d, want: %s, got: %s", 0, "SharedTask1", tasks[0])
-		}
-
-		if string(tasks[1]) != "SharedTask2" {
-			t.Errorf("unexpected task at index %d, want: %s, got: %s", 1, "SharedTask2", tasks[1])
-		}
-
-		for i := 2; i < len(tasks); i++ {
-			taskName := fmt.Sprintf("Task%d", i-1)
-			if string(tasks[i]) != taskName {
-				t.Errorf("unexpected task at index %d, want: %s, got: %s", i, taskName, tasks[i])
+		for _, want := range expectTasks {
+			var found bool
+			for _, got := range tasks {
+				if got == want {
+					found = true
+				}
+			}
+			if !found {
+				t.Errorf("expected to find task want: %v; got: %v", want, tasks)
 			}
 		}
 	})
@@ -194,6 +199,8 @@ func TestConfigParser_GetTasksByVersionIds(t *testing.T) {
 		}
 	`)
 
+	expectTasks := []pipeline.TaskName{"Task1", "Task2", "Task3", "Task4", "Task5"}
+
 	t.Run("returns tasks for given version id", func(t *testing.T) {
 		test.CreateFile(t, fileName, targetsJsonBlob)
 		defer test.CleanUp(t, fileName)
@@ -204,20 +211,21 @@ func TestConfigParser_GetTasksByVersionIds(t *testing.T) {
 			return
 		}
 
-		tasks, err := parser.GetTasksByVersionIds([]int64{1})
+		tasks, err := parser.getTasksByVersionIds([]int64{1})
 		if err != nil {
 			t.Errorf("GetTasksForVersion should not return error: err=%+v", err)
 			return
 		}
 
-		if len(tasks) != 5 {
-			t.Errorf("unexpected tasks length, want: %d; got: %d", 5, len(tasks))
-		}
-
-		for i := 0; i < len(tasks); i++ {
-			taskName := fmt.Sprintf("Task%d", i+1)
-			if string(tasks[i]) != taskName {
-				t.Errorf("unexpected task at index %d, want: %s, got: %s", i, taskName, tasks[i])
+		for _, want := range expectTasks {
+			var found bool
+			for _, got := range tasks {
+				if got == want {
+					found = true
+				}
+			}
+			if !found {
+				t.Errorf("expected to find task want: %v; got: %v", want, tasks)
 			}
 		}
 	})
@@ -232,7 +240,7 @@ func TestConfigParser_GetTasksByVersionIds(t *testing.T) {
 			return
 		}
 
-		_, err = parser.GetTasksByVersionIds([]int64{40})
+		_, err = parser.getTasksByVersionIds([]int64{40})
 		if err == nil {
 			t.Errorf("GetTasksForVersion should return error")
 		}
@@ -282,6 +290,8 @@ func TestConfigParser_GetTasksByTargetIds(t *testing.T) {
 			}
     	`)
 
+		expectTasks := []pipeline.TaskName{"Task1", "Task2", "Task3", "Task4", "Task5"}
+
 		test.CreateFile(t, fileName, targetsJsonBlob)
 		defer test.CleanUp(t, fileName)
 
@@ -291,20 +301,21 @@ func TestConfigParser_GetTasksByTargetIds(t *testing.T) {
 			return
 		}
 
-		tasks, err := parser.GetTasksByTargetIds([]int64{1, 2})
+		tasks, err := parser.getTasksByTargetIds([]int64{1, 2})
 		if err != nil {
 			t.Errorf("GetTasksByTargetIds should not return error: err=%+v", err)
 			return
 		}
 
-		if len(tasks) != 5 {
-			t.Errorf("unexpected tasks length, want: %d; got: %d", 5, len(tasks))
-		}
-
-		for i := 0; i < len(tasks); i++ {
-			taskName := fmt.Sprintf("Task%d", i+1)
-			if string(tasks[i]) != taskName {
-				t.Errorf("unexpected task at index %d, want: %s, got: %s", i, taskName, tasks[i])
+		for _, want := range expectTasks {
+			var found bool
+			for _, got := range tasks {
+				if got == want {
+					found = true
+				}
+			}
+			if !found {
+				t.Errorf("expected to find task want: %v; got: %v", want, tasks)
 			}
 		}
 	})
@@ -448,6 +459,8 @@ func TestConfigParser_GetAllVersionedTasks(t *testing.T) {
 		}
 	`)
 
+	expectTasks := []pipeline.TaskName{"Task1", "Task2", "Task3", "Task4", "Task5", "Task6", "Task7", "Task8"}
+
 	t.Run("returns tasks for targets 1, 2 and 3 from versions and not target 4", func(t *testing.T) {
 		test.CreateFile(t, fileName, targetsJsonBlob)
 		defer test.CleanUp(t, fileName)
@@ -464,14 +477,15 @@ func TestConfigParser_GetAllVersionedTasks(t *testing.T) {
 			return
 		}
 
-		if len(tasks) != 8 {
-			t.Errorf("unexpected tasks length, want: %d; got: %d", 5, len(tasks))
-		}
-
-		for i := 0; i < len(tasks); i++ {
-			taskName := fmt.Sprintf("Task%d", i+1)
-			if string(tasks[i]) != taskName {
-				t.Errorf("unexpected task at index %d, want: %s, got: %s", i, taskName, tasks[i])
+		for _, want := range expectTasks {
+			var found bool
+			for _, got := range tasks {
+				if got == want {
+					found = true
+				}
+			}
+			if !found {
+				t.Errorf("expected to find task want: %v; got: %v", want, tasks)
 			}
 		}
 	})

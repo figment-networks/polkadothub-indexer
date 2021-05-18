@@ -62,6 +62,11 @@ func (uc *getByHeightUseCase) Execute(height *int64) (SeqListView, error) {
 		return SeqListView{}, errors.New("height is not indexed yet")
 	}
 
+	eraSeqs, err := uc.validatorDb.FindEraSeqsByHeight(*height)
+	if err != nil && err != store.ErrNotFound {
+		return SeqListView{}, err
+	}
+
 	sessionSeqs, err := uc.validatorDb.FindSessionSeqsByHeight(*height)
 	if len(sessionSeqs) == 0 || err != nil {
 		syncable, err := uc.syncableDb.FindLastInSessionForHeight(*height)
@@ -85,11 +90,6 @@ func (uc *getByHeightUseCase) Execute(height *int64) (SeqListView, error) {
 		}
 
 		sessionSeqs = payload.ValidatorSessionSequences
-	}
-
-	eraSeqs, err := uc.validatorDb.FindEraSeqsByHeight(*height)
-	if err != nil && err != store.ErrNotFound {
-		return SeqListView{}, err
 	}
 
 	return ToSeqListView(sessionSeqs, eraSeqs), nil

@@ -13,7 +13,7 @@ type pipelineOptionsCreator struct {
 }
 
 func (o *pipelineOptionsCreator) parse() (*pipeline.Options, error) {
-	taskWhitelist, err := o.getTasksWhitelist()
+	taskWhitelist, err := o.configParser.GetAllTasks(o.desiredVersionIds, o.desiredTargetIds)
 	if err != nil {
 		return nil, err
 	}
@@ -22,28 +22,6 @@ func (o *pipelineOptionsCreator) parse() (*pipeline.Options, error) {
 		TaskWhitelist:   taskWhitelist,
 		StagesBlacklist: o.getStagesBlacklist(),
 	}, nil
-}
-
-func (o *pipelineOptionsCreator) getTasksWhitelist() ([]pipeline.TaskName, error) {
-	var taskWhitelist []pipeline.TaskName
-
-	if len(o.desiredVersionIds) > 0 {
-		tasks, err := o.configParser.GetTasksByVersionIds(o.desiredVersionIds)
-		if err != nil {
-			return nil, err
-		}
-		taskWhitelist = append(taskWhitelist, tasks...)
-	}
-
-	if len(o.desiredTargetIds) > 0 {
-		tasks, err := o.configParser.GetTasksByTargetIds(o.desiredTargetIds)
-		if err != nil {
-			return nil, err
-		}
-		taskWhitelist = append(taskWhitelist, tasks...)
-	}
-
-	return getUniqueTaskNames(taskWhitelist), nil
 }
 
 func (o *pipelineOptionsCreator) getStagesBlacklist() []pipeline.StageName {
