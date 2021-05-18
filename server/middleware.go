@@ -1,9 +1,11 @@
 package server
 
 import (
+	"strings"
+	"time"
+
 	"github.com/figment-networks/polkadothub-indexer/metric"
 	"github.com/gin-gonic/gin"
-	"time"
 )
 
 // setupMiddleware sets up middleware for gin application
@@ -17,8 +19,8 @@ func MetricMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		t := time.Now()
 		c.Next()
-		elapsed := time.Since(t)
-
-		metric.ServerRequestDuration.WithLabelValues(c.Request.URL.Path).Set(elapsed.Seconds())
+		if path := strings.Split(strings.TrimPrefix(c.Request.URL.Path, "/"), "/"); len(path) > 0 {
+			metric.ServerRequestDuration.WithLabelValues(path[0]).Set(time.Since(t).Seconds())
+		}
 	}
 }
