@@ -8,15 +8,17 @@ import (
 )
 
 var (
-	daysInYear = big.NewFloat(365)
+	daysInYear   = big.NewFloat(365)
+	decPrecision = 4
 )
 
 type DailyApr struct {
-	TimeBucket   types.Time     `json:"time"`
+	TimeBucket   types.Time     `json:"time_bucket"`
 	Era          int64          `json:"era"`
 	Bonded       types.Quantity `json:"bonded"`
 	TotalRewards types.Quantity `json:"total_rewards"`
-	APR          big.Float      `json:"apr"`
+	APR          string         `json:"apr"`
+	Validator    string         `json:"validator"`
 }
 
 func dailyAPR(rewardSeq model.RewardEraSeq, stake types.Quantity) (DailyApr, error) {
@@ -37,7 +39,8 @@ func dailyAPR(rewardSeq model.RewardEraSeq, stake types.Quantity) (DailyApr, err
 		Era:          rewardSeq.Era,
 		Bonded:       stake,
 		TotalRewards: reward,
-		APR:          *apr,
+		APR:          apr.Text('f', decPrecision),
+		Validator:    rewardSeq.ValidatorStashAccount,
 	}, nil
 }
 

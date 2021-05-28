@@ -30,29 +30,20 @@ func NewGetAprByAddressHttpHandler(accountDb store.AccountEraSeq, rewardDb store
 	}
 }
 
-type uriParams struct {
-	Address string `uri:"stash_account" binding:"required"`
-}
-
 type queryParams struct {
-	Start time.Time `form:"start" binding:"required" time_format:"2006-01-02"`
-	End   time.Time `form:"end" binding:"-" time_format:"2006-01-02"`
+	Account string    `form:"acount" binding:"required"`
+	Start   time.Time `form:"start_time" binding:"required" time_format:"2006-01-02"`
+	End     time.Time `form:"end_time" binding:"-" time_format:"2006-01-02"`
 }
 
 func (h *getAprByAddressHttpHandler) Handle(c *gin.Context) {
-	var req uriParams
-	if err := c.ShouldBindUri(&req); err != nil {
-		http.BadRequest(c, errors.New("missing parameter"))
-		return
-	}
-
 	var params queryParams
 	if err := c.ShouldBindQuery(&params); err != nil {
-		http.BadRequest(c, errors.New("invalid start and/or end date"))
+		http.BadRequest(c, errors.New("required start_time or account is missing, and/or start_time end_time must be in format: 2006-01-02"))
 		return
 	}
 
-	resp, err := h.getUseCase().Execute(req.Address, *types.NewTimeFromTime(params.Start), *types.NewTimeFromTime(params.End))
+	resp, err := h.getUseCase().Execute(params.Account, *types.NewTimeFromTime(params.Start), *types.NewTimeFromTime(params.End))
 	if http.ShouldReturn(c, err) {
 		return
 	}
