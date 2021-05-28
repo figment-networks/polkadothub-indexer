@@ -238,7 +238,7 @@ func (s *Server) setupRoutes() {
 	//       200: RewardsForErasView
 	//       400: BadRequestResponse
 	s.engine.GET("/rewards/:stash_account", s.handlers.GetRewardsForStashAccount.Handle)
-	// swagger:route GET /apr/:stash_account getAPR
+	// swagger:route GET /apr getAPR
 	//
 	// Gets apr for account
 	//
