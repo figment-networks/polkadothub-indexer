@@ -31,15 +31,15 @@ func NewGetAprByAddressHttpHandler(accountDb store.AccountEraSeq, rewardDb store
 }
 
 type queryParams struct {
-	Account string    `form:"acount" binding:"required"`
-	Start   time.Time `form:"start_time" binding:"required" time_format:"2006-01-02"`
-	End     time.Time `form:"end_time" binding:"-" time_format:"2006-01-02"`
+	Account string    `form:"account" binding:"required"`
+	Start   time.Time `form:"start" binding:"required" time_format:"2006-01-02"`
+	End     time.Time `form:"end" binding:"-" time_format:"2006-01-02"`
 }
 
 func (h *getAprByAddressHttpHandler) Handle(c *gin.Context) {
 	var params queryParams
 	if err := c.ShouldBindQuery(&params); err != nil {
-		http.BadRequest(c, errors.New("required start_time or account is missing, and/or start_time end_time must be in format: 2006-01-02"))
+		http.BadRequest(c, errors.New("required start or account is missing, and/or start end must be in format: 2006-01-02"))
 		return
 	}
 
