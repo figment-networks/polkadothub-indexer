@@ -120,7 +120,7 @@
         }
       }
     },
-    "/apr/:stash_account": {
+    "/apr": {
       "get": {
         "description": "This will show daily reward aprs for an account for given time period from \"start\" to \"end\". If \"end\" is not specified,\nwill return aprs until most recently indexed block.",
         "consumes": [

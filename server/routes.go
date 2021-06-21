@@ -238,7 +238,7 @@ func (s *Server) setupRoutes() {
 	//       200: RewardsForErasView
 	//       400: BadRequestResponse
 	s.engine.GET("/rewards/:stash_account", s.handlers.GetRewardsForStashAccount.Handle)
-	// swagger:route GET /apr/:stash_account getAPR
+	// swagger:route GET /apr getAPR
 	//
 	// Gets apr for account
 	//
@@ -254,7 +254,7 @@ func (s *Server) setupRoutes() {
 	//     Responses:
 	//       200: RewardsForErasView
 	//       400: BadRequestResponse
-	s.engine.GET("/apr/:stash_account", s.handlers.GetAPRByAddress.Handle)
+	s.engine.GET("/apr", s.handlers.GetAPRByAddress.Handle)
 }
 
 func (s *Server) ReverseProxy() gin.HandlerFunc {
